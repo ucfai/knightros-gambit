@@ -9,7 +9,9 @@
 ## Raspi code
 - [stockfish explained](https://www.quora.com/What-is-the-algorithm-behind-Stockfish-the-chess-engine)
 - [stockfish implementation](https://github.com/official-stockfish/Stockfish)
+- [stockfish download](https://stockfishchess.org/download/)
 - [board representation](https://en.wikipedia.org/wiki/Board_representation_(computer_chess))
+- [python-chess](https://python-chess.readthedocs.io/en/latest/index.html)
 
 ## Arduino code
 - [sample arduino actuation code](https://create.arduino.cc/projecthub/maguerero/automated-chess-board-50ca0f)
@@ -19,6 +21,9 @@
 
 ## Web/mobile app
 - [embed twitch stream in webpage](https://dev.twitch.tv/docs/embed)
+- [flutter chess app](https://levelup.gitconnected.com/how-to-build-a-simple-chess-app-with-flutter-f2726022de8a)
+- [react chessboard visualization](https://chessboardjsx.com/)
+- [chess.js, js based chess engine](https://github.com/jhlywa/chess.js): Javascript chess library that is used for chess move generation/validation, piece placement/movement, and check/checkmate/stalemate detection - basically everything but the AI.
 
 ## Backend
 - [deploy pickled ML with flask](https://towardsdatascience.com/how-to-easily-deploy-machine-learning-models-using-flask-b95af8fe34d4)
