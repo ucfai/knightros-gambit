@@ -5,6 +5,7 @@
 
 ## Chess AI
 - [alphazero paper](https://arxiv.org/pdf/1712.01815.pdf)
+- [maiachess, microsoft's human-like chess AI](https://maiachess.com/), [also see this](https://www.microsoft.com/en-us/research/blog/the-human-side-of-ai-for-chess/)
 
 ## Raspi code
 - [stockfish explained](https://www.quora.com/What-is-the-algorithm-behind-Stockfish-the-chess-engine)
@@ -35,3 +36,7 @@
 - https://arxiv.org/pdf/1708.03898.pdf
 - https://towardsdatascience.com/board-game-image-recognition-using-neural-networks-116fc876dafa
 - https://tech.bakkenbaeck.com/post/chessvision
+- https://devpost.com/software/chess-boss#updates
+- https://www.reddit.com/r/datasets/comments/emd3qw/chess_pieces_bounding_boxes_for_object_detection/
+- https://public.roboflow.com/object-detection/chess-full
+- https://twitter.com/braddwyer/status/1179966944138559489
