@@ -31,4 +31,8 @@ https://poloclub.github.io/cnn-explainer/
 Review in chess-engine
 
 
+## Jupyter notebook 
+
+
+
 
