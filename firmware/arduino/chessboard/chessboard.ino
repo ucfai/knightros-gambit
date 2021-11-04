@@ -21,7 +21,7 @@
 #define SOFT_TX 17
 
 // Electromagnet
-#define MAGNET 23
+#define ELECTROMAGNET 23
 
 // Switches and buttons
 #define X_AXIS_ENDSTOP_SWITCH 33
