@@ -21,7 +21,7 @@
 #define SOFT_TX 17
 
 // Electromagnet
-#define MAGNET 23
+#define ELECTROMAGNET 23
 
 // Switches and buttons
 #define X_AXIS_ENDSTOP_SWITCH 33
@@ -31,7 +31,25 @@
 void setup()
 {
   
+  pinMode(MOTOR_RESET, OUTPUT);
+  pinMode(MOTOR_SLEEP, OUTPUT);
+  pinMode(MOTOR_ENABLE, OUTPUT);
+  
+  pinMode(MOTOR1_MS1, OUTPUT);
+  pinMode(MOTOR1_MS2, OUTPUT);
+  pinMode(MOTOR1_DIR, OUTPUT);
+  pinMode(MOTOR1_STEP_PIN, OUTPUT);
 
+  pinMode(MOTOR2_MS1, OUTPUT);
+  pinMode(MOTOR2_MS2, OUTPUT);
+  pinMode(MOTOR2_DIR, OUTPUT);
+  pinMode(MOTOR2_STEP_PIN, OUTPUT);
+
+  pinMode(ELECTROMAGNET, OUTPUT);
+
+  pinMode(X_AXIS_ENDSTOP_SWITCH, INPUT);
+  pinMode(Y_AXIS_ENDSTOP_SWITCH, INPUT);
+  pinMode(CHESS_TIMER_BUTTON, INPUT);
 }
 
 void loop()
