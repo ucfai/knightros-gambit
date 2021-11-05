@@ -30,6 +30,7 @@
 
 void setup()
 {
+  // Define our pinModes
   pinMode(MOTOR_RESET, OUTPUT);
   pinMode(MOTOR_SLEEP, OUTPUT);
   pinMode(MOTOR_ENABLE, OUTPUT);
@@ -49,6 +50,9 @@ void setup()
   pinMode(X_AXIS_ENDSTOP_SWITCH, INPUT);
   pinMode(Y_AXIS_ENDSTOP_SWITCH, INPUT);
   pinMode(CHESS_TIMER_BUTTON, INPUT);
+
+  // Setup the UART here
+  Serial2.begin(115200, SERIAL_8N1, SOFT_RX, SOFT_TX);
 }
 
 void loop()
