@@ -30,6 +30,7 @@
 
 void setup()
 {
+  
   pinMode(MOTOR_RESET, OUTPUT);
   pinMode(MOTOR_SLEEP, OUTPUT);
   pinMode(MOTOR_ENABLE, OUTPUT);
