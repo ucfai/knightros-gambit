@@ -17,8 +17,8 @@
 #define MOTOR2_STEP_PIN 36
 
 // UART
-#define SOFT_RX 16
-#define SOFT_TX 17
+#define RX2 16
+#define TX2 17
 
 // Electromagnet
 #define ELECTROMAGNET 23
@@ -52,7 +52,7 @@ void setup()
   pinMode(CHESS_TIMER_BUTTON, INPUT);
 
   // Setup the UART here
-  Serial2.begin(115200, SERIAL_8N1, SOFT_RX, SOFT_TX);
+  Serial2.begin(115200, SERIAL_8N1, RX2, TX2);
 }
 
 void loop()
