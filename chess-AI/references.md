@@ -4,7 +4,7 @@ This is where code for chess AI will go
 # Resources: 
 
 ## Pytorch Intro/Tutorial :
-https://pytorch.org/get-started/locally/
+https://pytorch.org/get-started/locally/  
 https://pytorch.org/tutorials/beginner/deep_learning_60min_blitz.html
 
 
@@ -13,7 +13,7 @@ https://arxiv.org/pdf/1603.05027.pdf
 
 
 ## Reinforcement learning text book:
-https://drive.google.com/file/d/1jCSmPQF46WDPTV9gILT5kOsGujY8De0i/view
+https://drive.google.com/file/d/1jCSmPQF46WDPTV9gILT5kOsGujY8De0i/view  
 4.1-4.3, 5.1-5.3, 6.1-6.5, 13.1, 13.2, and 13.5 
 
 
