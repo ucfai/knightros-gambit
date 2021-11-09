@@ -11,7 +11,7 @@ mac_stockfish_path = "/usr/local/bin/stockfish"
 stockfish_path = mac_stockfish_path
 
 stockfish = Stockfish(stockfish_path)
-stockfish.set_elo_rating(1350)
+stockfish.set_elo_rating(1450) ## raised ELO rating
 
 ################################################
 
