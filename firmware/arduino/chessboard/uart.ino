@@ -41,23 +41,23 @@ bool parse_message_from_pi(char * message)
     if (message[0] == 0 || message[0] == 3)
     {
         //Check that the inputs are in a valid range
-        if (message[1] < 'a' || message[1] > 'h' || message[2] < '0' ||  message[2] > '8' || message[3] < 'a' || message[3] > 'h' || message[4] < '0' ||  message[4] > '8') 
+        if (message[1] < 'a' || message[1] > 'h' || message[2] < '1' ||  message[2] > '8' || message[3] < 'a' || message[3] > 'h' || message[4] < '1' ||  message[4] > '8') 
         {
             return false;
         }
 
         //Move type 0
         if (message[0] == 0)
-            move_straight(message[1] - 'a', message[2] - '0', message[3] - 'a', message[4] - '0');
+            move_straight(message[1] - 'a', message[2] - '1', message[3] - 'a', message[4] - '1');
         //Move type 3
         else
-            move_along_edges(message[1] - 'a', message[2] - '0', message[3] - 'a', message[4] - '0');
+            move_along_edges(message[1] - 'a', message[2] - '1', message[3] - 'a', message[4] - '1');
 
     }
     else if (message[0] == 1)
     {
         //Check validity for the first 3 bytes
-        if (message[1] < 'a' || message[1] > 'h' || message[2] < '0' ||  message[2] > '8' || ((message[3] != 'b') && message[3] != 'w'))
+        if (message[1] < 'a' || message[1] > 'h' || message[2] < '1' ||  message[2] > '8' || ((message[3] != 'b') && message[3] != 'w'))
             return false;
         
         //Check for valid piece type
@@ -65,7 +65,7 @@ bool parse_message_from_pi(char * message)
             return false;
 
         //Move type 1
-        move_to_graveyard(message[1] - 'a', message[2] - '0', message[3], message[4]);        
+        move_to_graveyard(message[1] - 'a', message[2] - '1', message[3], message[4]);        
     }
     else if (message[0] == 2)
     {
