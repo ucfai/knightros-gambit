@@ -30,7 +30,7 @@ void serialEvent2()
 
             //Process input
             //Returns true for valid input and false for invalid input. Calls movement function
-            parse_message_from_pi(&buffer);
+            parse_message_from_pi(buffer);
         }
     }
 }
