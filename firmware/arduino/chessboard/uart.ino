@@ -1,6 +1,6 @@
 char incomingByte;
 char  buffer[5];
-int byteNum = 0;
+int byteNum = -1; //-1 indicates that the start code hasn't been received
 
 //Wait for input
 void serialEvent2()
@@ -17,7 +17,7 @@ void serialEvent2()
             byteNum = 0;
         }
         //Add byte to buffer
-        else
+        else if (byteNum != -1)
         {
             buffer[byteNum] = incomingByte;
         }
@@ -26,7 +26,7 @@ void serialEvent2()
         if (byteNum == 4)
         {
             //Reset buffer position
-            byteNum = 0;
+            byteNum = -1;
 
             //Process input
             switch(buffer[0])
@@ -54,7 +54,7 @@ void serialEvent2()
             }
         }
         //Increment buffer position
-        else
+        else if (byteNum != -1)
         {
             byteNum++;
         }
