@@ -60,3 +60,15 @@ void loop()
   
 
 }
+
+// Function Declarations
+
+
+// Message Parsing
+bool parse_message_from_pi(char * buffer);
+
+// Piece Movement
+void move_straight(int startRow, int startCol, int endRow, int endCol);
+void move_to_graveyard(int startRow, int startCol, char color, char type);
+void castle(char color, char queenside_or_kingside);
+void move_along_edges(int startRow, int startCol, int endRow, int endCol);
