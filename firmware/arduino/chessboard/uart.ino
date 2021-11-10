@@ -19,44 +19,66 @@ void serialEvent2()
         //Add byte to buffer
         else if (byteNum != -1)
         {
-            buffer[byteNum] = incomingByte;
+            buffer[byteNum++] = incomingByte;
         }
 
         //Check if the buffer is full, process input
-        if (byteNum == 4)
+        if (byteNum == 5)
         {
             //Reset buffer position
             byteNum = -1;
 
             //Process input
-            switch(buffer[0])
-            {
-                case 0:
-                    //move_straight(int startRow, int startCol, int endRow, int endCol)
-                    move_straight(buffer[1] - 'a', buffer[2] - '0', buffer[3] - 'a', buffer[4] - '0');
-                    break;
-                case 1:
-                    //move_to_graveyard(int startRow, int startCol, char color, char type)
-                    move_to_graveyard(buffer[1] - 'a', buffer[2] - '0', buffer[3], buffer[4]);
-                    break;
-                case 2:
-                    //Args: piece color (b/w), kingside or queenside (-/0) 
-                    //castle(char color, char side)
-                    castle(buffer[1], buffer[3]);
-                    break;
-                case 3:
-                    //move_along_edges(int startRow, int startCol, int endRow, int endCol)
-                    move_along_edges(buffer[1] - 'a', buffer[2] - '0', buffer[3] - 'a', buffer[4] - '0');
-                    break;
-                default:
-                    //Handle error. Idk how we plan on doing this yet.
-                    break;
-            }
-        }
-        //Increment buffer position
-        else if (byteNum != -1)
-        {
-            byteNum++;
+            //Returns true for valid input and false for invalid input. Calls movement function
+            parseMessageFromPi(&buffer);
         }
     }
+}
+
+bool parse_message_from_pi(char * message)
+{
+    //Move types 0 and 3 are valid for the same range of values
+    if (message[0] == 0 || message[0] == 3)
+    {
+        //Check that the inputs are in a valid range
+        if (message[1] < 'a' || message[1] > 'h' || message[2] < '0' ||  message[2] > '8' || message[3] < 'a' || message[3] > 'h' || message[4] < '0' ||  message[4] > '8') 
+        {
+            return false;
+        }
+
+        //Move type 0
+        if (message[0] == 0)
+            move_straight(message[1] - 'a', message[2] - '0', message[3] - 'a', message[4] - '0');
+        //Move type 3
+        else
+            move_along_edges(message[1] - 'a', message[2] - '0', message[3] - 'a', message[4] - '0');
+
+    }
+    else if (message[0] == 1)
+    {
+        //Check validity for the first 3 bytes
+        if (message[1] < 'a' || message[1] > 'h' || message[2] < '0' ||  message[2] > '8' || ((message[3] != 'b') && message[3] != 'w'))
+            return false;
+        
+        //Check for valid piece type
+        if (!(message[4] == 'p' || message[4] == 'r' || message[4] == 'k' || message[4] == 'b' || message[4] == 'q'))
+            return false;
+
+        //Move type 1
+        move_to_graveyard(message[1] - 'a', message[2] - '0', message[3], message[4]);        
+    }
+    else if (message[0] == 2)
+    {
+        //Check input validity
+        if (!(message[1] == 'b' || message[1] == 'w') || message[2] != '0' || message[4] != '0' || !(message[3] == '0' || message[3] == '-'))
+            return false;
+
+        //Move type 2
+        castle(message[1], message[3]);
+    }
+    else
+        return false;
+
+    //Move is valid and was made
+    return true;
 }
