@@ -17,11 +17,11 @@
 #define MOTOR2_STEP_PIN 36
 
 // UART
-#define SOFT_RX 16
-#define SOFT_TX 17
+#define RX2 16
+#define TX2 17
 
 // Electromagnet
-#define MAGNET 23
+#define ELECTROMAGNET 23
 
 // Switches and buttons
 #define X_AXIS_ENDSTOP_SWITCH 33
@@ -30,8 +30,29 @@
 
 void setup()
 {
+  // Define our pinModes
+  pinMode(MOTOR_RESET, OUTPUT);
+  pinMode(MOTOR_SLEEP, OUTPUT);
+  pinMode(MOTOR_ENABLE, OUTPUT);
   
+  pinMode(MOTOR1_MS1, OUTPUT);
+  pinMode(MOTOR1_MS2, OUTPUT);
+  pinMode(MOTOR1_DIR, OUTPUT);
+  pinMode(MOTOR1_STEP_PIN, OUTPUT);
 
+  pinMode(MOTOR2_MS1, OUTPUT);
+  pinMode(MOTOR2_MS2, OUTPUT);
+  pinMode(MOTOR2_DIR, OUTPUT);
+  pinMode(MOTOR2_STEP_PIN, OUTPUT);
+
+  pinMode(ELECTROMAGNET, OUTPUT);
+
+  pinMode(X_AXIS_ENDSTOP_SWITCH, INPUT);
+  pinMode(Y_AXIS_ENDSTOP_SWITCH, INPUT);
+  pinMode(CHESS_TIMER_BUTTON, INPUT);
+
+  // Setup the UART here
+  Serial2.begin(115200, SERIAL_8N1, RX2, TX2);
 }
 
 void loop()
@@ -39,3 +60,15 @@ void loop()
   
 
 }
+
+// Function Declarations
+
+
+// Message Parsing
+bool parse_message_from_pi(char * buffer);
+
+// Piece Movement
+void move_straight(int startRow, int startCol, int endRow, int endCol);
+void move_to_graveyard(int startRow, int startCol, char color, char type);
+void castle(char color, char queenside_or_kingside);
+void move_along_edges(int startRow, int startCol, int endRow, int endCol);
