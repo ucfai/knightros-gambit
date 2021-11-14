@@ -53,7 +53,10 @@ void setup()
 
   // Setup the UART here
   Serial2.begin(115200, SERIAL_8N1, RX2, TX2);
+  resetEDPins();
 }
+
+int steps;
 
 void loop()
 {
@@ -62,7 +65,52 @@ void loop()
 }
 
 // Function Declarations
+void stepForwardX() {
+  digitalWrite(MOTOR1_DIR,LOW);
+  digitalWrite(MOTOR1_STEP_PIN,HIGH);
+  delay(1);
+  digitalWrite(MOTOR1_STEP_PIN,LOW);
+}
 
+void stepForwardY(){
+  digitalWrite(MOTOR2_DIR,LOW);
+  digitalWrite(MOTOR2_STEP_PIN,HIGH);
+  delay(1);
+  digitalWrite(MOTOR2_STEP_PIN,LOW);
+}
+
+void resetEDPins() {
+  digitalWrite(MOTOR1_DIR,LOW);
+  digitalWrite(MOTOR2_DIR,LOW);
+  digitalWrite(MOTOR1_STEP_PIN, LOW);
+  digitalWrite(MOTOR2_STEP_PIN, LOW);
+  digitalWrite(MOTOR1_MS1,LOW);
+  digitalWrite(MOTOR1_MS2,LOW);
+  digitalWrite(MOTOR2_MS1,LOW);
+  digitalWrite(MOTOR2_MS2,LOW);
+  digitalWrite(MOTOR_ENABLE, HIGH);
+}
+
+void halfStep() {
+  digitalWrite(MOTOR1_MS1,HIGH);
+  digitalWrite(MOTOR1_MS2,LOW);
+  digitalWrite(MOTOR2_MS1,HIGH);
+  digitalWrite(MOTOR2_MS2,LOW);
+}
+
+void quarterStep() {
+  digitalWrite(MOTOR1_MS1,LOW);
+  digitalWrite(MOTOR1_MS2,HIGH);
+  digitalWrite(MOTOR2_MS1,LOW);
+  digitalWrite(MOTOR2_MS2,HIGH);
+}
+
+void eighthStep() {
+  digitalWrite(MOTOR1_MS1,HIGH);
+  digitalWrite(MOTOR1_MS2,HIGH);
+  digitalWrite(MOTOR2_MS1,HIGH);
+  digitalWrite(MOTOR2_MS2,HIGH);
+}
 
 // Message Parsing
 bool parse_message_from_pi(char * buffer);
