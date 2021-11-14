@@ -9,12 +9,20 @@
 #define MOTOR1_MS1 14
 #define MOTOR1_MS2 12
 #define MOTOR1_DIR 34
-#define MOTOR1_STEP_PIN 35   
+#define MOTOR1_STEP_PIN 35
+int xMotor[4] = {MOTOR1_STEP_PIN, MOTOR1_DIR, MOTOR1_MS1, MOTOR1_MS2};
 
 #define MOTOR2_MS1 27
 #define MOTOR2_MS2 2
 #define MOTOR2_DIR 36
 #define MOTOR2_STEP_PIN 36
+int yMotor[4] = {MOTOR2_STEP_PIN, MOTOR2_DIR, MOTOR2_MS1, MOTOR2_MS2};
+
+// Motor directions
+#define FORWARD 0 
+#define BACKWARD 1
+#define LEFT 0
+#define RIGHT 1 
 
 // UART
 #define RX2 16
@@ -27,6 +35,68 @@
 #define X_AXIS_ENDSTOP_SWITCH 33
 #define Y_AXIS_ENDSTOP_SWITCH 32
 #define CHESS_TIMER_BUTTON 4
+
+/*
+  Motor array format in order of indicies:
+  Index:
+  0         1        2        3
+  Step pin, Dir pin, MS1 pin, MS2 pin
+*/
+void moveMotor(int motor[], int steps, int dir) {
+  int i;
+
+  // Enable motor driver inputs/output
+  digitalWrite(MOTOR_SLEEP, HIGH);
+  digitalWrite(MOTOR_RESET, HIGH);
+  digitalWrite(MOTOR_ENABLE, LOW);
+
+  // Set direction of motor
+  digitalWrite(motor[1], dir);
+
+  // Rotate motor some number of steps
+  for (i = 0; i < steps; i++) {
+    digitalWrite(motor[0], LOW);
+    delay(1);  // 1 milliSecond
+    digitalWrite(motor[0], HIGH);
+  }
+
+}
+
+void disableMotors() {
+  digitalWrite(MOTOR_SLEEP, LOW);
+  digitalWrite(MOTOR_RESET, LOW);
+  digitalWrite(MOTOR_ENABLE, HIGH);
+}
+
+/*
+  Motor array format in order of indicies:
+  Index:
+  0         1        2        3
+  Step pin, Dir pin, MS1 pin, MS2 pin
+*/
+void setScale(int motor[], int scale) {
+  if (scale == 1)  // whole steps
+  {
+    digitalWrite(motor[2], LOW);
+    digitalWrite(motor[3], LOW);
+  }
+  else if (scale == 2)  // 1/2 steps
+  {
+    digitalWrite(motor[2], HIGH);
+    digitalWrite(motor[3], LOW);
+  }
+  else if (scale == 4)  // 1/4 steps
+  {
+    digitalWrite(motor[2], LOW);
+    digitalWrite(motor[3], HIGH);
+  }
+  else if (scale == 8)  // 1/8 steps
+  {
+    digitalWrite(motor[2], HIGH);
+    digitalWrite(motor[3], HIGH);
+  }
+}
+
 
 void setup()
 {
@@ -53,63 +123,12 @@ void setup()
 
   // Setup the UART here
   Serial2.begin(115200, SERIAL_8N1, RX2, TX2);
-  resetEDPins();
 }
-
-int steps;
 
 void loop()
 {
   
 
-}
-
-// Function Declarations
-void stepForwardX() {
-  digitalWrite(MOTOR1_DIR,LOW);
-  digitalWrite(MOTOR1_STEP_PIN,HIGH);
-  delay(1);
-  digitalWrite(MOTOR1_STEP_PIN,LOW);
-}
-
-void stepForwardY(){
-  digitalWrite(MOTOR2_DIR,LOW);
-  digitalWrite(MOTOR2_STEP_PIN,HIGH);
-  delay(1);
-  digitalWrite(MOTOR2_STEP_PIN,LOW);
-}
-
-void resetEDPins() {
-  digitalWrite(MOTOR1_DIR,LOW);
-  digitalWrite(MOTOR2_DIR,LOW);
-  digitalWrite(MOTOR1_STEP_PIN, LOW);
-  digitalWrite(MOTOR2_STEP_PIN, LOW);
-  digitalWrite(MOTOR1_MS1,LOW);
-  digitalWrite(MOTOR1_MS2,LOW);
-  digitalWrite(MOTOR2_MS1,LOW);
-  digitalWrite(MOTOR2_MS2,LOW);
-  digitalWrite(MOTOR_ENABLE, HIGH);
-}
-
-void halfStep() {
-  digitalWrite(MOTOR1_MS1,HIGH);
-  digitalWrite(MOTOR1_MS2,LOW);
-  digitalWrite(MOTOR2_MS1,HIGH);
-  digitalWrite(MOTOR2_MS2,LOW);
-}
-
-void quarterStep() {
-  digitalWrite(MOTOR1_MS1,LOW);
-  digitalWrite(MOTOR1_MS2,HIGH);
-  digitalWrite(MOTOR2_MS1,LOW);
-  digitalWrite(MOTOR2_MS2,HIGH);
-}
-
-void eighthStep() {
-  digitalWrite(MOTOR1_MS1,HIGH);
-  digitalWrite(MOTOR1_MS2,HIGH);
-  digitalWrite(MOTOR2_MS1,HIGH);
-  digitalWrite(MOTOR2_MS2,HIGH);
 }
 
 // Message Parsing
