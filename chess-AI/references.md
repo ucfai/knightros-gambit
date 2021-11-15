@@ -3,6 +3,10 @@ This is where code for chess AI will go
 
 # Resources: 
 
+## Alpha Zero Paper (Includes ideas for CNN architecture and input) 
+https://arxiv.org/pdf/1712.01815.pdf  
+(pg 13-14 for CNN representation)
+
 ## Pytorch Intro/Tutorial :
 https://pytorch.org/get-started/locally/  
 https://pytorch.org/tutorials/beginner/deep_learning_60min_blitz.html
