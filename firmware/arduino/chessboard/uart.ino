@@ -30,12 +30,12 @@ void serialEvent2()
 
             //Process input
             //Returns true for valid input and false for invalid input. Calls movement function
-            parse_message_from_pi(buffer);
+            parseMessageFromPi(buffer);
         }
     }
 }
 
-bool parse_message_from_pi(char * message)
+bool parseMessageFromPi(char * message)
 {
     //Move types 0 and 3 are valid for the same range of values
     if (message[0] == 0 || message[0] == 3)
@@ -48,10 +48,10 @@ bool parse_message_from_pi(char * message)
 
         //Move type 0
         if (message[0] == 0)
-            move_straight(message[1] - 'a', message[2] - '1', message[3] - 'a', message[4] - '1');
+            moveStraight(message[1] - 'a', message[2] - '1', message[3] - 'a', message[4] - '1');
         //Move type 3
         else
-            move_along_edges(message[1] - 'a', message[2] - '1', message[3] - 'a', message[4] - '1');
+            moveAlongEdges(message[1] - 'a', message[2] - '1', message[3] - 'a', message[4] - '1');
 
     }
     else if (message[0] == 1)
@@ -65,7 +65,7 @@ bool parse_message_from_pi(char * message)
             return false;
 
         //Move type 1
-        move_to_graveyard(message[1] - 'a', message[2] - '1', message[3], message[4]);        
+        moveToGraveyard(message[1] - 'a', message[2] - '1', message[3], message[4]);        
     }
     else if (message[0] == 2)
     {
