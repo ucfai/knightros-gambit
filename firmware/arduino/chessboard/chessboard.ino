@@ -36,7 +36,6 @@ int yMotor[4] = {MOTOR2_STEP_PIN, MOTOR2_DIR, MOTOR2_MS1, MOTOR2_MS2};
 #define Y_AXIS_ENDSTOP_SWITCH 32
 #define CHESS_TIMER_BUTTON 4
 
-
 void setup()
 {
   // Define our pinModes

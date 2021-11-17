@@ -4,7 +4,8 @@
   0         1        2        3
   Step pin, Dir pin, MS1 pin, MS2 pin
 */
-void moveMotor(int motor[], int steps, int dir) {
+void moveMotor(int motor[], int steps, int dir) 
+{
   int i;
 
   // Enable motor driver inputs/output
@@ -24,7 +25,8 @@ void moveMotor(int motor[], int steps, int dir) {
 
 }
 
-void disableMotors() {
+void disableMotors() 
+{
   digitalWrite(MOTOR_SLEEP, LOW);
   digitalWrite(MOTOR_RESET, LOW);
   digitalWrite(MOTOR_ENABLE, HIGH);
@@ -36,7 +38,8 @@ void disableMotors() {
   0         1        2        3
   Step pin, Dir pin, MS1 pin, MS2 pin
 */
-void setScale(int motor[], int scale) {
+void setScale(int motor[], int scale) 
+{
   if (scale == 1)  // whole steps
   {
     digitalWrite(motor[2], LOW);
