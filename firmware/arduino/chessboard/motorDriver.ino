@@ -25,6 +25,17 @@ void moveMotor(int motor[], int steps, int dir)
 
 }
 
+void moveSpaces(int motor[], int spaces, int dir)
+{
+  int i;
+
+  digitalWrite(MOTOR_SLEEP, HIGH)
+  digitalWrite(MOTOR_RESET, HIGH)
+  digitalWrite(MOTOR_ENABLE, LOW)
+
+  for(i=0; i < )
+
+}
 void disableMotors() 
 {
   digitalWrite(MOTOR_SLEEP, LOW);
