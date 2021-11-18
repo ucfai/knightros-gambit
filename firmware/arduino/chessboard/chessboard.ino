@@ -36,6 +36,10 @@ int yMotor[4] = {MOTOR2_STEP_PIN, MOTOR2_DIR, MOTOR2_MS1, MOTOR2_MS2};
 #define Y_AXIS_ENDSTOP_SWITCH 32
 #define CHESS_TIMER_BUTTON 4
 
+// Distance Definitions
+#define MILLIMETERS_PER_SQUARE 63
+#define STEPS_PER_MILLIMETER 5
+#define STEPS_PER_SPACE 315 
 
 void setup()
 {
@@ -61,7 +65,7 @@ void setup()
   pinMode(CHESS_TIMER_BUTTON, INPUT);
 
   // Setup the UART here
-  Serial2.begin(115200, SERIAL_8N1, RX2, TX2);
+  //Serial2.begin(115200, SERIAL_8N1, RX2, TX2);
 }
 
 void loop()
