@@ -36,6 +36,11 @@ int yMotor[4] = {MOTOR2_STEP_PIN, MOTOR2_DIR, MOTOR2_MS1, MOTOR2_MS2};
 #define Y_AXIS_ENDSTOP_SWITCH 32
 #define CHESS_TIMER_BUTTON 4
 
+// Distance Definitions
+#define MILLIMETERS_PER_SQUARE 200
+#define STEPS_PER_MILLIMETER 200
+float stepsPerSpace = MILLIMETERS_PER_SQUARE * STEPS_PER_MILLIMETER;
+
 void setup()
 {
   // Define our pinModes
