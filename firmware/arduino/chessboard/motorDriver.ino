@@ -29,13 +29,49 @@ void moveSpaces(int motor[], int spaces, int dir)
 {
   int i;
 
-  digitalWrite(MOTOR_SLEEP, HIGH)
-  digitalWrite(MOTOR_RESET, HIGH)
-  digitalWrite(MOTOR_ENABLE, LOW)
+// How many steps per space
+  float stepsPerSquare = 200; //subject to change, motor turns 1.8degrees/step and 200 steps/full revolution
+  float numSteps = spaces * stepsPerSquare;
 
-  for(i=0; i < )
+  digitalWrite(MOTOR_SLEEP, HIGH);
+  digitalWrite(MOTOR_RESET, HIGH);
+  digitalWrite(MOTOR_ENABLE, LOW);
+
+  digitalWrite(motor[1], dir);
+
+  for(i=0; i < numSteps; i++);
+  {
+    digitalWrite(motor[0], LOW);
+    delay(1);  // 1 milliSecond
+    digitalWrite(motor[0], HIGH);
+  }
 
 }
+
+void moveDiaganol(int motor[], int dir, int spaces)
+{
+  int i;
+
+  float stepsPerSquare = 200; //similary subject to change as above function dictation, same number as above though
+  float numSteps = spaces * stepsPerSquare;
+
+  digitalWrite(MOTOR_SLEEP, HIGH);
+  digitalWrite(MOTOR_RESET, HIGH);
+  digitalWrite(MOTOR_ENABLE, LOW);
+
+  digitalWrite(xMotor[1], dir);
+  digitalWrite(yMotor[1], dir);
+
+  for(i=0; i < numSteps; i++)
+  {
+    digitalWrite(xMotor[0], LOW);
+    digitalWrite(yMotor[0], LOW);
+    delay(1);
+    digitalWrite(xMotor[0], HIGH);
+    digitalWrite(yMotor[0], HIGH);
+  }
+}
+
 void disableMotors() 
 {
   digitalWrite(MOTOR_SLEEP, LOW);
