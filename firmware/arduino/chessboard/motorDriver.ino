@@ -30,7 +30,7 @@ void moveSpaces(int motor[], int spaces, int dir)
   int i;
 
   // How many steps per space
-  float numSteps = spaces * STEPS_PER_SPACE;
+  float numSteps = spaces * stepsPerSpace;
 
   digitalWrite(MOTOR_SLEEP, HIGH);
   digitalWrite(MOTOR_RESET, HIGH);
@@ -52,7 +52,7 @@ void moveDiagonal(int motor[], int dir, int spaces)
   int i;
 
   // similary subject to change as above function dictation, same number as above though
-  float numSteps = spaces * STEPS_PER_SPACE;
+  float numSteps = spaces * stepsPerSpace;
 
   digitalWrite(MOTOR_SLEEP, HIGH);
   digitalWrite(MOTOR_RESET, HIGH);
