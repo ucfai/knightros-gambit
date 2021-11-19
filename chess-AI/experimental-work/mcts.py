@@ -1,3 +1,4 @@
+#https://web.stanford.edu/~surag/posts/alphazero.html
 
 class Mcts:
     def search(s,game,nnet):
