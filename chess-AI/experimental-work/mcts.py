@@ -1,160 +1,72 @@
-## https://towardsdatascience.com/monte-carlo-tree-search-implementing-reinforcement-learning-in-real-time-game-player-a9c412ebeff5
 
-class Node: ## node class
+class Mcts:
+    def search(s,game,nnet):
 
-    def __init__(self,move: tuple= None, parent: object = None):
+        if game.gameEnded(s): return  -game.gameReward(s) # returns the negative of the game reward, why negative?
 
-        self.move = move   ## the move to get to the node
-        self.parent = parent ## the parent of the node
-        self.N = 0 ## initially 0
-            self.Q = 0 ## initial 0
-            self.children = {}
-
-    def add_children(self,children:dict) --> None:
-
-        for child in children:
-            self.children[child.move] = child # adds , the child nodes
-
-    def value(self, explore:float = 0.5) # 0.5 is the exploration value , can be controlled
-
-        if self.N == 0:
-            return 0 if explore == 0 else Math.INF
-        else
-            return self.Q / self.N  + explore * sqrt(2*log(self.parent.N)/self.N) ## UCT formula for finding value
-
- class mctsAgent:
-
-     self.root = Node() # tree root node, will be the parent of all nodes
-
-     def search(self, time_budget: int) -> None:
-
-        """ 
-        Search and update the search tree for a specified amount of time
-        """
-        num_rollouts = 0
-
-        while num_rollouts < 10000:
-
-            node,state = self.select_node() ## selects a node
-            turn = state.turn() ## state refers to the chess engine
-            outcome = self.roll_out(state) ## plays random moves until the end is reached finds out if state is part of winning game
-            self.back_prop(node,turn,outcome) ## updates all the values
-            num_rollouts += 1
-
-    
-    def select_node(self) -> tuple:
-
-        node = self.root
-        state = gameState
-    
-        while len(node.children) != 0:
-
-            children = node.children.values() ## gets the values of the child nodes
-            max_value = max(children,key=lambda n: n.value).value
-            max_nodes = [n for n in node.children.values()]
-                if n.value == max_value] ## find nodes with max values
-            node = choice(max_nodes) ## choses a random value from the max nodes
-            state.play(node.move) ## makes move from the chose node
-
-            if node.N == 0 ## if it hasn't been explored then want to check it out
-                return node, state
-
-         if self.expand(node,state): ## will expand if theres no children
-            node = choice(list(node.children.values())) ## picks the child with the highest with the best value
-            state.play(node.move)
-
-        return node,state
-
-    def expand(parent: Node, state: GameState) -> bool:
-
-        ## generate children of the parent node based on the available moves in the passed game state and add to the tree
-
-        children = []
-
-        if state.winner != True # cannot expand if the game is over 
-            return False ## game is over
-
-        for move in state.moves(): ## finds valid moves
-            children.append(Node(move,parent))
+        if s not in visited # if a state has not been visited then you must find the predictions made by the model
+            visited.add(s) # will mark as visisted
+            P[s],v = nnet.predict(s) # this is like the rollout phase but using the nueral network
+            return -value
         
-        parent.add_children(children) 
-        return True
+        max_u, best_a = -float("inf"), -1 
 
+        for a in game.getvalidActions(s): # finds the valid actions from current state
 
-    def moves(self) -> list:
-        """
-        Get a list of all moves possible on the current board.
-        """
-        moves = []
-        for y in range(self.size):
-            for x in range(self.size):
-                if is_valid(self.board[x, y]): ## means valid move
-                    moves.append((x, y))
-        return moves
+            u = Q[s][a] + c_puct*P[s][a]*sqrt(sum(N[s]))/(1+N[s][a]) # formula for calculating the action to take
 
-    def roll_out (state:GameState) -> int:
-
-        """
-        Gets the state of the game and keeps playing random moves
-        """
-
-        while state.winner == False ## reached end of the game 
-            move = choice(moves)
-            state.play(move)
-            moves.remove(move)
-
-         return state.winner   
-
-
-    def back_prop(node: Node, turn: int, outcome:int) -> None:
-        """
-        Update node stats on the path from the passed node to root to reflet the outcome
-        of a randomsly simulated playout
-
-        Node : node we get from select node
-        Turn : Indicates the player turn in the state which was the second output of select_node
-        Outcome output of simulation phase which is winner of the simlulation
-
-        """
+            if u>max_u:
+                max_u = u  # assigns best u
+                best_a = a  # assigns best a
         
-        # outcome == turn refers to if the winner matches the current player
+            a = best_a
+            sp = game.nextState(s,a) # want to take the the best action
+            v = search(sp,game,nnet) # gets the value of the the action
 
-        reward = 0 if outcome == turn else 1 ## need to see if the oppenent won teh game
+            Q[s][a] = (N[s][a] * Q[s][a] +v)/N[s][a]+1) # calculates Q
+            N[s][a] += 1  # adds 1 to represent the node was visited
 
-        while node is not Node:
+            return -v
 
-            node.N += 1
-            node.Q += reward
-            node = node.parent
-            reward = 0 if reward = 1 else 1
+    """"
+    1. Initialize nn with random weights, starting with a random policy and value network
+    2. Play a number of games of self play
+    3. In each turn of the game perform a fixed number of MCTS simulations from the current state
+    4. Pick a move by sampling the improved policy 
+    """"
+
+class Train:
+
+    def policyIterSp(game)
+
+        nnet = initNet() # initializes nueral network
+        examples = []
+        for i in range(numIters):
+            for e in range(numEps):
+                examples += executeEpisode(game,nnet) # recieves training examples
+            new_nnet = trainNNet(examples) # trains new nnet on new training examples
+            frac_win = pit(new_nnet,nnet) # play the two nueral networks against each other
+            if frac_win > threshold: 
+                nnet = new_nnet # pick the winning model
+        return nnet
 
 
-    def tree_size(self) -> int:
-        """
-        Count nodes in tree by BFS.
-        """
-        Q = Queue()
-        count = 0
-        Q.put(self.root)
-        while not Q.empty():
-            node = Q.get()
-            count += 1
-            for child in node.children.values():
-                Q.put(child)
-        return count
+    def executeEpisde(game,nnet):
 
+        examples = []
+        s = game.startState() # get the start state of the game
+        mcts = Mcts() # instantiate the MCTS class
+ 
+        while True: 
 
-        def best_move(self) -> tuple:
-            """
-            Return the best move according to the current tree.
-            Returns:
-                best move in terms of the most simulations number unless the game is over
-            """
-            if self.root_state.winner != GameMeta.PLAYERS['none']:
-                return GameMeta.GAME_OVER
+            for _ in range(numMCTSims):
+                mcsts.search(s,game,nnet) #performs numMCTSims monte carlo simulations
 
-            # choose the move of the most simulated node breaking ties randomly
-            max_value = max(self.root.children.values(), key=lambda n: n.N).N
-            max_nodes = [n for n in self.root.children.values() if n.N == max_value]
-            bestchild = choice(max_nodes)
-            return bestchild.move
+            examples.append([s,mcts.pi(s),None]) ## append the state, and improved policy, None refers to not knowing the values yet
+
+            a = random.choice(len(mcts.pi(s)), p=mcts.pi(s)) # choose a random move from the improved policy
+            s= game.nextState(s,a) # try that random move
+
+            if game.gameEnded(s): # if hte game is over then you need to assign rewards to all the examples
+                examples = assignRewards(examples,game.gameReward(s))
+                return examples
