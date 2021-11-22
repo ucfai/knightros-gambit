@@ -18,7 +18,14 @@ class Status:
 class OpCode(Enum):
     # This code indicates Arduino should use straight-line path, diagonals allowed
     MovePieceInStraightLine = 0
-    # This code used for knights if adjacent pieces, for graveyard pathing, and for castling
+    
+    # This code indicates Arduino should move piece along square edges instead of 
+    # through the center of squares. Used for knights if adjacent pieces, for
+    # graveyard pathing, and for castling
     MovePieceAlongSquareEdges = 1
+    
     # Queenside and kingside castling are composed of two moves; one `SimpleMove` (king moving in straight line)
     # and one `MovePieceAlongSquareEdges`
+    
+    # This code indicates Arduino should use electromagnet to center piece on square
+    AlignPieceOnSquare = 2
