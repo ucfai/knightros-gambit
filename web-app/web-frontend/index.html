@@ -7,9 +7,27 @@
     <script src="js/chessboard-1.0.0.min.js"></script>
   </head>
   <body>
+    <p>Empty board, no notation</p>
     <div id="board1" style="width: 400px"></div>
+    <p>Board with pieces, no notation</p>
+    <div id="board2" style="width: 400px"></div>
+    <p>Board from position, with notation</p>
+    <div id="board3" style="width: 400px"></div>
     <script>
-        var board1 = ChessBoard('board1', 'start');
+        var b1Config = {
+          showNotation: false
+        };
+        var board1 = ChessBoard('board1', b1Config);
+        var b2Config = {
+          position: 'start',
+          showNotation: false
+        };
+        var board2 = ChessBoard('board2', b2Config);
+        var b3Config = {
+          position: 'r1k4r/p2nb1p1/2b4p/1p1n1p2/2PP4/3Q1NB1/1P3PPP/R5K1',
+          showNotation: true
+        };
+        var board3 = Chessboard('board3', b3Config);
     </script>
   </body>
 </html>
