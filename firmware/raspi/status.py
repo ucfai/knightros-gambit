@@ -17,8 +17,8 @@ class Status:
 
 class OpCode(Enum):
     # This code indicates Arduino should use straight-line path, diagonals allowed
-    SimpleMove = 0
-    # This code used for knights if adjacent pieces, and also for graveyard pathing
+    MovePieceInStraightLine = 0
+    # This code used for knights if adjacent pieces, for graveyard pathing, and for castling
     MovePieceAlongSquareEdges = 1
-    # This code used for queenside and kingside castling
-    Castling = 2
+    # Queenside and kingside castling are composed of two moves; one `SimpleMove` (king moving in straight line)
+    # and one `MovePieceAlongSquareEdges`
