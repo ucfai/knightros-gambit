@@ -65,6 +65,9 @@ class Engine:
     def make_move(self, move):
         self.stockfish.make_moves_from_current_position([move])
 
+    def is_promotion(self, move):
+        return 'q' in move or 'b' in move or 'n' in move or 'r' in move
+
 class Board:
     def __init__(self, operating_system, elo_rating=1300):
         self.engine = Engine(operating_system, elo_rating)
@@ -78,6 +81,8 @@ class Board:
         Returns true if the move was successfully sent to Arduino
         '''
         try:
+            if engine.is_promotion(move):
+                handle_promotion(move)
             self.send_move_to_arduino(move)
         except Exception as e:
             print(f"Unable to send move to Arduino: {e.__str__()}")
@@ -89,10 +94,11 @@ class Board:
         return self.engine.valid_moves_from_position()
 
     # TODO: implement this function
-    def send_move_to_arduino(self, move):
+    def send_message_to_arduino(self, move, opcode):
         # Need to construct message according to pi-arduino message format doc
         # Have to send metadata about type of move, whether it's a capture/castle/knight move etc
         # This function can also be used for sending moves to graveyard or to promote; so need to add move validation as well
+        # Maybe message should be constructed before being sent here?
         pass
     
     def get_status_from_arduino(self):
