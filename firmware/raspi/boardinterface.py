@@ -74,7 +74,6 @@ class Engine:
 class Board:
     def __init__(self, operating_system, elo_rating=1300):
         self.engine = Engine(operating_system, elo_rating)
-        self.arduino_status = ArduinoStatus.WaitingInitialization
 
         self.graveyard = Graveyard()
 
@@ -84,13 +83,14 @@ class Board:
         Returns true if the move was successfully sent to Arduino
         '''
         try:
-            if engine.is_promotion(move):
+            if self.engine.is_promotion(move):
                 handle_promotion(move)
-            if engine.is_castle(move):
+            if self.engine.is_castle(move):
                 # TODO: send the king move as a direct move, then the rook move as indirect
                 raise NotImplementedError("Need to create logic for sending castle moves")
             else:
-                self.send_move_to_arduino(move)
+                # TODO: update this to have a real opcode
+                self.send_message_to_arduino(move, opcode=None)
         except Exception as e:
             print(f"Unable to send move to Arduino: {e.__str__()}")
             return False

@@ -57,11 +57,14 @@ def main():
     # main game loop
     while True:
         board_status = board.get_status_from_arduino()
-        print(board_status)
+        print(f"Board Status: {board_status}")
         
         if board_status == ArduinoStatus.ExecutingMove or board_status == ArduinoStatus.MessageInProgress:
             # Wait for move in progress to finish executing
             time.sleep(1) # reduce the amount of polling while waiting for move to finish
+
+            # TODO: This is just so we have game loop working, remove once we read from arduino
+            board.set_status_from_arduino(ArduinoStatus.Idle)
             continue
 
         if board_status == ArduinoStatus.Error:
