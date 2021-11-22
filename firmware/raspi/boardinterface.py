@@ -68,6 +68,9 @@ class Engine:
     def is_promotion(self, move):
         return 'q' in move or 'b' in move or 'n' in move or 'r' in move
 
+    def is_castle(self, move):
+        return move == 'e1g1' or move == 'e1c1' or move == 'e8g8' or move == 'e8c8'
+
 class Board:
     def __init__(self, operating_system, elo_rating=1300):
         self.engine = Engine(operating_system, elo_rating)
@@ -83,7 +86,11 @@ class Board:
         try:
             if engine.is_promotion(move):
                 handle_promotion(move)
-            self.send_move_to_arduino(move)
+            if engine.is_castle(move):
+                # TODO: send the king move as a direct move, then the rook move as indirect
+                raise NotImplementedError("Need to create logic for sending castle moves")
+            else:
+                self.send_move_to_arduino(move)
         except Exception as e:
             print(f"Unable to send move to Arduino: {e.__str__()}")
             return False
