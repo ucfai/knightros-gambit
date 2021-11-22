@@ -95,6 +95,9 @@ def main():
                 raise NotImplementedError("Need to handle case of invalid move input. Should we loop until "
                                           "move is valid? What if the board is messed up? Need to revisit")
 
+        # TODO: After every move, center piece that was just moved on its new square
+        # TODO: Need to account for castles as well.
+        
         is_human_turn = not is_human_turn
         Status.write_game_status_to_disk(board)
 
