@@ -23,8 +23,8 @@ email: your-email@example.com
 description: >- # this means to ignore newlines until "baseurl:"
   This is a UCF AI / UCF IEEE collaboration to build an automatic chessboard with
   a custom AI.
-baseurl: "" # the subpath of your site, e.g. /blog
-url: "https://ucfai.github.io/knightros-gambit/" # the base hostname & protocol for your site, e.g. http://example.com
+baseurl: "/knightros-gambit" # the subpath of your site, e.g. /blog
+url: "https://ucfai.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 github_username:  ucfai
 
 # Build settings
