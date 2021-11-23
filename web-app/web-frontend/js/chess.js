@@ -695,7 +695,6 @@ var Chess = function (fen) {
      */
     function move_to_san(move, moves) {
       var output = ''
-  
       if (move.flags & BITS.KSIDE_CASTLE) {
         output = 'O-O'
       } else if (move.flags & BITS.QSIDE_CASTLE) {
@@ -712,7 +711,7 @@ var Chess = function (fen) {
           }
           output += 'x'
         }
-  
+        output += algebraic(move.from)
         output += algebraic(move.to)
   
         if (move.flags & BITS.PROMOTION) {
@@ -1504,6 +1503,7 @@ var Chess = function (fen) {
         }
   
         var moves = []
+        var pos = []
         var move_string = ''
   
         /* special case of a commented starting position with no moves */
@@ -1526,11 +1526,11 @@ var Chess = function (fen) {
             }
             move_string = move_number + '.'
           }
-  
+          
           move_string =
-            move_string +
-            ' ' +
-            move_to_san(move, generate_moves({ legal: true }))
+          move_string +
+          ' ' + 
+          move_to_san(move, generate_moves({ legal: true }))
           make_move(move)
         }
   
