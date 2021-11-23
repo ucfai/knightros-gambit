@@ -41,10 +41,7 @@ function onSnapEnd () {
 function updateStatus () {
   var status = ''
 
-  var moveColor = 'White'
-  if (game.turn() === 'b') {
-    moveColor = 'Black'
-  }
+  var moveColor = (game.turn() == 'b') ? "Black" : "White";
 
   // checkmate?
   if (game.in_checkmate()) {
