@@ -2,43 +2,19 @@
 // https://github.com/jhlywa/chess.js
 
 var board = null
-var $board = $('#myBoard')
 var game = new Chess()
-var squareToHighlight = null
-var squareClass = 'square-55d63'
-
-function removeHighlights (color) {
-  $board.find('.' + squareClass)
-    .removeClass('highlight-' + color)
-}
+var $status = $('#status')
+var $pgn = $('#pgn')
 
 function onDragStart (source, piece, position, orientation) {
   // do not pick up pieces if the game is over
   if (game.game_over()) return false
 
-  // only pick up pieces for White
-  if (piece.search(/^b/) !== -1) return false
-}
-
-function makeRandomMove () {
-  var possibleMoves = game.moves({
-    verbose: true
-  })
-
-  // game over
-  if (possibleMoves.length === 0) return
-
-  var randomIdx = Math.floor(Math.random() * possibleMoves.length)
-  var move = possibleMoves[randomIdx]
-  game.move(move.san)
-
-  // highlight black's move
-  removeHighlights('black')
-  $board.find('.square-' + move.from).addClass('highlight-black')
-  squareToHighlight = move.to
-
-  // update the board to the new position
-  board.position(game.fen())
+  // only pick up pieces for the side to move
+  if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
+      (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
+    return false
+  }
 }
 
 function onDrop (source, target) {
@@ -52,18 +28,7 @@ function onDrop (source, target) {
   // illegal move
   if (move === null) return 'snapback'
 
-  // highlight white's move
-  removeHighlights('white')
-  $board.find('.square-' + source).addClass('highlight-white')
-  $board.find('.square-' + target).addClass('highlight-white')
-
-  // make random move for black
-  window.setTimeout(makeRandomMove, 250)
-}
-
-function onMoveEnd () {
-  $board.find('.square-' + squareToHighlight)
-    .addClass('highlight-black')
+  updateStatus()
 }
 
 // update the board position after the piece snap
@@ -72,12 +37,46 @@ function onSnapEnd () {
   board.position(game.fen())
 }
 
+function updateStatus () {
+  var status = ''
+
+  var moveColor = 'White'
+  if (game.turn() === 'b') {
+    moveColor = 'Black'
+  }
+
+  // checkmate?
+  if (game.in_checkmate()) {
+    status = 'Game over, ' + moveColor + ' is in checkmate.'
+  }
+
+  // draw?
+  else if (game.in_draw()) {
+    status = 'Game over, drawn position'
+  }
+
+  // game still on
+  else {
+    status = moveColor + ' to move'
+
+    // check?
+    if (game.in_check()) {
+      status += ', ' + moveColor + ' is in check'
+    }
+  }
+
+  $status.html(status)
+  $pgn.html(game.pgn())
+}
+
 var config = {
   draggable: true,
   position: 'start',
   onDragStart: onDragStart,
   onDrop: onDrop,
-  onMoveEnd: onMoveEnd,
   onSnapEnd: onSnapEnd
 }
 board = ChessBoard('myBoard', config)
+
+updateStatus()
+
