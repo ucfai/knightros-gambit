@@ -4,8 +4,8 @@
 var board = null
 var game = new Chess()
 var $status = $('#status')
-var $fen = $('#fen')
 var $pgn = $('#pgn')
+var $gan = $('#gan')
 
 function onDragStart (source, piece, position, orientation) {
   // do not pick up pieces if the game is over
@@ -62,9 +62,10 @@ function updateStatus () {
       status += ', ' + moveColor + ' is in check'
     }
   }
-
+  
   $status.html(status)
   $pgn.html(game.pgn())
+  $gan.html(game.gan())
 }
 
 var config = {
