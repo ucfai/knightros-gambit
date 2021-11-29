@@ -695,7 +695,6 @@ var Chess = function (fen) {
      */
     function move_to_san(move, moves) {
       var output = ''
-  
       if (move.flags & BITS.KSIDE_CASTLE) {
         output = 'O-O'
       } else if (move.flags & BITS.QSIDE_CASTLE) {
@@ -712,7 +711,6 @@ var Chess = function (fen) {
           }
           output += 'x'
         }
-  
         output += algebraic(move.to)
   
         if (move.flags & BITS.PROMOTION) {
@@ -732,6 +730,30 @@ var Chess = function (fen) {
   
       return output
     }
+     
+    /* convert a move from 0x88 coordinates to Grid Algebraic Notation
+     * (GAN)
+     *
+     * displays move in the form of p1p2, p1 as the starting position and p2 as the destination position
+     * displays promotion move in the form of p1p2<lowercase-piece-type>
+     * 
+     */
+    function move_to_gan(move) {
+      var output = ''
+      if (move.flags & BITS.KSIDE_CASTLE) {
+        output = 'O-O'
+      } else if (move.flags & BITS.QSIDE_CASTLE) {
+        output = 'O-O-O'
+      } else {
+        output += algebraic(move.from)
+        output += algebraic(move.to)
+        if (move.flags & BITS.PROMOTION) {
+          output += move.promotion.toLowerCase()
+        }
+      }
+      return output
+    }
+
     // parses all of the decorators out of a SAN string
     function stripped_san(move) {
       return move.replace(/=/, '').replace(/[+#]?[?!]*$/, '')
@@ -1392,6 +1414,83 @@ var Chess = function (fen) {
   
         return moves
       },
+      
+      gan: function (options) {
+        var newline =
+          typeof options === 'object' && typeof options.newline_char === 'string'
+            ? options.newline_char
+            : '\n'
+        var max_width =
+          typeof options === 'object' && typeof options.max_width === 'number'
+            ? options.max_width
+            : 0
+        var result = []
+        var header_exists = false
+  
+        /* add the GAN header headerrmation */
+        for (var i in header) {
+          /* TODO: order of enumerated properties in header object is not
+           * guaranteed, see ECMA-262 spec (section 12.6.4)
+           */
+          result.push('[' + i + ' "' + header[i] + '"]' + newline)
+          header_exists = true
+        }
+  
+       /*if (header_exists && history.length) {
+          result.push(newline)
+        }*/
+  
+        var append_comment = function (move_string) {
+          var comment = comments[generate_fen()]
+          if (typeof comment !== 'undefined') {
+            var delimiter = move_string.length > 0 ? ' ' : ''
+            move_string = `${move_string}${delimiter}{${comment}}`
+          }
+          return move_string
+        }
+  
+        /* pop all of history onto reversed_history */
+        var reversed_history = []
+        while (history.length > 0) {
+          reversed_history.push(undo_move())
+        }
+  
+        var moves = []
+        var move_string = ''
+  
+        /* special case of a commented starting position with no moves */
+        if (reversed_history.length === 0) {
+          moves.push(append_comment(''))
+        }
+  
+        /* build the list of moves.  a move_string looks like: "3. e3 e6" */
+        while (reversed_history.length > 0) {
+          //move_string = append_comment(move_string)
+          var move = reversed_history.pop()
+          move_string =
+          move_to_gan(move)
+          make_move(move)
+        }
+  
+        /* are there any other leftover moves? */
+        if (move_string.length) {
+          moves.push(append_comment(move_string))
+        }
+  
+        /* is there a result? */
+        if (typeof header.Result !== 'undefined') {
+          moves.push(header.Result)
+        }
+  
+        /* history should be back to what it was before we started generating GAN,
+         * so join together moves
+         */
+        if (max_width === 0) {
+          return result.join('') + moves.join(' ')
+        }
+
+        return result.join('')
+      },
   
       in_check: function () {
         return in_check()
@@ -1526,11 +1625,11 @@ var Chess = function (fen) {
             }
             move_string = move_number + '.'
           }
-  
+          
           move_string =
-            move_string +
-            ' ' +
-            move_to_san(move, generate_moves({ legal: true }))
+          move_string +
+          ' ' + 
+          move_to_san(move, generate_moves({ legal: true }))
           make_move(move)
         }
   
