@@ -23,7 +23,7 @@ class PlayNetwork(nn.Module):
         # M = 14 representing the 12 channels of the position of each piece type and 2 channels for repetition,
         # T = 8 representing the number of past moves to consider,
         # L = 7 representing the number of constant number planes besides repetition such as castling, move count, etc.
-        self.convLayer = nn.Sequential(nn.Conv2d(in_channels=19, out_channels=256, kernel_size=3, padding=1),
+        self.convLayer = nn.Sequential(nn.Conv2d(in_channels=119, out_channels=256, kernel_size=3, padding=1),
                                        nn.BatchNorm2d(256),
                                        nn.ReLU(inplace=True))
         
@@ -41,7 +41,7 @@ class PlayNetwork(nn.Module):
                                        nn.BatchNorm2d(2),
                                        nn.ReLU(inplace=True),
                                        nn.Flatten(),
-                                       nn.Linear(in_features=2*8*8, out_features=73))
+                                       nn.Linear(in_features=2*8*8, out_features=73*8*8))
         
         # Convolve 256 8x8 channels into 8x8 channel, then use fully connected layer to take 64 input features from 8x8
         # channel and transform to 256 output features, then transform to one scalar value.
@@ -73,8 +73,8 @@ class PlayNetwork(nn.Module):
     
     
 model = PlayNetwork()
-policy, value = model(torch.randn(1, 19, 8, 8))
-policy = policy.reshape(73)
+policy, value = model(torch.randn(1, 119, 8, 8))
+policy = policy.reshape(73*8*8)
 value = value.item()
 print(policy)
 print(value)
