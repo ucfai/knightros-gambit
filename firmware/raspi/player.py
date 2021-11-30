@@ -2,26 +2,13 @@
 
 This class will wrap the custom AI we build, but for now we use it to get moves from stockfish.
 '''
-from stockfish import Stockfish
+from util import create_stockfish_wrapper
 
 class StockfishPlayer:
     '''"AI" class that is a simple wrapper around the Stockfish engine.
     '''
-    def __init__(self, operating_system, elo_rating=1300):
-        operating_system = operating_system.lower()
-        if operating_system == "darwin":
-            stockfish_path = "/usr/local/bin/stockfish"
-        elif operating_system == "raspi":
-            stockfish_path = "n/a"
-        elif operating_system == "linux":
-            stockfish_path = "../../chess-engine/stockfish_14.1_linux_x64/stockfish_14.1_linux_x64"
-        elif operating_system == "windows":
-            stockfish_path = "n/a"
-        else:
-            raise ValueError("Operating system must be one of "
-                            "'darwin' (osx), 'linux', 'windows', 'raspi'")
-
-        self.stockfish = Stockfish(stockfish_path)
+    def __init__(self, elo_rating=1300):
+        self.stockfish = create_stockfish_wrapper()
         self.stockfish.set_elo_rating(elo_rating)
 
     def select_move(self, fen):

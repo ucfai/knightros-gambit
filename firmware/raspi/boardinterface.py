@@ -1,7 +1,5 @@
-from stockfish import Stockfish
-
 from status import ArduinoException, ArduinoStatus, OpCode
-from util import BoardCell
+from util import BoardCell, create_stockfish_wrapper
 
 class Engine:
     '''Wrapper around the Stockfish engine.
@@ -11,25 +9,12 @@ class Engine:
     Attributes:
         stockfish: A python wrapper around the Stockfish chess engine.
     '''
-    def __init__(self, operating_system):
-        operating_system = operating_system.lower()
-        if operating_system == "darwin":
-            stockfish_path = "/usr/local/bin/stockfish"
-        elif operating_system == "raspi":
-            stockfish_path = "n/a"
-        elif operating_system == "linux":
-            stockfish_path = "../../chess-engine/stockfish_14.1_linux_x64/stockfish_14.1_linux_x64"
-        elif operating_system == "windows":
-            stockfish_path = "n/a"
-        else:
-            raise ValueError("Operating system must be one of "
-                            "'darwin' (osx), 'linux', 'windows', 'raspi'")
-
-        self.stockfish = Stockfish(stockfish_path)
+    def __init__(self):
+        self.stockfish = create_stockfish_wrapper()
 
     def get_2d_board(self):
         '''Returns a 2d board from stockfish fen representation
-        
+
         Taken from this SO answer:
         https://stackoverflow.com/questions/66451525/how-to-convert-fen-id-onto-a-chess-board
         '''
@@ -131,8 +116,8 @@ class Board:
         graveyard: See the `Graveyard` class below: A set of coordinates and metadata about
             the dead pieces on the board (captured/spare pieces).
     '''
-    def __init__(self, operating_system):
-        self.engine = Engine(operating_system)
+    def __init__(self):
+        self.engine = Engine()
         self.arduino_status = ArduinoStatus.IDLE
 
         self.graveyard = Graveyard()
@@ -204,18 +189,18 @@ class Board:
             print("   ", end='')
         print()
 
-    def setup_board(self, is_human_turn):
-        ''' Set up board with either black or white on human side, depending on value of is_human_turn.
+    # def setup_board(self, is_human_turn):
+    #     ''' Set up board with black or white on human side, depending on value of is_human_turn.
 
-        If is_human_turn == True, white on human side; otherwise, black
-        '''
-        # TODO: implement this method
-        print("Need to discuss how board is setup in team meeting")
+    #     If is_human_turn == True, white on human side; otherwise, black
+    #     '''
+    #     # TODO: implement this method
+    #     print("Need to discuss how board is setup in team meeting")
 
     def handle_promotion(self, color, piece_type):
         '''Backfills promotion area from graveyard if possible.
         '''
-        if graveyard.dead_piece_counts[color + piece_type] > 1:
+        if self.graveyard.dead_piece_counts[color + piece_type] > 1:
             self.send_message_to_arduino(
                 *self.graveyard.backfill_promotion_area_from_graveyard(color, piece_type),
                 OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
@@ -301,7 +286,7 @@ class Graveyard:
     def update_dead_piece_count(self, color, piece_type, delta):
         '''Updates number of dead pieces by specified delta, either 1 or -1.
         '''
-        if delta == 1 or delta == -1:
+        if delta in (1, -1):
             self.dead_piece_counts[color + piece_type] += delta
         else:
             raise ValueError("Cannot modify graveyard in increments greater than 1")

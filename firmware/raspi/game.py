@@ -3,11 +3,10 @@
 
 import random
 import time
-import platform
 
 from boardinterface import Board
 from player import CLHumanPlayer, StockfishPlayer
-from status import ArduinoStatus, Status
+from status import ArduinoStatus
 
 def assign_piece_color():
     '''
@@ -74,7 +73,7 @@ def main():
 
     # board initialization
     elo_rating = 1300
-    board = Board(platform.system())
+    board = Board()
     print("Welcome to Knightro's Gambit")
 
     # TODO: update this to handle physical, web, speech interaction
@@ -83,8 +82,9 @@ def main():
     # Get desired piece color for human. Can be white, black, or random.
     is_human_turn = is_human_turn_at_start()
 
-    # Set up board with either white or black on human side.
-    board.setup_board(is_human_turn)
+    # TODO: Set up board with either white or black on human side.
+    # board.setup_board(is_human_turn)
+
     # TODO: remove this after real Arduino communication is set up
     board.set_status_from_arduino(ArduinoStatus.IDLE)
 
@@ -94,7 +94,7 @@ def main():
         raise ValueError("Other modes of interaction are unimplemented")
     # TODO: update this to handle physical, web, speech interaction
 
-    ai_player = StockfishPlayer(platform.system(), elo_rating)
+    ai_player = StockfishPlayer(elo_rating)
 
     # main game loop
     while True:
