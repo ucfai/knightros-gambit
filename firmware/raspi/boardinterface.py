@@ -9,7 +9,7 @@ class Engine:
         # TODO: update raspi path
         self.raspi_stockfish_path = "n/a"
         # TODO: update ubuntu path
-        self.linux_stockfish_path = "../../chess-engine/stockfish_14_linux_x64/stockfish_14_x64"
+        self.linux_stockfish_path = "../../chess-engine/stockfish_14.1_linux_x64/stockfish_14.1_linux_x64"
         # TODO: update window path
         self.windows_stockfish_path = "n/a"
         operating_system = operating_system.lower()
