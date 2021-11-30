@@ -11,7 +11,7 @@ class Engine:
     Attributes:
         stockfish: A python wrapper around the Stockfish chess engine.
     '''
-    def __init__(self, operating_system, elo_rating=1300):
+    def __init__(self, operating_system):
         operating_system = operating_system.lower()
         if operating_system == "darwin":
             stockfish_path = "/usr/local/bin/stockfish"
@@ -26,7 +26,6 @@ class Engine:
                             "'darwin' (osx), 'linux', 'windows', 'raspi'")
 
         self.stockfish = Stockfish(stockfish_path)
-        self.stockfish.set_elo_rating(elo_rating)
 
     def get_2d_board(self):
         '''Returns a 2d board from stockfish fen representation
@@ -75,6 +74,9 @@ class Engine:
         Assumes that provided move is valid.
         '''
         self.stockfish.make_moves_from_current_position([move])
+
+    def get_fen_position(self):
+        return self.stockfish.get_fen_position()
 
     @staticmethod
     def is_promotion(move):
@@ -129,8 +131,8 @@ class Board:
         graveyard: See the `Graveyard` class below: A set of coordinates and metadata about
             the dead pieces on the board (captured/spare pieces).
     '''
-    def __init__(self, operating_system, elo_rating=1300):
-        self.engine = Engine(operating_system, elo_rating)
+    def __init__(self, operating_system):
+        self.engine = Engine(operating_system)
         self.arduino_status = ArduinoStatus.Idle
 
         self.graveyard = Graveyard()

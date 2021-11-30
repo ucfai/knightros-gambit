@@ -1,21 +1,46 @@
-class Player:
-    def select_move(self, board):
+'''This file contains classes that wrap players of different types.
+
+This class will wrap the custom AI we build, but for now we use it to get moves from stockfish.
+'''
+from stockfish import Stockfish
+
+class StockfishPlayer:
+    '''"AI" class that is a simple wrapper around the Stockfish engine.
+    '''
+    def __init__(self, operating_system, elo_rating=1300):
+        operating_system = operating_system.lower()
+        if operating_system == "darwin":
+            stockfish_path = "/usr/local/bin/stockfish"
+        elif operating_system == "raspi":
+            stockfish_path = "n/a"
+        elif operating_system == "linux":
+            stockfish_path = "../../chess-engine/stockfish_14.1_linux_x64/stockfish_14.1_linux_x64"
+        elif operating_system == "windows":
+            stockfish_path = "n/a"
+        else:
+            raise ValueError("Operating system must be one of "
+                            "'darwin' (osx), 'linux', 'windows', 'raspi'")
+
+        self.stockfish = Stockfish(stockfish_path)
+        self.stockfish.set_elo_rating(elo_rating)
+
+    def select_move(self, fen):
+        '''Sets stockfish state from provided fen and returns best move.
+        '''
+        self.stockfish.set_fen_position(fen)
+        return self.stockfish.get_best_move()
+
+
+class CLHumanPlayer:
+    '''"Human" class that allows playing with the chessboard through CLI.
+    '''
+    def __init__(self):
         pass
 
-
-class StockfishPlayer(Player):
-    def __init(self):
-        super().__init__()
-
-    def select_move(self, board):
-        return board.engine.stockfish.get_best_move()
-
-
-class CLHumanPlayer(Player):
-    def __init(self):
-        super().__init__()
-
-    def select_move(self, board):
+    @staticmethod
+    def select_move(board):
+        '''Prompts user to select a move.
+        '''
         legal_moves = board.valid_moves_from_position()
         move = None
         while move is None:
@@ -27,20 +52,16 @@ class CLHumanPlayer(Player):
         return move
 
 
-# TODO: implement
-# class PhysicalHumanPlayer(HumanPlayer):
-#     def __init(self):
-#         super().__init__()
+# class PhysicalHumanPlayer:
+#     def __init__(self):
+#         pass
 
 
-# TODO: implement
-# class WebHumanPlayer(HumanPlayer):
-#     def __init(self):
-#         super().__init__()
+# class WebHumanPlayer:
+#     def __init__(self):
+#         pass
 
 
-# TODO: implement
-# class SpeechHumanPlayer(HumanPlayer):
-#     def __init(self):
-#         super().__init__()
-
+# class SpeechHumanPlayer:
+#     def __init__(self):
+#         pass

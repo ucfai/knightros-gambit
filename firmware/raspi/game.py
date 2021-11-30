@@ -45,11 +45,11 @@ def send_move_to_board(board, move):
                                   "the board is messed up? Need to revisit.")
 
 
-def handle_human_move(mode_of_interaction, human_player, board):
+def handle_human_move(mode_of_interaction, board):
     '''Handle human move based on specified mode of interaction.
     '''
     if mode_of_interaction == 'cli':
-        move = human_player.select_move(board)
+        move = CLHumanPlayer.select_move(board)
         try:
             send_move_to_board(board, move)
         except NotImplementedError as nie:
@@ -60,7 +60,7 @@ def handle_human_move(mode_of_interaction, human_player, board):
 def handle_ai_move(ai_player, board):
     '''Handle AI move.
     '''
-    move = ai_player.select_move(board)
+    move = ai_player.select_move(board.engine.get_fen_position())
     try:
         send_move_to_board(board, move)
         print(f"AI made move: {move}")
@@ -74,7 +74,7 @@ def main():
 
     # board initialization
     elo_rating = 1300
-    board = Board(platform.system(), elo_rating)
+    board = Board(platform.system())
     print("Welcome to Knightro's Gambit")
 
     # TODO: update this to handle physical, web, speech interaction
@@ -89,12 +89,12 @@ def main():
     board.set_status_from_arduino(ArduinoStatus.Idle)
 
     if mode_of_interaction == "cli":
-        human_player = CLHumanPlayer()
+        print("Using CLI mode of interaction for human player")
     else:
         raise ValueError("Other modes of interaction are unimplemented")
     # TODO: update this to handle physical, web, speech interaction
 
-    ai_player = StockfishPlayer()
+    ai_player = StockfishPlayer(platform.system(), elo_rating)
 
     # main game loop
     while True:
@@ -116,7 +116,7 @@ def main():
         board.show_on_cli()
 
         if is_human_turn:
-            handle_human_move(mode_of_interaction, human_player, board)
+            handle_human_move(mode_of_interaction, board)
         else:
             handle_ai_move(ai_player, board)
         # TODO: After every move, center piece that was just moved on its new square
