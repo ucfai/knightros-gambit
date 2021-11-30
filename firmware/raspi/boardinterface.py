@@ -133,7 +133,7 @@ class Board:
     '''
     def __init__(self, operating_system):
         self.engine = Engine(operating_system)
-        self.arduino_status = ArduinoStatus.Idle
+        self.arduino_status = ArduinoStatus.IDLE
 
         self.graveyard = Graveyard()
 
@@ -179,7 +179,7 @@ class Board:
         # TODO: update this function to actually read from arduino
         return self.arduino_status
 
-    def set_status_from_arduino(self, arduino_status=ArduinoStatus.Idle):
+    def set_status_from_arduino(self, arduino_status=ArduinoStatus.IDLE):
         '''Placeholder function; used for game loop development only.
         '''
         self.arduino_status = arduino_status
@@ -218,7 +218,7 @@ class Board:
         if graveyard.dead_piece_counts[color + piece_type] > 1:
             self.send_message_to_arduino(
                 *self.graveyard.backfill_promotion_area_from_graveyard(color, piece_type),
-                OpCode.MovePieceAlongSquareEdges)
+                OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
             self.graveyard.update_dead_piece_count(color, piece_type, delta=1)
         else:
             print(f"All pieces of type {color}{piece_type} have been used!")

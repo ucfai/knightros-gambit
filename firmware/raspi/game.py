@@ -37,7 +37,7 @@ def send_move_to_board(board, move):
     if board.is_valid_move(move):
         board.make_move(move)
         # TODO: This is for game loop dev, remove once we read from arduino
-        board.set_status_from_arduino(ArduinoStatus.ExecutingMove)
+        board.set_status_from_arduino(ArduinoStatus.EXECUTING_MOVE)
     else:
         # TODO: do error handling
         raise NotImplementedError("Need to handle case of invalid move input. "
@@ -86,7 +86,7 @@ def main():
     # Set up board with either white or black on human side.
     board.setup_board(is_human_turn)
     # TODO: remove this after real Arduino communication is set up
-    board.set_status_from_arduino(ArduinoStatus.Idle)
+    board.set_status_from_arduino(ArduinoStatus.IDLE)
 
     if mode_of_interaction == "cli":
         print("Using CLI mode of interaction for human player")
@@ -101,15 +101,15 @@ def main():
         board_status = board.get_status_from_arduino()
         print(f"Board Status: {board_status}")
 
-        if board_status in (ArduinoStatus.ExecutingMove, ArduinoStatus.MessageInProgress):
+        if board_status in (ArduinoStatus.EXECUTING_MOVE, ArduinoStatus.MESSAGE_IN_PROGRESS):
             # Wait for move in progress to finish executing
             time.sleep(1) # reduce the amount of polling while waiting for move to finish
 
             # TODO: This is just so we have game loop working, remove once we read from arduino
-            board.set_status_from_arduino(ArduinoStatus.Idle)
+            board.set_status_from_arduino(ArduinoStatus.IDLE)
             continue
 
-        if board_status == ArduinoStatus.Error:
+        if board_status == ArduinoStatus.ERROR:
             # TODO: figure out edge/error cases and handle them here
             raise ValueError("Unimplemented, need to handle errors")
 
@@ -123,7 +123,7 @@ def main():
         # TODO: Need to account for castles as well.
 
         is_human_turn = not is_human_turn
-        Status.write_game_status_to_disk(board)
+        # Status.write_game_status_to_disk(board)
 
 if __name__ == '__main__':
     main()
