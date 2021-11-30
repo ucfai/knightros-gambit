@@ -29,3 +29,6 @@ class OpCode(Enum):
     
     # This code indicates Arduino should use electromagnet to center piece on square
     AlignPieceOnSquare = 2
+
+class ArduinoException(Exception):
+    pass
