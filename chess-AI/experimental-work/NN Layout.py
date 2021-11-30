@@ -8,7 +8,6 @@
         L = 7 representing the number of constant number planes besides repetition such as castling, move count, etc.
 """
 
-import chess
 import torch
 from torch import nn
 
@@ -41,13 +40,13 @@ class PlayNetwork(nn.Module):
         # Convolve 256 8x8 channels into 8x8 channel, then use fully connected layer to take 64 input features from 8x8
         # channel and transform to 256 output features, then transform to one scalar value.
         self.value_head = nn.Sequential(nn.Conv2d(in_channels = 256, out_channels = 1, kernel_size = 1, bias = False),
-                                       nn.BatchNorm2d(1),
-                                       nn.ReLU(inplace = True),
-                                       nn.Flatten(),
-                                       nn.Linear(in_features = 8 * 8, out_features = 256),
-                                       nn.ReLU(inplace = True),
-                                       nn.Linear(in_features = 256, out_features = 1),
-                                       nn.Tanh())
+                                        nn.BatchNorm2d(1),
+                                        nn.ReLU(inplace = True),
+                                        nn.Flatten(),
+                                        nn.Linear(in_features = 8 * 8, out_features = 256),
+                                        nn.ReLU(inplace = True),
+                                        nn.Linear(in_features = 256, out_features = 1),
+                                        nn.Tanh())
 
         
     def forward(self, x):
