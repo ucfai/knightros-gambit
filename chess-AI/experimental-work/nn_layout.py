@@ -10,6 +10,7 @@ L = 7   the number of constant number planes besides repetition like castling, m
 
 import torch
 from torch import nn
+from output_representation import convertToMove
 
 class PlayNetwork(nn.Module):
     def __init__(self):
@@ -100,8 +101,10 @@ a value head of one scalar evaluation number.
 """
 def main():
     model = PlayNetwork()
+    move = convertToMove()
     policy, value = model(torch.randn(1, 119, 8, 8))
-    policy = policy.reshape(73 * 8 * 8)
+    policy = policy.reshape(8,8,73)
+    policy = move.find_best_move(policy)
     value = value.item()
     print(policy)
     print(value)
