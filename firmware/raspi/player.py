@@ -1,21 +1,33 @@
-class Player:
-    def select_move(self, board):
+'''This file contains classes that wrap players of different types.
+
+This class will wrap the custom AI we build, but for now we use it to get moves from stockfish.
+'''
+from util import create_stockfish_wrapper
+
+class StockfishPlayer:
+    '''"AI" class that is a simple wrapper around the Stockfish engine.
+    '''
+    def __init__(self, elo_rating=1300):
+        self.stockfish = create_stockfish_wrapper()
+        self.stockfish.set_elo_rating(elo_rating)
+
+    def select_move(self, fen):
+        '''Sets stockfish state from provided fen and returns best move.
+        '''
+        self.stockfish.set_fen_position(fen)
+        return self.stockfish.get_best_move()
+
+
+class CLHumanPlayer:
+    '''"Human" class that allows playing with the chessboard through CLI.
+    '''
+    def __init__(self):
         pass
 
-
-class StockfishPlayer(Player):
-    def __init(self):
-        super().__init__()
-
-    def select_move(self, board):
-        return board.engine.stockfish.get_best_move()
-
-
-class CLHumanPlayer(Player):
-    def __init(self):
-        super().__init__()
-
-    def select_move(self, board):
+    @staticmethod
+    def select_move(board):
+        '''Prompts user to select a move.
+        '''
         legal_moves = board.valid_moves_from_position()
         move = None
         while move is None:
@@ -27,20 +39,16 @@ class CLHumanPlayer(Player):
         return move
 
 
-# TODO: implement
-# class PhysicalHumanPlayer(HumanPlayer):
-#     def __init(self):
-#         super().__init__()
+# class PhysicalHumanPlayer:
+#     def __init__(self):
+#         pass
 
 
-# TODO: implement
-# class WebHumanPlayer(HumanPlayer):
-#     def __init(self):
-#         super().__init__()
+# class WebHumanPlayer:
+#     def __init__(self):
+#         pass
 
 
-# TODO: implement
-# class SpeechHumanPlayer(HumanPlayer):
-#     def __init(self):
-#         super().__init__()
-
+# class SpeechHumanPlayer:
+#     def __init__(self):
+#         pass
