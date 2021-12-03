@@ -77,7 +77,7 @@ class PlayNetworkPolicyConverter:
         square = (indices[0], indices[1])
         move = self.codes_list[indices[2]]
 
-        start_sq_str = self.files_from_idx[square[0]] + str(square[1])
+        start_sq_str = self.files_from_idx[square[0]] + str(square[1] + 1)
         start_coords = np.array(square)
 
         # Set number of squares to move selected piece
@@ -104,26 +104,26 @@ class PlayNetworkPolicyConverter:
 
         if move[0] == "knight":
             # Here, len(move_directions[move[1]]) == 1, same for move[2]
-            end_coords = start_coords + np.array([2 * move_directions[move[1]],
-                                                  move_directions[move[2]]])
+            end_coords = start_coords + 2 * move_directions[move[1]] + move_directions[move[2]]
         else:
             # Here, len(move_directions[move[1]]) == 2
             end_coords = start_coords + move_directions[move[1]]
 
         # Make sure all indices are in bounds
-        if end_coords[0] > 7 or end_coords[0] < 0 or start_coords[0] > 7 or start_coords[0] < 0:
+        if end_coords[0] > 7 or end_coords[0] < 0 or end_coords[1] > 7 or end_coords[1] < 0:
             return None
 
         # Construct end square string
-        end_sq_str = self.files_from_idx[end_coords[0]] + str(end_coords[1])
+        end_sq_str = self.files_from_idx[end_coords[0]] + str(end_coords[1] + 1)
+        uci_move = start_sq_str + end_sq_str
+
         # If needed, append piece type to which to promote
         if move[0] == "underpromotion":
-            end_sq_str += move[2]
+            uci_move += move[2]
         # If not underpromotion, check if move is queen promotion
-        elif chess.Move.from_uci(end_sq_str + 'q') in board_t.legal_moves:
-            end_sq_str += 'q'
+        elif chess.Move.from_uci(uci_move + 'q') in board_t.legal_moves:
+            uci_move += 'q'
 
-        uci_move = start_sq_str + end_sq_str
 
         # Validate move, return only if legal
         return uci_move if chess.Move.from_uci(uci_move) in board_t.legal_moves else None
