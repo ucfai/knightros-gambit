@@ -1,7 +1,6 @@
 #https://web.stanford.edu/~surag/posts/alphazero.html
 
 class Mcts:
-    
     def search(s,game,nnet):
 
         if game.gameEnded(s): return  -game.gameReward(s) # returns the negative of the game reward, why negative?
