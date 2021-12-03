@@ -3,6 +3,7 @@
 
 var board = null
 var game = new Chess()
+game.load("rnbqkbnr/ppp1pppp/8/4PP2/8/P7/1PpP2PP/RNBQKBNR b KQkq - 0 5");
 var $status = $('#status')
 var $pgn = $('#pgn')
 var $gan = $('#gan')
@@ -59,6 +60,7 @@ function selection(piece, s, t) {
 async function processUserInput(s, t) {
   let piece = await askQuestion();
   selection(piece, s, t);
+  board.position(game.fen());
 }
 
 function wait (ms = 0) {
@@ -144,6 +146,7 @@ function is_promotion(cfg) {
 // update the board position after the piece snap
 // for castling, en passant, pawn promotion
 function onSnapEnd () {
+  console.log(game.fen())
   board.position(game.fen())
 }
 
@@ -185,5 +188,6 @@ var config = {
   onSnapEnd: onSnapEnd
 }
 board = ChessBoard('myBoard', config)
+board.position(game.fen())
 
 updateStatus()
