@@ -102,7 +102,7 @@ a value head of one scalar evaluation number.
 def main():
     model = PlayNetwork()
     policy, value = model(torch.randn(1, 119, 8, 8))
-    policy = policy.reshape(8,8,73)
+    policy = policy.reshape(8, 8, 73)
     value = value.item()
     print(policy)
     print(value)
