@@ -10,25 +10,12 @@ class chess_state():
         self.move_count = 0
         self.half_count = 0
         self.board2d = np.array([])
-        self.w_pawns = np.zeros((8, 8))
-        self.b_pawns = np.zeros((8, 8))
-        self.w_bishs = np.zeros((8, 8))
-        self.b_bishs = np.zeros((8, 8))
-        self.w_knights = np.zeros((8, 8))
-        self.b_knights = np.zeros((8, 8))
-        self.w_rooks = np.zeros((8, 8))
-        self.b_rooks = np.zeros((8, 8))
-        self.w_queens = np.zeros((8, 8))
-        self.b_queens = np.zeros((8, 8))
-        self.w_king = np.zeros((8, 8))
-        self.b_king = np.zeros((8, 8))
-        self.bq_castle = np.zeros((8, 8))
-        self.bk_castle = np.zeros((8, 8))
-        self.wk_castle = np.zeros((8, 8))
-        self.wq_castle = np.zeros((8, 8))
-        self.turn_plane = np.zeros((8, 8))
-        self.count_plane = np.full((8, 8), round((float(self.move_count)-1) / 74, 3))
-        self.pointless_count = np.full((8, 8), (int(self.half_count) / 2))
+
+        self.piece_planes = np.zeros((12, 8, 8))
+        self.castling_planes = np.zeros((4, 8, 8))
+        self.turn_plane = np.zeros((1, 8, 8))
+        self.count_plane = np.full((1, 8, 8), round((float(self.move_count)-1) / 74, 3))
+        self.pointless_count = np.full((1, 8, 8), (int(self.half_count) / 2))
         
     def set_state(self, board2d, fen, turn, castling, half_count, move_count):
         self.fen = fen
@@ -37,57 +24,43 @@ class chess_state():
         self.half_count = half_count
         self.move_count = move_count
         self.board2d = board2d
-        
-        self.set_pieces()
+
         self.set_turn()
+        self.set_pieces()
         self.set_castling()
         self.set_count()
         self.set_pointless()
     
     def set_pieces(self):
+        w_piece_order = "PBNRQK"
+
+        # orders the current player's pieces first
+        if self.turn == 'w':
+            piece_order = w_piece_order + w_piece_order.lower()
+        else:
+            piece_order = w_piece_order.lower() + w_piece_order
+
         for row in range(8):
             for col in range(8):
-                if self.board2d[row][col] == 'p':
-                    self.b_pawns[row][col] = 1
-                elif self.board2d[row][col] == 'P':
-                    self.w_pawns[row][col] = 1
-                elif self.board2d[row][col] == 'b':
-                    self.b_bishs[row][col] = 1
-                elif self.board2d[row][col] == 'B':
-                    self.w_bishs[row][col] = 1
-                elif self.board2d[row][col] == 'n':
-                    self.b_knights[row][col] = 1
-                elif self.board2d[row][col] == 'N':
-                    self.w_knights[row][col] = 1
-                elif self.board2d[row][col] == 'r':
-                    self.b_rooks[row][col] = 1
-                elif self.board2d[row][col] == 'R':
-                    self.w_rooks[row][col] = 1
-                elif self.board2d[row][col] == 'q':
-                    self.b_queens[row][col] = 1
-                elif self.board2d[row][col] == 'Q':
-                    self.w_queens[row][col] = 1
-                elif self.board2d[row][col] == 'k':
-                    self.b_king[row][col] = 1
-                elif self.board2d[row][col] == 'K':
-                    self.w_king[row][col] = 1
-    
+                plane_num = piece_order.find(self.board2d[row][col])
+                if plane_num != -1:
+                    self.piece_planes[plane_num][row][col] = 1
+            
+    def set_castling(self):
+        if self.turn == 'w':
+            castle_order = "KQkq"
+        else:
+            castle_order = "kqKQ"
+
+        for plane_num, char in enumerate(castle_order):
+            if char in self.castling:
+                self.castling_planes[plane_num].fill(1)
+
     def set_turn(self):
         if self.turn == "w":
             self.turn_plane.fill(0)
         else:
             self.turn_plane.fill(1)
-            
-    def set_castling(self):
-        for char in self.castling:
-            if char == 'K':
-                self.wk_castle.fill(1)
-            elif char == 'Q':
-                self.wq_castle.fill(1)
-            elif char == 'k':
-                self.bk_castle.fill(1)
-            elif char == 'q':
-                self.bq_castle.fill(1)
                 
     def set_count(self):
         self.count_plane.fill(round((float(self.move_count)-1)/74, 3))
@@ -96,16 +69,14 @@ class chess_state():
         self.pointless_count.fill(int(self.half_count)/2)
         
     def get_cnn_input(self):
-        cnn_input = torch.from_numpy(np.array([self.w_pawns, self.b_pawns, self.w_bishs, self.b_bishs, self.w_knights, 
-                                               self.b_knights, self.w_rooks, self.b_rooks, self.w_queens, self.b_queens,
-                                               self.w_king, self.b_king, self.wk_castle, self.wq_castle, self.bk_castle, 
-                                               self.bq_castle, self.turn_plane, self.count_plane, self.pointless_count])).reshape(1, 19, 8, 8)
+        cnn_input = torch.from_numpy(np.concatenate((self.piece_planes, self.castling_planes,
+                                                     self.turn_plane, self.count_plane, self.pointless_count), axis=0))
         return cnn_input
 
 
-def fen_to_board(fen):
+def fen_to_board(fen, turn):
     board_state = []
-    w_play = True
+
     for row in fen.split('/'):
         brow = []
         for c in row:
@@ -116,14 +87,18 @@ def fen_to_board(fen):
             else:
                 brow.append(c)
 
-        board_state.append(brow)
+        # flips perspective to current player
+        if turn == 'w':
+            board_state.append(brow)
+        else:
+            board_state.insert(0, brow)
     return board_state
 
 # update_input updates the state of the cnn input to match the current state of the pychess board, 
 # making the current game state passable into the cnn.
 def update_input(board_state):
     board_fen, turn, castling, _, half_count, move_count = board_state.fen().split(' ')
-    board2d = fen_to_board(board_fen)
+    board2d = fen_to_board(board_fen, turn)
     
     input_states.set_state(board2d, board_fen, turn, castling, half_count, move_count)
 
