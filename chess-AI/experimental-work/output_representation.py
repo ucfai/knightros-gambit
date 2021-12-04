@@ -1,5 +1,4 @@
 '''This file prototypes the conversion from the network output representation to a chess move.
-
 Uses https://ai.stackexchange.com/questions/27336/how-does-the-alpha-zeros-move-encoding-work?rq=1
 for reference.
 '''
@@ -66,12 +65,10 @@ class PlayNetworkPolicyConverter:
 
     def convert_policy_indices_to_uci_move(self, indices, board_t):
         '''Construct move in UCI format from indices corresponding to neural network output cell.
-
         Returns None if the move is not a legal chess move.
         Need to convert information about square and move to UCI (e.g. e1e4)
         We need to know whether white or black turn (so that we know relative N S etc)
         This is so we know moving 2 spaces N is either increasing 2 or decreasing 2
-
         Note: this validates move w/in context of current game state, returns None if invalid move.
         '''
         square = (indices[0], indices[1])
@@ -103,10 +100,8 @@ class PlayNetworkPolicyConverter:
         }
 
         if move[0] == "knight":
-            # Here, len(move_directions[move[1]]) == 1, same for move[2]
             end_coords = start_coords + 2 * move_directions[move[1]] + move_directions[move[2]]
         else:
-            # Here, len(move_directions[move[1]]) == 2
             end_coords = start_coords + move_directions[move[1]]
 
         # Make sure all indices are in bounds
@@ -132,8 +127,8 @@ class PlayNetworkPolicyConverter:
         '''Convert a uci move to a tuple of three indices corresponding to a cell in the policy.
         '''
         start_sq = uci_move[:2]
-        start_coords = [self.idx_from_file[uci_move[0]], int(uci_move[1])]
-        end_coords = [self.idx_from_file[uci_move[2]], int(uci_move[3])]
+        start_coords = [self.idx_from_file[uci_move[0]], int(uci_move[1]) -1]
+        end_coords = [self.idx_from_file[uci_move[2]], int(uci_move[3])-1]
 
         # If black to play, compute coordinates for flipped board
         if board_t.turn == chess.BLACK:
@@ -170,13 +165,12 @@ class PlayNetworkPolicyConverter:
                 direction = "N"
                 if ew_value != 0:
                     direction += "E" if ew_value > 0 else "W"
-            else:
-                print(f"queen promotion: {uci_move[4]}")
-            move_idx = self.codes_list.index(("underpromotion", direction, uci_move[4]))
-            return np.array([*start_coords, move_idx])
+                move_idx = self.codes_list.index(("underpromotion", direction, uci_move[4]))
+                return np.array([*start_coords, move_idx])
+            # Note: queen promotions are "normal moves", no special indexing for them                
 
-        # If we are here, normal move along single file/rank/diagonal
-        assert ew_value == 0 or ns_value == 0 or ew_value == ns_value
+        # If here, normal move along single file/rank/diagonal. Includes promotion to queen
+        assert ew_value == 0 or ns_value == 0 or ew_value == ns_value or ew_value == -ns_value
 
         if ew_value == 0:
             direction = "N" if ns_value > 0 else "S"
@@ -187,7 +181,7 @@ class PlayNetworkPolicyConverter:
                 direction = "N" if ns_value > 0 else "S"
             direction += "E" if ew_value > 0 else "W"
 
-        return np.array([*start_coords, self.codes_list.index((max(ew_value, ns_value),
+        return np.array([*start_coords, self.codes_list.index((max(abs(ew_value), abs(ns_value)),
                                                                direction))])
 
     def find_best_move(self, policy, board_t):
@@ -197,7 +191,6 @@ class PlayNetworkPolicyConverter:
         max_indices = np.unravel_index(policy.argmax(), policy.shape)
         return self.convert_policy_indices_to_uci_move(max_indices, board_t)
 
-    # TODO: consider consolidating `find_best_legal_move` and `find_value_of_all_legal_moves`
     def find_best_legal_move(self, policy, board_t):
         '''Return the legal move with the highest value as given by the policy.
         '''

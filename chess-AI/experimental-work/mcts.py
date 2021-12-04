@@ -1,73 +1,104 @@
 #https://web.stanford.edu/~surag/posts/alphazero.html
 
+##from math import random
+from math import sqrt
+import numpy as np
+import chess
+from nn_layout import predict
+import random
+from state_representation import chess_state
+
 class Mcts:
-    def search(s,game,nnet):
+    
+    def __init__(self):
+        self.states_visited = [] # stores fen strings of states visisted
+        self.N = {} # stores all the n values
+        self.Q = {} # stores all the Q values
+        self.exploration = .5 # stores the exploration values
+        self.P = {} # stores the Porbabilites return by NN
 
-        if game.gameEnded(s): return  -game.gameReward(s) # returns the negative of the game reward, why negative?
+    def find_best_action(self,legal_moves,fen_string):
 
-        if s not in visited # if a state has not been visited then you must find the predictions made by the model
-            visited.add(s) # will mark as visisted
-            P[s],v = nnet.predict(s) # this is like the rollout phase but using the nueral network
-            return -value
+        best_u = -float("inf")
+        best_action = -1 
+  
+        for action in legal_moves: # finds the valid actions from current state
+
+            uci_action = action.uci() # needs UCI format
+
+            if fen_string in self.Q:
+                if uci_action in self.Q[fen_string]:
+                     q_value = self.Q[fen_string][uci_action] # get q value
+                else:
+                     self.Q[fen_string][uci_action] = 0
+                     q_value = 0
+            else:
+                self.Q[fen_string]={}
+                self.Q[fen_string][uci_action] = 0
+                q_value = 0
+
+            if fen_string in self.N:
+                if uci_action in self.N[fen_string]:
+                     n_value = self.N[fen_string][uci_action] # get q value
+                else:
+                     self.N[fen_string][uci_action] = 1
+                     n_value = 1
+            else:
+                self.N[fen_string]={}
+                self.N[fen_string][uci_action] = 1
+                n_value = 1
+
+            u = q_value  + self.exploration * self.P[fen_string][uci_action] * sqrt(sum(self.N[fen_string].values())/n_value)
+   
+            if u > best_u:
+                best_action = action # action with best u value
+
+        return best_action
+
+    def update_QN(self,fen_string,action,value):
+
+        action = action.uci()
+        self.Q[fen_string][action] = (self.N[fen_string][action]* self.Q[fen_string][action] + value) / (self.N[fen_string][action] + 1)
+        self.N[fen_string][action] += 1  
+           
+    def search(self,board,nnet): ## will find all the Q,N, and F values for a given simulation
+
+        fen_string = board.fen()
         
-        max_u, best_a = -float("inf"), -1 
-
-        for a in game.getvalidActions(s): # finds the valid actions from current state
-
-            u = Q[s][a] + c_puct*P[s][a]*sqrt(sum(N[s]))/(1+N[s][a]) # formula for calculating the action to take
-
-            if u>max_u:
-                max_u = u  # assigns best u
-                best_a = a  # assigns best a
+        if board.is_game_over(): 
+            print(board.outcome().termination)
+            return  1 
+       
+        if fen_string not in self.states_visited: # if a state has not been visited then you must find the predictions made by the model
+            self.states_visited.append(fen_string) # adds ot the fen string
+            state_obj = chess_state(fen_string)
+            input = state_obj.get_cnn_input()
+            value,policy = predict(board,input)  # eventaul will pas input from intput representation
+            self.P.update({fen_string:policy})
+            return -value 
         
-            a = best_a
-            sp = game.nextState(s,a) # want to take the the best action
-            v = search(sp,game,nnet) # gets the value of the the action
+        legal_moves = board.legal_moves # gets the legal actions from the current position
 
-            Q[s][a] = (N[s][a] * Q[s][a] +v)/N[s][a]+1) # calculates Q
-            N[s][a] += 1  # adds 1 to represent the node was visited
+        action = self.find_best_action(legal_moves,fen_string)
+        board.push(action) # want to take the the best action
+        value = self.search(board,nnet) # gets the value of the the action
+        board.pop()
+        fen_string = board.fen()
+        self.update_QN(fen_string,action,value)
+        
+        return value
 
-            return -v
+    def findSearchProbs(self,fen_string): # computes search probs for n
+        values = np.array(list(self.N[fen_string].values()))    
+        return values/np.sum(values)
 
-    """"
-    1. Initialize nn with random weights, starting with a random policy and value network
-    2. Play a number of games of self play
-    3. In each turn of the game perform a fixed number of MCTS simulations from the current state
-    4. Pick a move by sampling the improved policy 
-    """"
+def main():
+    mcts = Mcts()
+    start_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
+    for _ in range(50):
+        board = chess.Board(start_fen)
+        mcts.search(board,None)
+    mcts.findSearchProbs(board.fen())
 
-class Train:
-
-    def policyIterSp(game)
-
-        nnet = initNet() # initializes nueral network
-        examples = []
-        for i in range(numIters):
-            for e in range(numEps):
-                examples += executeEpisode(game,nnet) # recieves training examples
-            new_nnet = trainNNet(examples) # trains new nnet on new training examples
-            frac_win = pit(new_nnet,nnet) # play the two nueral networks against each other
-            if frac_win > threshold: 
-                nnet = new_nnet # pick the winning model
-        return nnet
-
-
-    def executeEpisde(game,nnet):
-
-        examples = []
-        s = game.startState() # get the start state of the game
-        mcts = Mcts() # instantiate the MCTS class
- 
-        while True: 
-
-            for _ in range(numMCTSims):
-                mcsts.search(s,game,nnet) #performs numMCTSims monte carlo simulations
-
-            examples.append([s,mcts.pi(s),None]) ## append the state, and improved policy, None refers to not knowing the values yet
-
-            a = random.choice(len(mcts.pi(s)), p=mcts.pi(s)) # choose a random move from the improved policy
-            s= game.nextState(s,a) # try that random move
-
-            if game.gameEnded(s): # if hte game is over then you need to assign rewards to all the examples
-                examples = assignRewards(examples,game.gameReward(s))
-                return examples
+if __name__ == "__main__":
+    main()
