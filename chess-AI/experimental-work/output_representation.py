@@ -103,10 +103,8 @@ class PlayNetworkPolicyConverter:
         }
 
         if move[0] == "knight":
-            # Here, len(move_directions[move[1]]) == 1, same for move[2]
             end_coords = start_coords + 2 * move_directions[move[1]] + move_directions[move[2]]
         else:
-            # Here, len(move_directions[move[1]]) == 2
             end_coords = start_coords + move_directions[move[1]]
 
         # Make sure all indices are in bounds
@@ -170,12 +168,11 @@ class PlayNetworkPolicyConverter:
                 direction = "N"
                 if ew_value != 0:
                     direction += "E" if ew_value > 0 else "W"
-            else:
-                print(f"queen promotion: {uci_move[4]}")
-            move_idx = self.codes_list.index(("underpromotion", direction, uci_move[4]))
-            return np.array([*start_coords, move_idx])
+                move_idx = self.codes_list.index(("underpromotion", direction, uci_move[4]))
+                return np.array([*start_coords, move_idx])
+            # Note: queen promotions are "normal moves", no special indexing for them                
 
-        # If we are here, normal move along single file/rank/diagonal
+        # If here, normal move along single file/rank/diagonal. Includes promotion to queen
         assert ew_value == 0 or ns_value == 0 or ew_value == ns_value
 
         if ew_value == 0:
@@ -197,7 +194,6 @@ class PlayNetworkPolicyConverter:
         max_indices = np.unravel_index(policy.argmax(), policy.shape)
         return self.convert_policy_indices_to_uci_move(max_indices, board_t)
 
-    # TODO: consider consolidating `find_best_legal_move` and `find_value_of_all_legal_moves`
     def find_best_legal_move(self, policy, board_t):
         '''Return the legal move with the highest value as given by the policy.
         '''
