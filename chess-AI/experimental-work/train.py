@@ -2,6 +2,7 @@ from mcts import Mcts
 import random
 import chess
 from nn_layout import PlayNetwork
+from output_representation import PlayNetworkPolicyConverter
 
 class Train: # algorithm for training the model.
 
@@ -25,33 +26,40 @@ class Train: # algorithm for training the model.
             for _ in range(self.simulations):
                 mcts.search(board,nnet) # performs mcts
             
+            converter = PlayNetworkPolicyConverter()
             keys,policy = mcts.findSearchProbs(fen_string) # gets the search probs and associated keys
-
-            #TODO: For training example need to get (8*8*73) grid oof values
-
-            self.trainingSet.append([fen_string,policy,None]) # append the state, and improved policy, None refers to not knowing the values yet
-
             choice = random.randint(0,len(policy) - 1) # selects random policy
-            action = keys[choice] # getes the random action from the random policy
+            policy = converter.compute_full_search_probs(keys, policy, board)
+
+            self.trainingSet.append([fen_string,policy,None]) # adds the training example
+
+            action = keys[choice] # makes a random move
             action = chess.Move.from_uci(action) # gets the action to make
             board.push(action)
+             
             fen_string = board.fen()
 
             if board.is_game_over():  # if hte engine is over then you need to assign rewards to all the examples
-                self.assignRewards(board,1)
+                self.assignRewards(keys,policy,board,1)
                 return
         
-    def assignRewards(self,board,reward): # assigns the reward to training examples
-        for i in self.trainingSet:
-            i[2] = reward
+    def assignRewards(self,keys,policy,board,reward): # assigns the reward to training examples
+
+        for i in self.trainingSet:   
+            winner = board.Outcome().winner
+            if not winner:
+                i[2] = 0
+            if winner == chess.WHITE:
+                i[2] = 1 
+            else: 
+                i[2] = -1
+
         print(board)    
         print(board.outcome().termination)
-        #print(len(self.trainingSet))  
-        #print(self.trainingSet)  
-
+   
 def main():
     nnet = PlayNetwork()
-    train = Train(10)
+    train = Train(100)
     train.executeEpisode(nnet)
 
 if __name__ == "__main__":

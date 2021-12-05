@@ -64,10 +64,11 @@ class Mcts:
 
         fen_string = board.fen()
         
-        if board.is_game_over(): 
-            #print(board)
-            #print(board.outcome().termination) # print what causes game to end
-            return  -1  # need to figure out what to return here
+        if board.is_game_over():
+            winner = board.Outcome().winner
+            if not winner:
+                return 0
+            return 1 if winner == chess.WHITE else -1
        
         if fen_string not in self.states_visited: # if a state has not been visited then you must find the predictions made by the model
             self.states_visited.append(fen_string) # marks the state as visited
@@ -87,7 +88,7 @@ class Mcts:
         fen_string = board.fen()
         self.update_QN(fen_string,action,value)
         
-        return -value
+        return value
 
     def findSearchProbs(self,fen_string): # computes the search probs for N
  
@@ -96,13 +97,4 @@ class Mcts:
         keys = list(self.N[fen_string].keys())
         return keys,search_probs
 
-def main():
-    mcts = Mcts()
-    start_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR" # sets starting fen
-    for _ in range(5000):
-        board = chess.Board(start_fen)
-        mcts.search(board,None)
-    mcts.findSearchProbs(board.fen())
 
-if __name__ == "__main__":
-    main()
