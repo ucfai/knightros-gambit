@@ -44,22 +44,18 @@ class Train: # algorithm for training the model.
                 return
         
     def assignRewards(self,keys,policy,board,reward): # assigns the reward to training examples
-
-        for i in self.trainingSet:   
-            winner = board.Outcome().winner
-            if not winner:
-                i[2] = 0
-            if winner == chess.WHITE:
-                i[2] = 1 
-            else: 
-                i[2] = -1
+        for i in self.trainingSet:
+            i[2] = reward
 
         print(board)    
         print(board.outcome().termination)
-   
+      
+        #print(len(self.trainingSet))  
+        #print(self.trainingSet)  
+
 def main():
     nnet = PlayNetwork()
-    train = Train(100)
+    train = Train(1600)
     train.executeEpisode(nnet)
 
 if __name__ == "__main__":

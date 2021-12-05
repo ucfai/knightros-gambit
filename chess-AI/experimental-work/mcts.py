@@ -65,10 +65,7 @@ class Mcts:
         fen_string = board.fen()
         
         if board.is_game_over():
-            winner = board.Outcome().winner
-            if not winner:
-                return 0
-            return 1 if winner == chess.WHITE else -1
+            return 1
        
         if fen_string not in self.states_visited: # if a state has not been visited then you must find the predictions made by the model
             self.states_visited.append(fen_string) # marks the state as visited
