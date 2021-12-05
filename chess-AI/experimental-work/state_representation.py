@@ -2,6 +2,9 @@ import torch
 import chess
 import numpy as np
 
+# change input_states to include the past 8 moves and add 14 planes for each past move 
+# (12 for pieces and 2 for repetition) to the cnn_input to make it 119 channels
+
 
 def get_piece_planes(board2d, turn):
     piece_planes = np.zeros((12, 8, 8))
@@ -37,10 +40,7 @@ def get_castle_planes(castling, turn):
 
 
 def get_turn_plane(turn):
-    if turn == "w":
-        return np.zeros((1, 8, 8))
-    else:
-        return np.ones((1, 8, 8))
+    return np.zeros((1, 8, 8)) if turn == 'w' else np.ones((1, 8, 8))
 
 
 def get_cnn_input(board_state):
@@ -75,8 +75,11 @@ def fen_to_board(fen, turn):
             board_state.insert(0, brow)
     return board_state
 
-# change input_states to include the past 8 moves and add 14 planes for each past move (12 for pieces and 2 for repetition)
-# to the cnn_input to make it 119 channels
 
-board_state = chess.Board()
-print(get_cnn_input(board_state).size())
+def main():
+    board_state = chess.Board()
+    print(get_cnn_input(board_state).size())
+
+
+if __name__ == '__main__':
+    main()
