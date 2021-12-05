@@ -3,8 +3,8 @@ import chess
 import numpy as np
 
 class chess_state():
-    def __init__(self):
-        self.fen = ""
+    def __init__(self,fen_string):
+        self.fen = fen_string
         self.turn = ''
         self.castling = ""
         self.move_count = 0
@@ -100,6 +100,7 @@ class chess_state():
                                                self.b_knights, self.w_rooks, self.b_rooks, self.w_queens, self.b_queens,
                                                self.w_king, self.b_king, self.wk_castle, self.wq_castle, self.bk_castle, 
                                                self.bq_castle, self.turn_plane, self.count_plane, self.pointless_count])).reshape(1, 19, 8, 8)
+
         return cnn_input
 
 
@@ -128,11 +129,11 @@ def update_input(board_state):
     input_states.set_state(board2d, board_fen, turn, castling, half_count, move_count)
 
 
-board_state = chess.Board()
+#board_state = chess.Board()
 
 # change input_states to include the past 8 moves and add 14 planes for each past move (12 for pieces and 2 for repetition)
 # to the cnn_input to make it 119 channels
 
-input_states = chess_state()
-update_input(board_state)
-print(input_states.get_cnn_input().size())
+#input_states = chess_state()
+#update_input(board_state)
+#print(input_states.get_cnn_input().size())

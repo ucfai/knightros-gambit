@@ -10,6 +10,7 @@ L = 7   the number of constant number planes besides repetition like castling, m
 
 import torch
 from torch import nn
+import chess
 from output_representation import PlayNetworkPolicyConverter
 
 class PlayNetwork(nn.Module):
@@ -19,7 +20,7 @@ class PlayNetwork(nn.Module):
         
         # Takes 119 channels of input comprised of 7 previous states' piece and repetition
         # planes plus the current state input of 21 channels.
-        self.conv_layer = nn.Sequential(nn.Conv2d(in_channels=119,
+        self.conv_layer = nn.Sequential(nn.Conv2d(in_channels=19,
                                                   out_channels=256,
                                                   kernel_size=3,
                                                   padding=1,
@@ -89,6 +90,23 @@ class PlayNetwork(nn.Module):
         policy_out = self.policy_head(x)
         
         return (policy_out, value_out)
+
+
+    def predict(self,board,input): # function to get predictions from model
+        model = PlayNetwork()
+        #policy, value = model(input)
+        policy, value = model(torch.randn(1, 19, 8, 8))
+        policy = policy.reshape(8, 8, 73)
+        value = value.item()
+        #print(policy)
+        #print(value)
+        policy_converter = PlayNetworkPolicyConverter()
+
+        move_values = policy_converter.find_value_of_all_legal_moves(policy, board)
+        #for move, value in move_values.items():
+        # print(f"{move}: {value}")
+        return value,move_values
+                
   
         
 """Make working chess AI CNN with policy vector and value output
@@ -99,22 +117,3 @@ Output has a policy vector size of 4672 possbile moves and
 a value head of one scalar evaluation number.
 
 """
-def main():
-    model = PlayNetwork()
-    policy, value = model(torch.randn(1, 119, 8, 8))
-    policy = policy.reshape(8, 8, 73)
-    value = value.item()
-    print(policy)
-    print(value)
-
-    import chess
-    board = chess.Board()
-    policy_converter = PlayNetworkPolicyConverter()
-
-    move_values = policy_converter.find_value_of_all_legal_moves(policy, board)
-    for move, value in move_values.items():
-        print(f"{move}: {value}")
-
-
-if __name__ == "__main__":
-    main()
