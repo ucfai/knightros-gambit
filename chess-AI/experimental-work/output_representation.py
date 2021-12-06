@@ -181,6 +181,10 @@ class PlayNetworkPolicyConverter:
                 direction = "N" if ns_value > 0 else "S"
             direction += "E" if ew_value > 0 else "W"
 
+        """
+        NOTE: I added the abs value into the max function, fixed issues that we 
+        were having
+        """
         return np.array([*start_coords, self.codes_list.index((max(abs(ew_value), abs(ns_value)),
                                                                direction))])
 
@@ -217,6 +221,15 @@ class PlayNetworkPolicyConverter:
             move_vals[uci_move] = policy[i, j, k]
 
         return move_vals
+
+    def compute_full_search_probs(self, legal_moves, search_probs, board):
+     '''This assumes that legal_moves[i] corresponds to search_probs[i].
+     '''
+     full_search_probs = np.zeros((8, 8, 73))
+     for i, uci_move in enumerate(legal_moves):
+         j, k, l = self.convert_uci_move_to_policy_indices(uci_move, board)
+         full_search_probs[j, k, l] = search_probs[i]
+     return full_search_probs
 
 def main():
     '''Entry point for driver to test output representation converter.

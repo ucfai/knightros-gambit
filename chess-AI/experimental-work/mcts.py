@@ -1,97 +1,161 @@
-#https://web.stanford.edu/~surag/posts/alphazero.html
-
 from math import sqrt
 import numpy as np
-import chess
-import random
 from state_representation import chess_state
 
 class Mcts:
-    
-    def __init__(self):
-        self.states_visited = [] # stores fen strings of states visisted
-        self.N = {} # stores all the N values
-        self.Q = {} # stores all the Q values
-        self.exploration = 1 # sets exploration rate
-        self.P = {} # stores the nueral network probabilites
 
-    def find_best_action(self,legal_moves,fen_string):
+    def __init__(self):
+        self.states_visited = [] # stores fen strings of states visited
+        self.n_values = {} # stores all the N values
+        self.q_values = {} # stores all the Q values
+        self.exploration = 1 # sets exploration rate
+        self.p_values = {} # stores the probabilities computed by NN
+
+    def find_best_move(self,legal_moves,fen_string):
 
         best_u = -float("inf")
-        best_action = -1 
- 
-        for action in legal_moves: # finds the valid actions from current state
+        best_move = -1
 
-            uci_action = action.uci() # need to get UCI format
+        # Iterate through all legal moves at the state
 
-            if fen_string in self.Q: 
-                if uci_action in self.Q[fen_string]:
-                     q_value = self.Q[fen_string][uci_action]
+        for move in legal_moves:
+
+            # Get move in uci form
+            uci_move = move.uci()
+
+            # Check to see if the state has been added to Q
+            if fen_string in self.q_values:
+                if uci_move in self.q_values[fen_string]:
+                    q_value = self.q_values[fen_string][uci_move]
                 else:
-                     self.Q[fen_string][uci_action] = 0
-                     q_value = 0
+                    self.q_values[fen_string][uci_move] = 0
+                    q_value = 0
             else:
-                self.Q[fen_string]={}
-                self.Q[fen_string][uci_action] = 0
+                self.q_values[fen_string]={}
+                self.q_values[fen_string][uci_move] = 0
                 q_value = 0
 
-            if fen_string in self.N:
-                if uci_action in self.N[fen_string]:
-                     n_value = self.N[fen_string][uci_action] # get q value
+
+            # Check to see if state has been added to N
+            if fen_string in self.n_values:
+                if uci_move in self.n_values[fen_string]:
+                    n_value = self.n_values[fen_string][uci_move]
                 else:
-                     self.N[fen_string][uci_action] = 1
-                     n_value = 1
+                    self.n_values[fen_string][uci_move] = 1
+                    n_value = float("inf")
             else:
-                self.N[fen_string]={}
-                self.N[fen_string][uci_action] = 1
-                n_value = 1
+                self.n_values[fen_string]={}
+                self.n_values[fen_string][uci_move] = 1
+                n_value = float("inf")
 
-            u = q_value  + self.exploration * self.P[fen_string][uci_action] * sqrt(sum(self.N[fen_string].values())/n_value)
-   
-            if u > best_u:
-                best_u = u
-                best_action = action # action with best u value
+            """
+            NOTE: still unsure about the n values
+            not sure if I should set the n values to infinite if a node
+            has not been visited
+            Also do not know what N should be initial
+            """
 
-        return best_action
+            # Calculate U based on the UCB formula
+            u_value = q_value + (self.exploration * self.p_values[fen_string][uci_move])
+            u_value = u_value * sqrt(sum(self.n_values[fen_string].values())/n_value)
 
-    def update_QN(self,fen_string,action,value):
+            """
+            NOTE: Look at different formulas for calculating U
+            There could be better formula for evaluating an action
+            """
 
-        action = action.uci()
-        self.Q[fen_string][action] = (self.N[fen_string][action]* self.Q[fen_string][action] + value) / (self.N[fen_string][action] + 1)
-        self.N[fen_string][action] += 1  
-           
-    def search(self,board,nnet): ## will find all the Q,N, and F values for a given simulation
+            # Want to choose the move with the highest u value
+            if u_value > best_u:
+                best_u = u_value
+                best_move = move # move with best u value
 
-        fen_string = board.fen()
-        
-        if board.is_game_over():
-            return 1
-       
-        if fen_string not in self.states_visited: # if a state has not been visited then you must find the predictions made by the model
-            self.states_visited.append(fen_string) # marks the state as visited
-            state_obj = chess_state(fen_string)
-            input = state_obj.get_cnn_input()  # gets the state from the input representation
-            value,policy = nnet.predict(board,input)  # eventually will need to pass input from input representation
-            self.P.update({fen_string:policy}) # updates the policy accordingly
-            return -value 
-        
-        legal_moves = board.legal_moves # gets the legal actions from the current position
-        action = self.find_best_action(legal_moves,fen_string)
+        return best_move
 
-        board.push(action) # want to take the the best action
-        value = self.search(board,nnet) # gets the value of the the action
-        board.pop()
 
-        fen_string = board.fen()
-        self.update_QN(fen_string,action,value)
-        
-        return value
+    # Function to calculate Q and N based on the value and the move
+    def update_qn(self,fen_string,move,value):
 
-    def findSearchProbs(self,fen_string): # computes the search probs for N
- 
-        search_probs = np.array(list(self.N[fen_string].values())) 
+        move = move.uci()
+
+        # Function to calculate Q
+        self.q_values[fen_string][move] = self.n_values[fen_string][move] * self.q_values[fen_string][move] + value
+        self.q_values[fen_string][move] = self.q_values[fen_string][move] / (self.n_values[fen_string][move] + 1)
+
+        """
+        NOTE: Can look into different formulas for this as well
+        """
+
+        # Need to increment the number of times the node has been visited
+        self.n_values[fen_string][move] += 1
+
+    # Calculates the search probabilties using N
+    def find_search_probs(self,fen_string):
+
+        # Calculates the search probabilites
+        search_probs = np.array(list(self.n_values[fen_string].values()))
         search_probs = search_probs/np.sum(search_probs)
-        keys = list(self.N[fen_string].keys())
+
+        """
+        NOTE: The search probabilites are being calculated based on the
+        the number of times a node has been visited/sum of all nodes visited
+        """
+
+        # Gets the list of all the moves
+        keys = list(self.n_values[fen_string].keys())
+
         return keys,search_probs
 
+    # Main function to traverse the tree
+    def search(self,board,nnet):
 
+        # Need to get the fen string for the current state
+        fen_string = board.fen()
+
+        # Assigns reward if game is over
+        if board.is_game_over():
+            return 1 if board.outcome().winner else 0
+
+        # Checks to see if the node has been visited
+        if fen_string not in self.states_visited:
+
+            # Has to add the state to the list of visited nodes
+            self.states_visited.append(fen_string)
+
+            # Needs to get neural network state representation from fen_string
+            state_representation = chess_state(fen_string)
+
+            # Gets the input from neural network
+            input_state = state_representation.get_cnn_input()
+            value,policy = nnet.predict(board,input_state)
+
+            """
+            NOTE: Right now the state representation is not complete
+            and working with the neural network
+            The input is being passed into predict but not being used
+            """
+
+            # Need to update P with the state and the policy
+            self.p_values.update({fen_string:policy})
+
+            return -value
+
+        # Finds the legal moves from the current state
+        legal_moves = board.legal_moves
+
+        # Finds the best move from the current state
+        move = self.find_best_move(legal_moves,fen_string)
+
+        # Makes the move on the board
+        board.push(move)
+
+        # Search based on the new state
+        value = self.search(board,nnet)
+
+        # After search need to undo the move
+        board.pop()
+
+        # After undoing the move , the Q and N values need to be updated
+        fen_string = board.fen()
+        self.update_qn(fen_string,move,value)
+
+        return -value

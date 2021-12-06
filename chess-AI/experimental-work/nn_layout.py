@@ -11,6 +11,8 @@ L = 7   the number of constant number planes besides repetition like castling, m
 import torch
 from torch import nn
 import chess
+import numpy as np
+
 from output_representation import PlayNetworkPolicyConverter
 
 class PlayNetwork(nn.Module):
@@ -20,7 +22,7 @@ class PlayNetwork(nn.Module):
         
         # Takes 119 channels of input comprised of 7 previous states' piece and repetition
         # planes plus the current state input of 21 channels.
-        self.conv_layer = nn.Sequential(nn.Conv2d(in_channels=19,
+        self.conv_layer = nn.Sequential(nn.Conv2d(in_channels=119,
                                                   out_channels=256,
                                                   kernel_size=3,
                                                   padding=1,
@@ -92,23 +94,29 @@ class PlayNetwork(nn.Module):
         return (policy_out, value_out)
 
 
-    def predict(self,board,input): # function to get predictions from model
-        model = PlayNetwork()
-        #policy, value = model(input)
-        policy, value = model(torch.randn(1, 19, 8, 8))
-        policy = policy.reshape(8, 8, 73)
-        value = value.item()
-        #print(policy)
-        #print(value)
-        policy_converter = PlayNetworkPolicyConverter()
+    # Function to get Neural network output
+    def predict(self,board,input):
 
+        """
+        NOTE: If you want to run the MCTS but not with the
+        nnet then you can uncomment this out
+
+        policy = np.arange(8*8*73)
+        value = 1
+        """
+
+        # Comment this text out if you do not want to use nnet
+        model = PlayNetwork()
+        policy, value = model(torch.randn(1, 119, 8, 8))
+        value = value.item()
+
+        policy = policy.reshape(8, 8, 73)
+        policy_converter = PlayNetworkPolicyConverter()
         move_values = policy_converter.find_value_of_all_legal_moves(policy, board)
-        #for move, value in move_values.items():
-        # print(f"{move}: {value}")
+
         return value,move_values
                 
-  
-        
+   
 """Make working chess AI CNN with policy vector and value output
 
 Input current and 7 past moves, each move state with their
