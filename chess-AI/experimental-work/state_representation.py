@@ -104,7 +104,7 @@ class chess_state():
         return cnn_input
 
 
-def fen_to_board(fen):
+def fen_to_board(fen): 
     board_state = []
     w_play = True
     for row in fen.split('/'):

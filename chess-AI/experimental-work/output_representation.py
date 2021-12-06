@@ -249,5 +249,5 @@ def main():
     # is being parsed correctly both for uci -> indices and indices -> uci
     # Functions should be inverse of each other.
 
-if __name__ == "__main__":
+if __name__ == "__main__": 
     main()
