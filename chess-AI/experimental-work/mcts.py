@@ -1,6 +1,6 @@
 from math import sqrt
 import numpy as np
-from state_representation import chess_state
+from state_representation import get_cnn_input
 
 class Mcts:
 
@@ -122,11 +122,11 @@ class Mcts:
             self.states_visited.append(fen_string)
 
             # Needs to get neural network state representation from fen_string
-            state_representation = chess_state(fen_string)
+            
 
             # Gets the input from neural network
-            input_state = state_representation.get_cnn_input()
-            value,policy = nnet.predict(board,input_state)
+            #input_state = get_cnn_input(fen_string)
+            value,policy = nnet.predict(board,None)
 
             """
             NOTE: Right now the state representation is not complete
