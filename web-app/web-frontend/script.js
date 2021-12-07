@@ -20,7 +20,7 @@ function onDragStart(source, piece, position, orientation) {
 
   // only pick up pieces for the side to move
   if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
-      (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
+    (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
     return false;
   }
 }
@@ -34,7 +34,7 @@ function onDrop(source, target) {
   // see if the move is a promotion
   if (isPromotion({
     game: game,
-    move: {from: source, to: target},
+    move: { from: source, to: target },
   })) {
     processUserInput(source, target);
   } else { // normal move
@@ -45,6 +45,7 @@ function onDrop(source, target) {
   }
   // illegal move
   if (move === null) return 'snapback';
+
   updateStatus();
 }
 
@@ -54,7 +55,7 @@ function onDrop(source, target) {
  * @param {Object} t move to target location
 */
 function selection(piece, s, t) {
-  game.move({from: s, to: t, promotion: piece});
+  game.move({ from: s, to: t, promotion: piece });
   updateStatus();
 }
 
@@ -91,11 +92,11 @@ async function destroyPopup(popup) {
 
 /** prompts popup and returns value selected by user **/
 async function ask() {
-  return new Promise( async function(resolve) {
-  // FIRST CREATE A POPUP WITH ALL THE FIELDS IN IT
+  return new Promise(async function (resolve) {
+    // FIRST CREATE A POPUP WITH ALL THE FIELDS IN IT
     const popup = document.createElement('form');
     popup.classList.add('popup');
-    if(game.turn()==='w'){
+    if (game.turn() === 'w') {
       popup.insertAdjacentHTML(
         'afterbegin',
         `
@@ -107,10 +108,11 @@ async function ask() {
           <button class = "button" value ="b" style="background-image: 
           url(img/chesspieces/wikipedia/wB.png);"></button>
           <button class = "button" value ="n" style="background-image: 
-          url(img/chesspieces/wikipedia/wK.png);"></button>
+          url(img/chesspieces/wikipedia/wN.png);"></button>
         </fieldset>
         `,
-    )}
+      )
+    }
     else {
       popup.insertAdjacentHTML(
         'afterbegin',
@@ -123,17 +125,18 @@ async function ask() {
           <button class = "button" value ="b" style="background-image: 
           url(img/chesspieces/wikipedia/bB.png);"></button>
           <button class = "button" value ="n" style="background-image: 
-          url(img/chesspieces/wikipedia/bK.png);"></button>
+          url(img/chesspieces/wikipedia/bN.png);"></button>
         </fieldset>
         `,
-    )};
+      )
+    };
     // LISTEN FOR THE SUBMIT EVENT ON THE INPUTS
-    popup.addEventListener('click', function(event) {
+    popup.addEventListener('click', function (event) {
       event.preventDefault();
       resolve(event.target.value);
       destroyPopup(popup);
     },
-    {once: true});
+      { once: true });
     // INSERT THAT POPUP INTO THE DOM
     document.body.appendChild(popup);
     // PUT A SMALL TIMEOUT BEFORE WE ADD THE OPEN CLASS
@@ -145,7 +148,7 @@ async function ask() {
 
 /** calls and returns value from ask function **/
 async function askQuestion() {
-  return await ask({cancel: true});
+  return await ask({ cancel: true });
 };
 
 /**
@@ -157,21 +160,21 @@ function isPromotion(cfg) {
   const piece = cfg.game.get(cfg.move.from);
   if ( // pawn is white or black and being promoted
     (cfg.game.turn() == 'w' &&
-         cfg.move.from.charAt(1) == 7 &&
-         cfg.move.to.charAt(1) == 8 &&
-         piece.type == 'p' &&
-         piece.color == 'w') ||
-         (cfg.game.turn() == 'b' &&
-         cfg.move.from.charAt(1) == 2 &&
-         cfg.move.to.charAt(1) == 1 &&
-         piece.type == 'p' &&
-         piece.color == 'b' )
+      cfg.move.from.charAt(1) == 7 &&
+      cfg.move.to.charAt(1) == 8 &&
+      piece.type == 'p' &&
+      piece.color == 'w') ||
+    (cfg.game.turn() == 'b' &&
+      cfg.move.from.charAt(1) == 2 &&
+      cfg.move.to.charAt(1) == 1 &&
+      piece.type == 'p' &&
+      piece.color == 'b')
   ) {
-    const tempChess= new Chess(game.fen());
-    if (tempChess.move({from: cfg.move.from, to: cfg.move.to, promotion: 'q'})||
-     tempChess.move({from: cfg.move.from, to: cfg.move.to, promotion: 'r'})||
-     tempChess.move({from: cfg.move.from, to: cfg.move.to, promotion: 'n'})||
-    tempChess.move({from: cfg.move.from, to: cfg.move.to, promotion: 'b'}) ) {
+    const tempChess = new Chess(game.fen());
+    if (tempChess.move({ from: cfg.move.from, to: cfg.move.to, promotion: 'q' }) ||
+      tempChess.move({ from: cfg.move.from, to: cfg.move.to, promotion: 'r' }) ||
+      tempChess.move({ from: cfg.move.from, to: cfg.move.to, promotion: 'n' }) ||
+      tempChess.move({ from: cfg.move.from, to: cfg.move.to, promotion: 'b' })) {
       return true;
     } else {
       return false;
