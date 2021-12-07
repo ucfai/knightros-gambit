@@ -134,7 +134,6 @@ class Mcts:
         """
 
         fen_string = board.fen()
-
         # Assigns reward if game is over
         if board.is_game_over():
             return 1 if board.outcome().winner else 0

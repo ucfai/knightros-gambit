@@ -59,7 +59,7 @@ class MctsTrain:
             self.training_examples.append([fen_string,converted_search_probs,None])
 
             # Makes the random action on the board, and gets fen string
-            move  = chess.Move.from_uci(move)
+            move = chess.Move.from_uci(move)
             board.push(move)
             fen_string = board.fen()
 
@@ -91,7 +91,7 @@ def main():
 
     # Gets the neural network, and performs and episode
     nnet = PlayNetwork()
-    train = MctsTrain(2)
+    train = MctsTrain(2,1)
     train.training_episode(nnet)
 
 if __name__ == "__main__":
