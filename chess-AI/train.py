@@ -53,8 +53,9 @@ class MctsTrain:
             move = moves[rand_move_idx]
 
             # Converts mcts search probabilites to (8,8,73) vector
-            converted_search_probs = self.policy_converter.compute_full_search_probs(move, search_probs, board)
-
+     
+            converted_search_probs = self.policy_converter.compute_full_search_probs(moves, search_probs, board)
+            
             # Adds entry to the training examples
             self.training_examples.append([fen_string,converted_search_probs,None])
 

@@ -127,6 +127,7 @@ class PlayNetworkPolicyConverter:
     def convert_uci_move_to_policy_indices(self, uci_move, board_t):
         '''Convert a uci move to a tuple of three indices corresponding to a cell in the policy.
         '''
+
         start_sq = uci_move[:2]
         start_coords = [self.idx_from_file[uci_move[0]], int(uci_move[1]) - 1]
         end_coords = [self.idx_from_file[uci_move[2]], int(uci_move[3])- 1]
@@ -182,11 +183,7 @@ class PlayNetworkPolicyConverter:
                 direction = "N" if ns_value > 0 else "S"
             direction += "E" if ew_value > 0 else "W"
 
-        n_squares = abs(ew_value)
-
-        assert ew_value == 0 or ns_value == 0 or abs(ns_value) == n_squares
-
-        return np.array([*start_coords, self.codes_list.index(n_squares, direction)])
+        return np.array([*start_coords, self.codes_list.index((max(abs(ew_value), abs(ns_value)),direction))])
 
     def find_best_move(self, policy, board_t):
         '''Find the best move according to the policy outputted by the network.
