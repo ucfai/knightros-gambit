@@ -71,6 +71,7 @@ class PlayNetworkPolicyConverter:
         This is so we know moving 2 spaces N is either increasing 2 or decreasing 2
         Note: this validates move w/in context of current game state, returns None if invalid move.
         '''
+
         square = (indices[0], indices[1])
         move = self.codes_list[indices[2]]
 
@@ -127,8 +128,8 @@ class PlayNetworkPolicyConverter:
         '''Convert a uci move to a tuple of three indices corresponding to a cell in the policy.
         '''
         start_sq = uci_move[:2]
-        start_coords = [self.idx_from_file[uci_move[0]], int(uci_move[1]) -1]
-        end_coords = [self.idx_from_file[uci_move[2]], int(uci_move[3])-1]
+        start_coords = [self.idx_from_file[uci_move[0]], int(uci_move[1]) - 1]
+        end_coords = [self.idx_from_file[uci_move[2]], int(uci_move[3])- 1]
 
         # If black to play, compute coordinates for flipped board
         if board_t.turn == chess.BLACK:
@@ -181,12 +182,11 @@ class PlayNetworkPolicyConverter:
                 direction = "N" if ns_value > 0 else "S"
             direction += "E" if ew_value > 0 else "W"
 
-        """
-        NOTE: I added the abs value into the max function, fixed issues that we 
-        were having
-        """
-        return np.array([*start_coords, self.codes_list.index((max(abs(ew_value), abs(ns_value)),
-                                                               direction))])
+        n_squares = abs(ew_value)
+
+        assert ew_value == 0 or ns_value == 0 or abs(ns_value) == n_squares
+
+        return np.array([*start_coords, self.codes_list.index(n_squares, direction)])
 
     def find_best_move(self, policy, board_t):
         '''Find the best move according to the policy outputted by the network.
@@ -251,3 +251,4 @@ def main():
 
 if __name__ == "__main__": 
     main()
+    

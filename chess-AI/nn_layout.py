@@ -16,6 +16,16 @@ import numpy as np
 from output_representation import PlayNetworkPolicyConverter
 
 class PlayNetwork(nn.Module):
+
+    """Make working chess AI CNN with policy vector and value output
+
+    Input current and 7 past moves, each move state with their
+    own set of channels to represent their state, then pass to output.
+    Output has a policy vector size of 4672 possbile moves and
+    a value head of one scalar evaluation number.
+
+    """
+
     def __init__(self):
         super(PlayNetwork, self).__init__()
         self.num_res_blocks = 3
@@ -116,12 +126,21 @@ class PlayNetwork(nn.Module):
 
         return value,move_values
                 
-   
-"""Make working chess AI CNN with policy vector and value output
+def main():
+    model = PlayNetwork()
+    policy, value = model(torch.randn(1, 119, 8, 8))
+    policy = policy.reshape(8, 8, 73)
+    value = value.item()
+    print(policy)
+    print(value)
 
-Input current and 7 past moves, each move state with their
-own set of channels to represent their state, then pass to output.
-Output has a policy vector size of 4672 possbile moves and
-a value head of one scalar evaluation number.
+    board = chess.Board()
+    policy_converter = PlayNetworkPolicyConverter()
 
-"""
+    move_values = policy_converter.find_value_of_all_legal_moves(policy, board)
+    for move, value in move_values.items():
+        print(f"{move}: {value}")
+
+
+if __name__ == "__main__":
+    main()
