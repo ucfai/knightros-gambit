@@ -20,7 +20,7 @@ function onDragStart(source, piece, position, orientation) {
 
   // only pick up pieces for the side to move
   if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
-    (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
+      (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
     return false;
   }
 }
@@ -136,7 +136,7 @@ async function ask() {
       resolve(event.target.value);
       destroyPopup(popup);
     },
-      { once: true });
+    { once: true });
     // INSERT THAT POPUP INTO THE DOM
     document.body.appendChild(popup);
     // PUT A SMALL TIMEOUT BEFORE WE ADD THE OPEN CLASS
@@ -158,23 +158,23 @@ async function askQuestion() {
 */
 function isPromotion(cfg) {
   const piece = cfg.game.get(cfg.move.from);
-  if ( // pawn is white or black and being promoted
-    (cfg.game.turn() == 'w' &&
-      cfg.move.from.charAt(1) == 7 &&
-      cfg.move.to.charAt(1) == 8 &&
-      piece.type == 'p' &&
-      piece.color == 'w') ||
+  // Check if pawn is white or black and being promoted
+  if ((cfg.game.turn() == 'w' &&
+     cfg.move.from.charAt(1) == 7 &&
+     cfg.move.to.charAt(1) == 8 &&
+     piece.type == 'p' &&
+     piece.color == 'w') ||
     (cfg.game.turn() == 'b' &&
-      cfg.move.from.charAt(1) == 2 &&
-      cfg.move.to.charAt(1) == 1 &&
-      piece.type == 'p' &&
-      piece.color == 'b')
+     cfg.move.from.charAt(1) == 2 &&
+     cfg.move.to.charAt(1) == 1 &&
+     piece.type == 'p' &&
+     piece.color == 'b')
   ) {
     const tempChess = new Chess(game.fen());
     if (tempChess.move({ from: cfg.move.from, to: cfg.move.to, promotion: 'q' }) ||
-      tempChess.move({ from: cfg.move.from, to: cfg.move.to, promotion: 'r' }) ||
-      tempChess.move({ from: cfg.move.from, to: cfg.move.to, promotion: 'n' }) ||
-      tempChess.move({ from: cfg.move.from, to: cfg.move.to, promotion: 'b' })) {
+    tempChess.move({ from: cfg.move.from, to: cfg.move.to, promotion: 'r' }) ||
+    tempChess.move({ from: cfg.move.from, to: cfg.move.to, promotion: 'n' }) ||
+    tempChess.move({ from: cfg.move.from, to: cfg.move.to, promotion: 'b' })) {
       return true;
     } else {
       return false;
