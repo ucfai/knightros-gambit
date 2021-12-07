@@ -1,0 +1,264 @@
+/* body formatting */
+body {
+  background-color: black;
+}
+/* Knightr0's Gambit heading */
+#site-header-name {
+  font-size: 50px;
+  letter-spacing: 6px;
+  font-family: 'Exo';
+  color: rgb(182, 153, 97);
+  padding-top: 10px;
+  padding-right: 30px;
+  padding-bottom: 10px;
+  padding-left: 220px;   
+}
+/* UCF AI/IEEE subheading */
+#site-header-subtitle {
+  font-size: 25px;
+  font-stretch: ultra-condensed;
+  font-family: 'Roboto';
+  letter-spacing: 1.5px;
+  color: rgb(136, 136, 136);
+  padding-top: 0px;
+  padding-right: 30px;
+  padding-bottom: 10px;
+  padding-left: 220px;
+}
+/* page title */
+#intro {
+  font-size: 36px;
+  letter-spacing: 3px;
+  font-family: 'Exo';
+  color: rgb(238, 233, 224);
+  padding-top: px;
+  padding-right: 100px;
+  padding-left: 700px;
+}
+/* page title */
+#background {
+  font-size: 25px;
+  letter-spacing: 3px;
+  font-family: 'Exo';
+  color: rgb(219, 206, 173);
+  padding-top: -10px;
+  padding-right: 30px;
+  padding-bottom: 10px;
+  padding-left: 220px;
+}
+/* body text format */
+#text {
+  font-size: 15px;
+  font-family: 'Roboto';
+  color: rgb(172, 172, 172);
+  padding-right: 30px;
+  padding-bottom: 1px;
+  padding-left: 220px; 
+  margin-bottom: -10px;
+}
+/* page subtitle */
+#subBackground {
+  font-size: 21px;
+  letter-spacing: 3px;
+  font-family: 'Exo';
+  color: rgb(160, 149, 125);
+  padding-top: 30px;
+  padding-right: 30px;
+  padding-bottom: 10px;
+  padding-left: 220px;
+}
+/* headings and text indented right */
+.sideContainer {
+  margin-top: -400px;
+  padding-right: 30px;
+  padding-bottom: 10px;
+  padding-left: 900px;
+}
+#sideSub {
+  font-size: 20px;
+  letter-spacing: 3px;
+  font-family: 'Exo';
+  color: rgb(160, 155, 145);
+}
+#sideText {
+  font-size: 15px;
+  font-family: 'Roboto';
+  color: rgb(172, 172, 172);
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+/* text within list */
+#textIn {
+  font-size: 15px;
+  font-family: 'Roboto';
+  color: rgb(172, 172, 172);
+  padding-right: 480px;
+  padding-bottom: 1px;
+}
+/* page titles */
+#background {
+  font-size: 25px;
+  letter-spacing: 3px;
+  font-family: 'Exo';
+  color: rgb(219, 206, 173);
+  margin-top: 20px;
+  padding-top: 10px;
+  padding-right: 30px;
+  padding-bottom: 10px;
+  padding-left: 220px;
+}
+#background2 {
+  font-size: 25px;
+  letter-spacing: 3px;
+  font-family: 'Exo';
+  color: rgb(219, 206, 173);
+  margin-top: -45px;
+  padding-top: 10px;
+  padding-right: 30px;
+  padding-bottom: 10px;
+  padding-left: 220px;
+}
+/* images */
+.bdiagrm {
+  padding-top: 20px;
+  padding-right: 250px;
+  padding-left: 240px;
+  max-width: 43%;
+  max-height:43%;
+  opacity: 80%; 
+}
+.cvImg {
+  padding-top: 20px;
+  padding-right: 200px;
+  padding-left: 470px;
+  max-width: 43%;
+  max-height:43%;
+  opacity: 80%;  
+}
+.bState {
+  position: relative;
+  top: -220px;
+  padding-right: 200px;
+  padding-left: 1010px;
+  max-width: 20%;
+  max-height:20%;
+  opacity: 80%;  
+}
+/* descriptions underneath images */
+#imgdescription {
+  font-size: 15px;
+  font-family: 'Roboto';
+  color: rgb(160, 150, 124);
+  padding-bottom: 1px;
+  padding-left: 265px; 
+  padding-right: 220px; 
+}
+#imgdescription2 {
+  font-size: 15px;
+  font-family: 'Roboto';
+  color: rgb(160, 150, 124);
+  padding-bottom: 1px;
+  padding-left: 660px; 
+  padding-right: 200px; 
+}
+/* Container w/main body of text and images */
+.container {
+  overflow-x: hidden;
+  overflow-y: hidden;
+  height: 4280px;
+  width: 100%;
+}
+/* link formatting and colors*/
+a:link {
+  color: rgb(182, 153, 97);
+  text-decoration: none;
+}
+a:visited {
+  color: rgb(182, 153, 97);
+  text-decoration: none;
+}
+a:hover {
+  color: rgb(124, 124, 124);
+  text-decoration: none;
+}
+a:active {
+  color: rgb(228, 222, 197);
+  text-decoration: none;
+}
+/* list with bullets */
+ul.a {
+  font-size: 15px;
+  font-family: 'Roboto';
+  color: rgb(172, 172, 172);
+  margin-left: 16%;
+  line-height: 160%;
+  margin-bottom: -10px;
+}
+li::marker {
+  color: rgb(182, 153, 97);
+}
+/* list with numbers*/
+ol.a{
+  font-size: 15px;
+  font-family: 'Roboto';
+  color: rgb(172, 172, 172);
+  margin-left: 16%;
+  line-height: 160%; 
+}
+/* sublist with a, b, etc.*/
+ol.b{
+  font-size: 15px;
+  font-family: 'Roboto';
+  color: rgb(172, 172, 172);
+  margin-left: 0%;
+  line-height: 160%; 
+}
+/* The header line */
+.site-header hr {
+  margin-top: -0.5em;
+  margin-bottom: 0.5em;
+  margin-left: auto;
+  margin-right: auto;
+  border-style: inset;
+  border-width: 1px;
+  border-color: rgb(182, 153, 97);
+}
+/* The sidebar menu */
+.sidebar {
+  height: 100%;
+  width: 200px;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: rgb(182, 153, 97);
+  overflow-x: hidden;
+  padding-top: 20px;
+}
+/* The navigation menu links */
+.sidebar a {
+  padding: 10px 0px 15px 0px;
+  text-decoration: none;
+  font-size: 25px;
+  font-family: 'Roboto';
+  color: rgb(87, 65, 22);
+  display: block;
+  text-align: center;
+}
+/* color change when link hover with mouse  */
+.sidebar a:hover {
+  color: rgb(245, 224, 179);
+}
+/* On smaller screens, where height is less than 450px, change the style of the sidebar (less padding and a smaller font size) */
+@media screen and (max-height: 450px) {
+  .sidebar {padding-top: 15px;}
+  .sidebar a {font-size: 18px;}
+}
+/* UCF logo on sidebar */
+.sidebar img {
+  margin-top: -1.25em;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+} 

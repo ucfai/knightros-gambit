@@ -1,0 +1,210 @@
+/* body formatting */
+body {
+  background-color: black;
+}
+/* Knightr0's Gambit heading */
+#site-header-name {
+  font-size: 50px;
+  letter-spacing: 6px;
+  font-family: 'Exo';
+  color: rgb(182, 153, 97);
+  padding-top: 10px;
+  padding-right: 30px;
+  padding-bottom: 10px;
+  padding-left: 220px;   
+}
+/* UCF AI/IEEE subheading */
+#site-header-subtitle {
+  font-size: 25px;
+  font-stretch: ultra-condensed;
+  font-family: 'Roboto';
+  letter-spacing: 1.5px;
+  color: rgb(136, 136, 136);
+  padding-top: 0px;
+  padding-right: 30px;
+  padding-bottom: 10px;
+  padding-left: 220px;
+}
+/* page title */
+#intro {
+  font-size: 36px;
+  letter-spacing: 3px;
+  font-family: 'Exo';
+  color: rgb(238, 233, 224);
+  padding-top: px;
+  padding-right: 100px;
+  padding-bottom: 10px;
+  padding-left: 700px;
+}
+/* page title */
+#background {
+  font-size: 25px;
+  letter-spacing: 3px;
+  font-family: 'Exo';
+  color: rgb(219, 206, 173);
+  padding-top: -10px;
+  padding-right: 30px;
+  padding-bottom: 10px;
+  padding-left: 220px;
+}
+/* text indented left */
+#textL {
+  font-size: 15px;
+  font-family: 'Roboto';
+  color: rgb(172, 172, 172);
+  padding-top: 8px;
+  padding-right: 600px;
+  padding-bottom: 15px;
+  padding-left: 220px;
+  line-height: 20px; 
+}
+/* text indented right */
+#textR {
+  font-size: 15px;
+  font-family: 'Roboto';
+  position: relative;
+  color: rgb(172, 172, 172);
+  top: -250px;
+  padding-right: 10px;
+  padding-bottom: 1px;
+  padding-left: 820px;
+  line-height: 20px;  
+}
+/* descriptions underneath images */
+#imgdescription {
+  font-size: 15px;
+  font-family: 'Roboto';
+  position: relative;
+  color: rgb(160, 150, 124);
+  top: 25px;
+  padding-right: 10px;
+  padding-bottom: 1px;
+  padding-left: 940px;  
+}
+#imgdescription2 {
+  font-size: 15px;
+  font-family: 'Roboto';
+  position: relative;
+  color: rgb(160, 150, 124);
+  top: -640px;
+  padding-bottom: 1px;
+  padding-left: 280px; 
+  padding-right: 680px; 
+}
+#imgdescription3 {
+  font-size: 15px;
+  font-family: 'Roboto';
+  position: relative;
+  color: rgb(160, 150, 124);
+  top: -570px;
+  padding-bottom: 1px;
+  padding-left: 670px; 
+  padding-right: 220px; 
+}
+/* Electric Design subheading */
+#ele {
+  font-size: 25px;
+  letter-spacing: 3px;
+  font-family: 'Exo';
+  color: rgb(219, 206, 173);
+  position: relative;
+  top: -600px;
+  padding-right: 30px;
+  padding-bottom: 10px;
+  padding-left: 220px;  
+}
+/* body text format */
+#text {
+  font-size: 15px;
+  font-family: 'Roboto';
+  color: rgb(172, 172, 172);
+  position: relative;
+  top: -550px;
+  padding-right: 30px;
+  padding-bottom: 1px;
+  padding-left: 220px; 
+}
+/* image formatting */
+.assbly {
+  padding-right: 250px;
+  padding-left: 240px;
+  top: -654px;
+  position: relative;
+  max-width: 37%;
+  max-height:37%;
+  opacity: 80%; 
+}
+.es {
+  padding-right: 250px;
+  padding-left: 350px;
+  top: -580px;
+  position: relative;
+  max-width: 60%;
+  max-height:60%;
+  opacity: 80%; 
+}
+.slider {
+  padding-right: 90px;
+  padding-left: 650px;
+  top: -300px;
+  position: relative;
+  max-width: 30%;
+  max-height:30%;
+  opacity: 80%;
+}
+/* Container w/main body of text and images */
+.container {
+  overflow-x: hidden;
+  overflow-y: hidden;
+  height: 1600px;
+  width: 100%;
+}
+/* The header line */
+.site-header hr {
+  margin-top: -0.5em;
+  margin-bottom: 0.5em;
+  margin-left: auto;
+  margin-right: auto;
+  border-style: inset;
+  border-width: 1px;
+  border-color: rgb(182, 153, 97);
+}
+/* The sidebar menu */
+.sidebar {
+  height: 100%; 
+  width: 200px; 
+  position: fixed; 
+  z-index: 1; 
+  top: 0; 
+  left: 0;
+  background-color: rgb(182, 153, 97); 
+  overflow-x: hidden; 
+  padding-top: 20px;
+}  
+/* The navigation menu links */
+.sidebar a {
+  padding: 10px 0px 15px 0px;
+  text-decoration: none;
+  font-size: 25px;
+  font-family: 'Roboto';
+  color: rgb(87, 65, 22);
+  display: block;
+  text-align: center;
+}
+/* color change when link hover with mouse  */
+.sidebar a:hover {
+  color: rgb(245, 224, 179);
+}
+/* On smaller screens, where height is less than 450px, change the style of the sidebar (less padding and a smaller font size) */
+@media screen and (max-height: 450px) {
+  .sidebar {padding-top: 15px;}
+  .sidebar a {font-size: 18px;}
+}
+/* UCF logo on sidebar */
+.sidebar img {
+  margin-top: -1.25em;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+} 

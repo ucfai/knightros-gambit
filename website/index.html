@@ -1,0 +1,76 @@
+<!DOCTYPE html> 
+<html lang="en"></html> 
+  <head>
+    <link rel="stylesheet" href="css/main.css"/>
+    <link href='https://fonts.googleapis.com/css?family=Exo' rel='stylesheet'>
+    <link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet'>
+    <link rel="preconnect" href="https://fonts.googleapis.com"> 
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
+    <link href="https://fonts.googleapis.com/css2?family=Almendra+SC&display=swap" rel="stylesheet">
+  </head> 
+  <body> 
+    <header class = "site-header">
+        <div id="site-header-name">Knightr0's Gambit</div>
+        <hr>
+        <div id= "site-header-subtitle">A UCF AI/UCF IEEE Collaboration</div>
+    </header>
+    <div class="sidebar">
+      <a href="https://www.ucf.edu" onclick="window.open(this.href,'');return false;"><img src="images/ucflogo.png"/></a>
+      <a href="index.html">Home</a>
+      <a href="https://github.com/ucfai/knightros-gambit" onclick="window.open(this.href,'');return false;">Github</a>
+      <a href="hardware.html">Hardware</a>
+      <a href="software.html">Software</a>
+      <a href="members.html">Members</a>
+    </div>
+    <div class = "container">
+      <div id="quote">Chess is art,<br> and every move is science...</div>
+      <img src="images/chesspieces.png">
+      <div id="intro">Project Summary</div>
+      <div id="text"><i>Knightr0's Gambit</i> is a partnership between the UCF student chapter of the Institute of Electrical 
+        and Electronics Engineers (<a href = "https://ieee.cecs.ucf.edu" onclick="window.open(this.href,'');return false;">UCF IEEE</a>)
+         the UCF Artificial Intelligence club (<a  href="https://ucfai.org" onclick="window.open(this.href,'');return false;">UCF AI</a>) 
+         to create an automatic chessboard (similar to <a  href="https://www.youtube.com/watch?v=s3cjWc-XXCg" onclick="window.open(this.href,'');
+         return false;">Harry Potter's Wizard Chess</a> with less violence) powered by a custom chess AI. We plan to use computer vision to 
+         detect the board state after each move (see <a href="software.html#computerVision">Computer Vision</a>), build in natural language 
+         processing capabilities to allow moving a piece without touching the board (see <a href="software.html#speechRecognition">Speech 
+           Recognition</a>), and we plan to build a web application to allow displaying the current game state as well as playing against 
+           the chess board through a smartphone or computer interface (see <a href="software.html#webApp">Web Application</a>).</div>
+      <div id="background">Background and Motivation</div>
+      <div id="text">Chess and artificial intelligence have been closely related since the dawn of AI research 
+        (<a  href="https://www.history.com/news/in-1950-alan-turing-created-a-chess-computer-program-that-prefigured-a-i" 
+        onclick="window.open(this.href,'');return false;">Turing</a>). The state of the art for chess engines is constantly evolving, 
+        but recent advancements include <a  href="https://deepmind.com/blog/article/alphazero-shedding-new-light-grand-games-chess-shogi-and-go" 
+        onclick="window.open(this.href,'');return false;">AlphaZero</a>, which uses reinforcement learning and self-play, and <a  
+        href="https://maiachess.com/" onclick="window.open(this.href,'');return false;">Maia Chess</a>, which uses supervised learning. We 
+        aim to develop a custom chess AI inspired by AlphaZero and Maia that will incorporate machine learning and deep neural networks to 
+        develop an understanding of the game of chess. For context, machine learning is a data-driven artificial intelligence methodology 
+        and is generally divided into three categories: supervised, unsupervised (or self-supervised), and reinforcement learning. We plan 
+        to primarily use reinforcement learning to develop our chess AI, but are also considering using supervised learning to improve the 
+        AI by learning from high-level human chess games.</div>
+      <div id="text">We are particularly inspired by 1) the Raspberry Turk project, which in turn was inspired by the famed <a  
+        href="https://en.wikipedia.org/wiki/Mechanical_Turk" onclick="window.open(this.href,'');return false;">Mechanical Turk</a>, a 
+        chess automaton (later proven to be a hoax) that was built in the 1770s and 2) the <a  
+        href="https://www.kickstarter.com/projects/wondersubstance/phantom-the-most-advanced-chess-board-in-the-world" 
+        onclick="window.open(this.href,'');return false;">Phantom</a> chess project, which in turn was inspired by the <a  
+        href="https://squareoffnow.com/" onclick="window.open(this.href,'');return false;">Square Off</a> chess board. There are many 
+        <a  href="https://create.arduino.cc/projecthub/maguerero/automated-chess-board-50ca0f" onclick="window.open(this.href,'');return false;">
+          examples</a> of other similar projects, but we believe our approach is novel in combining and refining the following features:
+      </div>
+      <ul class="a">
+        <li>We create an x-y Cartesian coordinate system for the board space, and use two servo motors to actuate the slide rails</li>
+        <li>We use computer vision to detect the board state (using traditional computer vision approaches in addition to neural-network 
+          based classifiers)</li>
+        <li>We develop a custom AI using reinforcement learning and neural networks, akin to AlphaZero</li>
+        <li>We enable the capability to play against our custom AI, Maia, Stockfish, and other human opponents (through our custom web app)</li>
+        <li>We allow players to move pieces on the physical chessboard using only their voice</li>
+      </ul>
+      <div id="text">In addition to the clear goal of pushing forward the state of the art for automatic chess boards and chess AI, a secondary 
+        goal is one closely tied to the UCF IEEE and UCF AI mission statement: giving undergraduate students opportunities to apply concepts 
+        from the classroom in a project-based environment.</div>
+      <br>
+      <br>
+      <br>
+      <br>
+    </div>
+  </body>
+</html>
