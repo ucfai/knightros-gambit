@@ -29,3 +29,18 @@
 .popup.open fieldset {
   --scale: 1;
 }
+.button {
+  background-size: cover;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  border: 0.5px solid rgb(58, 58, 58);
+  background-color: #ffffff;
+  resize: both;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+.button:hover{
+  background: #FFEFCB;
+  border: 0.5px solid rgb(58, 58, 58);
+}
