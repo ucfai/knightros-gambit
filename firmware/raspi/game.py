@@ -30,11 +30,11 @@ def is_human_turn_at_start():
         print("Please choose one of [w], [b], or [r].")
 
 # TODO: maybe this should be in Board class instead?
-def send_move_to_board(board, move):
+def send_move_to_board(board, uci_move):
     '''Validate move and send to board interface.
     '''
-    if board.is_valid_move(move):
-        board.make_move(move)
+    if board.is_valid_move(uci_move):
+        board.make_move(uci_move)
         # TODO: This is for game loop dev, remove once we read from arduino
         board.set_status_from_arduino(ArduinoStatus.EXECUTING_MOVE)
     else:
@@ -48,9 +48,9 @@ def handle_human_move(mode_of_interaction, board):
     '''Handle human move based on specified mode of interaction.
     '''
     if mode_of_interaction == 'cli':
-        move = CLHumanPlayer.select_move(board)
+        uci_move = CLHumanPlayer.select_move(board)
         try:
-            send_move_to_board(board, move)
+            send_move_to_board(board, uci_move)
         except NotImplementedError as nie:
             print(nie.__str__())
     else:
@@ -59,10 +59,10 @@ def handle_human_move(mode_of_interaction, board):
 def handle_ai_move(ai_player, board):
     '''Handle AI move.
     '''
-    move = ai_player.select_move(board.engine.get_fen_position())
+    uci_move = ai_player.select_move(board.engine.fen())
     try:
-        send_move_to_board(board, move)
-        print(f"AI made move: {move}")
+        send_move_to_board(board, uci_move)
+        print(f"AI made move: {uci_move}")
     except NotImplementedError as nie:
         print(nie.__str__())
 
