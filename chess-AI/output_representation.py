@@ -1,4 +1,5 @@
 '''This file prototypes the conversion from the network output representation to a chess move.
+
 Uses https://ai.stackexchange.com/questions/27336/how-does-the-alpha-zeros-move-encoding-work?rq=1
 for reference.
 '''
@@ -65,13 +66,13 @@ class PlayNetworkPolicyConverter:
 
     def convert_policy_indices_to_uci_move(self, indices, board_t):
         '''Construct move in UCI format from indices corresponding to neural network output cell.
+
         Returns None if the move is not a legal chess move.
         Need to convert information about square and move to UCI (e.g. e1e4)
         We need to know whether white or black turn (so that we know relative N S etc)
         This is so we know moving 2 spaces N is either increasing 2 or decreasing 2
         Note: this validates move w/in context of current game state, returns None if invalid move.
         '''
-
         square = (indices[0], indices[1])
         move = self.codes_list[indices[2]]
 
@@ -127,10 +128,9 @@ class PlayNetworkPolicyConverter:
     def convert_uci_move_to_policy_indices(self, uci_move, board_t):
         '''Convert a uci move to a tuple of three indices corresponding to a cell in the policy.
         '''
-
         start_sq = uci_move[:2]
         start_coords = [self.idx_from_file[uci_move[0]], int(uci_move[1]) - 1]
-        end_coords = [self.idx_from_file[uci_move[2]], int(uci_move[3])- 1]
+        end_coords = [self.idx_from_file[uci_move[2]], int(uci_move[3]) - 1]
 
         # If black to play, compute coordinates for flipped board
         if board_t.turn == chess.BLACK:
@@ -159,7 +159,7 @@ class PlayNetworkPolicyConverter:
                 direction = "N" if ns_value > 0 else "S"
                 direction += "E" if ew_value > 0 else "W"
             move_idx = self.codes_list.index(("knight", direction[0], direction[1]))
-            return np.array([*start_coords, move_idx])
+            return [*start_coords, move_idx]
 
         if len(uci_move) == 5:
             # handle promotions/underpromotions
@@ -168,11 +168,12 @@ class PlayNetworkPolicyConverter:
                 if ew_value != 0:
                     direction += "E" if ew_value > 0 else "W"
                 move_idx = self.codes_list.index(("underpromotion", direction, uci_move[4]))
-                return np.array([*start_coords, move_idx])
+                return [*start_coords, move_idx]
             # Note: queen promotions are "normal moves", no special indexing for them                
 
         # If here, normal move along single file/rank/diagonal. Includes promotion to queen
-        assert ew_value == 0 or ns_value == 0 or ew_value == ns_value or ew_value == -ns_value
+        n_squares = max(abs(ew_value), abs(ns_value))
+        assert ew_value == 0 or ns_value == 0 or abs(ns_value) == n_squares
 
         if ew_value == 0:
             direction = "N" if ns_value > 0 else "S"
@@ -183,7 +184,7 @@ class PlayNetworkPolicyConverter:
                 direction = "N" if ns_value > 0 else "S"
             direction += "E" if ew_value > 0 else "W"
 
-        return np.array([*start_coords, self.codes_list.index((max(abs(ew_value), abs(ns_value)),direction))])
+        return [*start_coords, self.codes_list.index((n_squares, direction))]
 
     def find_best_move(self, policy, board_t):
         '''Find the best move according to the policy outputted by the network.
