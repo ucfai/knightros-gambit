@@ -66,6 +66,18 @@ def handle_ai_move(ai_player, board):
     except NotImplementedError as nie:
         print(nie.__str__())
 
+def reset_board():
+    '''Skeleton method for resetting board after play.
+    '''
+    # TODO: implement
+    print("Resetting board")
+
+def player_wants_rematch():
+    '''Skeleton method for querying player about rematch.
+    '''
+    # TODO: implement
+    return False
+
 def main():
     '''Main driver loop for running Knightro's Gambit.
     '''
@@ -96,8 +108,18 @@ def main():
 
     ai_player = StockfishPlayer(elo_rating)
 
-    # main game loop
+    # Main game loop
     while True:
+        # TODO: Handle game end condition here, rematch, termination, etc.
+        if board.engine.is_game_over():
+            if not player_wants_rematch():
+                print("Thanks for playing")
+                reset_board()
+                break  # Break out of main game loop
+            
+            print("Ok, resetting board")
+            reset_board()
+
         board_status = board.get_status_from_arduino()
         print(f"Board Status: {board_status}")
 
