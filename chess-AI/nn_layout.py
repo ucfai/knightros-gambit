@@ -8,11 +8,19 @@ T = 8   the number of past moves to consider,
 L = 7   the number of constant number planes besides repetition like castling, move count, etc.
 """
 
+import numpy as np
 import torch
 from torch import nn
+
 from output_representation import PlayNetworkPolicyConverter
 
 class PlayNetwork(nn.Module):
+    """Chess AI CNN with policy vector and value output.
+
+    Input current and 7 past moves, each move state with their own set of channels to represent
+    their state, then pass to output. Output has a policy vector size of 4672 possbile moves and
+    a value head of one scalar evaluation number.
+    """
     def __init__(self):
         super(PlayNetwork, self).__init__()
         self.num_res_blocks = 3
@@ -89,16 +97,30 @@ class PlayNetwork(nn.Module):
         policy_out = self.policy_head(x)
         
         return (policy_out, value_out)
-  
-        
-"""Make working chess AI CNN with policy vector and value output
 
-Input current and 7 past moves, each move state with their
-own set of channels to represent their state, then pass to output.
-Output has a policy vector size of 4672 possbile moves and
-a value head of one scalar evaluation number.
 
-"""
+    def predict(self, board, input):
+        """Function to get neural network output.
+        """
+        # # Note: uncomment below two lines and comment out the other code to run MCTS without neural network.
+        # policy = np.arange(8 * 8 * 73).reshape(8, 8, 73)
+        # value = 1
+
+        model = PlayNetwork()
+        policy, value = model(torch.randn(1, 119, 8, 8))
+        value = value.item()
+
+        policy = policy.reshape(8, 8, 73)
+
+        # TODO: this conversion should be done at the calling function, predict() should return
+        # the policy and value. Then, when you have the policy, you can convert it. This way we
+        # don't need to pass board to this function either. This should solely take the input
+        # state, run it through the net, then return the output.
+        policy_converter = PlayNetworkPolicyConverter()
+        move_values = policy_converter.find_value_of_all_legal_moves(policy, board)
+
+        return value, move_values
+                
 def main():
     model = PlayNetwork()
     policy, value = model(torch.randn(1, 119, 8, 8))
