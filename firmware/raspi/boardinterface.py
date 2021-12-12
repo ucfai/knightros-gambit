@@ -18,6 +18,12 @@ class Engine:
     def __init__(self):
         self.chess_board = chess.Board()
 
+        self.king_to_rook_moves = {}
+        self.king_to_rook_moves['e1g1'] = 'h1f1'
+        self.king_to_rook_moves['e1c1'] = 'a1d1'
+        self.king_to_rook_moves['e8g8'] = 'h8f8'
+        self.king_to_rook_moves['e8c8'] = 'a8d8'
+
     def get_2d_board(self):
         '''Returns a 2d board from fen representation
 
@@ -80,6 +86,11 @@ class Engine:
         '''
         return self.chess_board.is_castling(self.chess_board.parse_uci(uci_move))
 
+    def is_capture(self, uci_move):
+        '''Returns boolean indicating if uci_move is a capture.
+        '''
+        return self.chess_board.is_capture(self.chess_board.parse_uci(uci_move))
+
     @staticmethod
     def get_coords_from_square(square):
         '''Returns tuple of integers indicating grid coordinates from square
@@ -108,6 +119,16 @@ class Engine:
         color = 'w' if piece_w_color.isupper() else 'b'
         return (color, piece_w_color.lower())
 
+    def outcome(self):
+        '''Returns None if game in progress, otherwise outcome of game.
+        '''
+        return self.chess_board.outcome()
+
+    def is_game_over(self):
+        '''Returns boolean indicating whether or not game is over.
+        '''
+        return self.chess_board.is_game_over()
+
 class Board:
     '''Main class that serves as glue between software and hardware.
 
@@ -133,15 +154,26 @@ class Board:
         Returns true if the uci_move was successfully sent to Arduino
         '''
         try:
+            # Send captured piece to graveyard first, then do all the other ops 
+            if self.engine.is_capture(uci_move):
+                self.send_to_graveyard(*self.engine.get_piece_info_from_square(uci_move[2:4]))
+            # If move is promotion, send pawn to graveyard, then send promotion piece to board
             if Engine.is_promotion(uci_move):
                 self.handle_promotion(*self.engine.get_piece_info_from_square(uci_move[:2]))
+            # If castle, decompose move into king move, then castle move
             if self.engine.is_castle(uci_move):
-                # TODO: send the king move as a direct uci_move, then the rook move as indirect
-                print("Need to create logic for sending castle moves")
-            else:
-                # TODO: update this to have a real opcode
+                # King move
                 self.send_message_to_arduino(*Engine.get_coords_from_uci_move(uci_move),
-                                             opcode=None)
+                                             opcode=OpCode.MOVE_PIECE_IN_STRAIGHT_LINE)
+                # Rook move
+                self.send_message_to_arduino(*Engine.get_coords_from_uci_move(
+                                                self.king_to_rook_moves[uci_move]),
+                                             opcode=OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
+            else:
+                # TODO: Update this to have a real opcode
+                # need to consider direct vs. indirect moves; see notes for move types
+                self.send_message_to_arduino(*Engine.get_coords_from_uci_move(uci_move),
+                                             opcode=OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
         except ArduinoException as a_e:
             print(f"Unable to send move to Arduino: {a_e.__str__()}")
             return False
@@ -209,16 +241,58 @@ class Board:
     #     '''
     #     print("Need to discuss how board is setup in team meeting")
 
-    def handle_promotion(self, color, piece_type):
-        '''Backfills promotion area from graveyard if possible.
+    def handle_promotion(self, square, color, piece_type):
+        '''Assumes that handling captures during promotion done outside this function.
+
+        Backfills promotion area from graveyard if possible.
         '''
+        # TODO: First move the pawn being promoted to the graveyard.
+        # self.send_to_graveyard(color, 'p', origin=square)
+
+        # TODO: Put the to-be-promoted piece on the appropriate square.
+        # self.retrieve_from_graveyard(destination, color, piece_type)
+
+        # Lastly, backfill the graveyard, if possible.
         if self.graveyard.dead_piece_counts[color + piece_type] > 1:
             self.send_message_to_arduino(
                 *self.graveyard.backfill_promotion_area_from_graveyard(color, piece_type),
                 OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
-            self.graveyard.update_dead_piece_count(color, piece_type, delta=1)
+            self.graveyard.update_dead_piece_count(color, piece_type, delta=-1)  # decrement
         else:
             print(f"All pieces of type {color}{piece_type} have been used!")
+
+    # TODO: clean up interaction between this and backfill_promo_area in Graveyard. Need to be
+    # careful about updating counts of dead pieces.
+
+    def send_to_graveyard(self, color, piece_type, origin=None):
+        '''Send piece to graveyard and increment dead piece count.
+
+        Increments the number of dead pieces from k to k + 1, then sends captured piece to
+        graveyard[piece types][k + 1].
+        '''
+        self.graveyard.update_dead_piece_count(color, piece_type, delta=1)  # increment
+        counts, graveyard = get_graveyard_info_for_piece_type(color, piece_type)
+        count = counts[color + piece_type]
+        if not origin:
+            origin = self.graveyard.w_capture_sq if color == 'w' else self.graveyard.b_capture_sq
+        dest = graveyard[color + piece_type][count]
+
+        self.send_message_to_arduino(origin, dest, OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
+
+    def retrieve_from_graveyard(dest, color, piece_type):
+        '''Retrieve piece from graveyard and decrement dead piece count.
+
+        Increments the number of dead pieces from k to k + 1, then sends captured piece to
+        graveyard[piece types][k + 1].
+        '''
+        self.graveyard.update_dead_piece_count(color, piece_type, delta=1)  # increment
+        counts, graveyard = get_graveyard_info_for_piece_type(color, piece_type)
+        count = counts[color + piece_type]
+        if not origin:
+            origin = self.graveyard.w_capture_sq if color == 'w' else self.graveyard.b_capture_sq
+        dest = graveyard[color + piece_type][count]
+
+        self.send_message_to_arduino(origin, dest, OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
 
 class Graveyard:
     '''Class holds coordinates and state information of board graveyard.
@@ -262,7 +336,6 @@ class Graveyard:
         '''
         piece_w_color = color + piece_type
         return self.dead_piece_counts[piece_w_color], self.dead_piece_graveyards[piece_w_color]
-
 
     def update_dead_piece_count(self, color, piece_type, delta):
         '''Updates number of dead pieces by specified delta, either 1 or -1.
