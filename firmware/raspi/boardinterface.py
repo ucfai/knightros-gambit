@@ -271,28 +271,30 @@ class Board:
         graveyard[piece types][k + 1].
         '''
         self.graveyard.update_dead_piece_count(color, piece_type, delta=1)  # increment
-        counts, graveyard = get_graveyard_info_for_piece_type(color, piece_type)
-        count = counts[color + piece_type]
+        piece_counts, piece_locations = get_graveyard_info_for_piece_type(color, piece_type)
+        count = piece_counts[color + piece_type]
         if not origin:
             origin = self.graveyard.w_capture_sq if color == 'w' else self.graveyard.b_capture_sq
-        dest = graveyard[color + piece_type][count]
+        dest = piece_locations[color + piece_type][count]
 
         self.send_message_to_arduino(origin, dest, OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
 
     def retrieve_from_graveyard(dest, color, piece_type):
         '''Retrieve piece from graveyard and decrement dead piece count.
 
-        Increments the number of dead pieces from k to k + 1, then sends captured piece to
-        graveyard[piece types][k + 1].
+        Decrements the number of dead pieces from k to k - 1, then sends graveyard piece at
+        graveyard[piece types][k] to `dest`.
         '''
-        self.graveyard.update_dead_piece_count(color, piece_type, delta=1)  # increment
-        counts, graveyard = get_graveyard_info_for_piece_type(color, piece_type)
-        count = counts[color + piece_type]
-        if not origin:
-            origin = self.graveyard.w_capture_sq if color == 'w' else self.graveyard.b_capture_sq
-        dest = graveyard[color + piece_type][count]
+        piece_counts, piece_locations = get_graveyard_info_for_piece_type(color, piece_type)
+        count = piece_counts[color + piece_type]
+        # Can only retrieve piece from graveyard if there is at least one piece of specified type
+        if count == 0:
+            raise ValueError(f"There are not enough pieces in the graveyard to support promotion "
+                              "to piece of type {piece_type}.")
+        self.graveyard.update_dead_piece_count(color, piece_type, delta=-1)  # decrement
 
-        self.send_message_to_arduino(origin, dest, OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
+        self.send_message_to_arduino(piece_locations[color + piece_type][count], dest,
+                                     OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
 
 class Graveyard:
     '''Class holds coordinates and state information of board graveyard.
