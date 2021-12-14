@@ -28,15 +28,14 @@ class CLHumanPlayer:
     def select_move(board):
         '''Prompts user to select a move.
         '''
-        legal_moves = board.valid_moves_from_position()
-        move = None
-        while move is None:
-            try_move = input("Please input your move (xyxy): ").lower()
-            if try_move in legal_moves:
-                move = try_move
+        uci_move = None
+        while uci_move is None:
+            input_move = input("Please input your move (xyxy): ").lower()
+            if board.is_valid_move(input_move):
+                uci_move = input_move
             else:
-                print(f"The move {try_move} is invalid; please use format (xyxy) e.g., d2d4")
-        return move
+                print(f"The move {input_move} is invalid; please use format (xyxy) e.g., d2d4")
+        return uci_move
 
 
 # class PhysicalHumanPlayer:

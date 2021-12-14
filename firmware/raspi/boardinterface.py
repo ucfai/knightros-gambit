@@ -1,24 +1,36 @@
+'''This module is the interface point between the Arduino and Raspberry Pi.
+
+In addition to encapsulating serial communication to facilitate the game loop,
+this file also manages the game state, move validation, etc.
+'''
+
+import chess
+
 from status import ArduinoException, ArduinoStatus, OpCode
-from util import BoardCell, create_stockfish_wrapper
+import util
 
 class Engine:
-    '''Wrapper around the Stockfish engine.
-
-    Provides some additional utility functions not offered by Stockfish.
+    '''Engine designed to be used for maintaining hardware board state.
 
     Attributes:
-        stockfish: A python wrapper around the Stockfish chess engine.
+        board: A python wrapper around a python-chess board.
     '''
     def __init__(self):
-        self.stockfish = create_stockfish_wrapper()
+        self.chess_board = chess.Board()
+
+        self.king_to_rook_moves = {}
+        self.king_to_rook_moves['e1g1'] = 'h1f1'
+        self.king_to_rook_moves['e1c1'] = 'a1d1'
+        self.king_to_rook_moves['e8g8'] = 'h8f8'
+        self.king_to_rook_moves['e8c8'] = 'a8d8'
 
     def get_2d_board(self):
-        '''Returns a 2d board from stockfish fen representation
+        '''Returns a 2d board from fen representation
 
         Taken from this SO answer:
         https://stackoverflow.com/questions/66451525/how-to-convert-fen-id-onto-a-chess-board
         '''
-        fen = self.stockfish.get_fen_position()
+        fen = self.chess_board.fen()
         board = []
         for row in fen.split('/'):
             brow = []
@@ -27,55 +39,57 @@ class Engine:
                     break
 
                 if char in '12345678':
-                    brow.extend(['--'] * int(char))
-                elif char == 'p':
-                    brow.append('bp')
-                elif char == 'P':
-                    brow.append('wp')
-                elif char > 'Z':
-                    brow.append('b'+char.upper())
+                    brow.extend(['.'] * int(char))
                 else:
-                    brow.append('w'+char)
+                    brow.append(char)
             board.append(brow)
         return board
 
     def valid_moves_from_position(self):
-        '''Returns all valid moves from the current board position.
-
-        218 is max number of moves from given position:
-        https://www.chessprogramming.org/Chess_Position
+        '''Returns list of all valid moves (in uci format) from the current board position.
         '''
-        move_dict = self.stockfish.get_top_moves(218)
-        return [move['Move'] for move in move_dict]
+        return [move.uci() for move in self.chess_board.legal_moves]
 
-    def is_valid_move(self, move):
+    def is_valid_move(self, uci_move):
         '''Returns boolean indicating if move is valid in current board state.
         '''
-        return self.stockfish.is_move_correct(move)
+        try:
+            move = self.chess_board.parse_uci(uci_move)
+        except ValueError:
+            return False
 
-    def make_move(self, move):
+        # Move parsed from UCI can be null, only return True if non-null.
+        return bool(move)
+
+    def make_move(self, uci_move):
         '''Updates board state by making move from current position.
 
-        Assumes that provided move is valid.
+        Assumes that provided uci_move is valid.
         '''
-        self.stockfish.make_moves_from_current_position([move])
+        self.chess_board.push_uci(uci_move)
 
-    def get_fen_position(self):
-        return self.stockfish.get_fen_position()
+    def fen(self):
+        '''Return fen string representation of current board state.
+        '''
+        return self.chess_board.fen()
 
     @staticmethod
-    def is_promotion(move):
-        '''Returns boolean indicating if move is a promotion.
+    def is_promotion(uci_move):
+        '''Returns boolean indicating if uci_move is a promotion.
         '''
-        if not move:
+        if not uci_move or len(uci_move) == 4:
             return False
-        return 'q' in move or 'b' in move or 'n' in move or 'r' in move
+        return 'q' in uci_move or 'b' in uci_move or 'n' in uci_move or 'r' in uci_move
 
-    @staticmethod
-    def is_castle(move):
-        '''Returns boolean indicating if move is a castle.
+    def is_castle(self, uci_move):
+        '''Returns boolean indicating if uci_move is a castle.
         '''
-        return move in ('e1g1', 'e1c1', 'e8g8', 'e8c8')
+        return self.chess_board.is_castling(self.chess_board.parse_uci(uci_move))
+
+    def is_capture(self, uci_move):
+        '''Returns boolean indicating if uci_move is a capture.
+        '''
+        return self.chess_board.is_capture(self.chess_board.parse_uci(uci_move))
 
     @staticmethod
     def get_coords_from_square(square):
@@ -86,10 +100,11 @@ class Engine:
         return (ord(square[0]) - ord('a'), ord(square[1]) - ord('1'))
 
     @staticmethod
-    def get_start_and_end_coords_from_move(move):
-        '''Returns tuple of int tuples, start and end points from provided move.
+    def get_coords_from_uci_move(uci_move):
+        '''Returns tuple of int tuples, start and end points from provided uci_move.
         '''
-        return (Engine.get_coords_from_square(move[:2]), Engine.get_coords_from_square(move[2:]))
+        return (Engine.get_coords_from_square(uci_move[:2]),
+                Engine.get_coords_from_square(uci_move[2:]))
 
     def get_piece_info_from_square(self, square):
         '''Returns tuple of color and piece type from provided square.
@@ -99,9 +114,20 @@ class Engine:
         grid = self.get_2d_board()
         i, j = Engine.get_coords_from_square(square)
         piece_w_color = grid[i][j]
-        if piece_w_color != "--":
+        if piece_w_color != '.':
             return None
-        return (piece_w_color[0], piece_w_color[1].lower())
+        color = 'w' if piece_w_color.isupper() else 'b'
+        return (color, piece_w_color.lower())
+
+    def outcome(self):
+        '''Returns None if game in progress, otherwise outcome of game.
+        '''
+        return self.chess_board.outcome()
+
+    def is_game_over(self):
+        '''Returns boolean indicating whether or not game is over.
+        '''
+        return self.chess_board.is_game_over()
 
 class Board:
     '''Main class that serves as glue between software and hardware.
@@ -110,7 +136,7 @@ class Board:
     Arduino code/physical hardware/sensors.
 
     Attributes:
-        engine: See the `Engine` class above: a wrapper around Stockfish that offers some
+        engine: See the `Engine` class above: a wrapper around py-chess that offers some
             additional utility functions.
         arduino_status: An enum containing the most recent status received from the Arduino.
         graveyard: See the `Graveyard` class below: A set of coordinates and metadata about
@@ -122,25 +148,36 @@ class Board:
 
         self.graveyard = Graveyard()
 
-    def make_move(self, move):
-        ''' This function assumes that is_valid_move has been called for the move.
+    def make_move(self, uci_move):
+        ''' This function assumes that is_valid_move has been called for the uci_move.
 
-        Returns true if the move was successfully sent to Arduino
+        Returns true if the uci_move was successfully sent to Arduino
         '''
         try:
-            if Engine.is_promotion(move):
-                self.handle_promotion(*self.engine.get_piece_info_from_square(move[:2]))
-            if Engine.is_castle(move):
-                # TODO: send the king move as a direct move, then the rook move as indirect
-                print("Need to create logic for sending castle moves")
+            # Send captured piece to graveyard first, then do all the other ops 
+            if self.engine.is_capture(uci_move):
+                self.send_to_graveyard(*self.engine.get_piece_info_from_square(uci_move[2:4]))
+            # If move is promotion, send pawn to graveyard, then send promotion piece to board
+            if Engine.is_promotion(uci_move):
+                self.handle_promotion(*self.engine.get_piece_info_from_square(uci_move[:2]))
+            # If castle, decompose move into king move, then castle move
+            if self.engine.is_castle(uci_move):
+                # King move
+                self.send_message_to_arduino(*Engine.get_coords_from_uci_move(uci_move),
+                                             opcode=OpCode.MOVE_PIECE_IN_STRAIGHT_LINE)
+                # Rook move
+                self.send_message_to_arduino(*Engine.get_coords_from_uci_move(
+                                                self.king_to_rook_moves[uci_move]),
+                                             opcode=OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
             else:
-                # TODO: update this to have a real opcode
-                self.send_message_to_arduino(*Engine.get_start_and_end_coords_from_move(move),
-                                             opcode=None)
+                # TODO: Update this to have a real opcode
+                # need to consider direct vs. indirect moves; see notes for move types
+                self.send_message_to_arduino(*Engine.get_coords_from_uci_move(uci_move),
+                                             opcode=OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
         except ArduinoException as a_e:
             print(f"Unable to send move to Arduino: {a_e.__str__()}")
             return False
-        self.engine.make_move(move)
+        self.engine.make_move(uci_move)
         return True
 
     def valid_moves_from_position(self):
@@ -170,23 +207,31 @@ class Board:
         self.arduino_status = arduino_status
         # TODO: send status to Arduino
 
-    def is_valid_move(self, move):
-        '''Returns boolean indicating if move is valid in current board state.
+    def is_valid_move(self, uci_move):
+        '''Returns boolean indicating if uci_move is valid in current board state.
         '''
-        return self.engine.is_valid_move(move)
+        return self.engine.is_valid_move(uci_move)
+
+    def show_w_graveyard_on_cli(self):
+        '''Prints 2d grid of board, also showing which graveyard squares are occupied/empty.
+        '''
+        pass
 
     def show_on_cli(self):
         '''Prints board as 2d grid.
         '''
-        boardstate = self.engine.stockfish.get_board_visual()
-        # Last row is newline
-        for brow in boardstate.split('\n')[:-1]:
-            print(brow)
-        # Print letters under grid to show files
-        print("  ", end='')
+        chess_grid = self.engine.get_2d_board()
+        # 8 x 8 chess board
+        for i in range(8):
+            # Print row, then number indicating rank
+            for j in range(8):
+                print(chess_grid[i][j], end=' ')
+            print(8-i)
+
+        # Print letters under board to indicate files
         for char in ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']:
             print(char, end='')
-            print("   ", end='')
+            print(" ", end='')
         print()
 
     # def setup_board(self, is_human_turn):
@@ -194,19 +239,62 @@ class Board:
 
     #     If is_human_turn == True, white on human side; otherwise, black
     #     '''
-    #     # TODO: implement this method
     #     print("Need to discuss how board is setup in team meeting")
 
-    def handle_promotion(self, color, piece_type):
-        '''Backfills promotion area from graveyard if possible.
+    def handle_promotion(self, square, color, piece_type):
+        '''Assumes that handling captures during promotion done outside this function.
+
+        Backfills promotion area from graveyard if possible.
         '''
+        # TODO: First move the pawn being promoted to the graveyard.
+        # self.send_to_graveyard(color, 'p', origin=square)
+
+        # TODO: Put the to-be-promoted piece on the appropriate square.
+        # self.retrieve_from_graveyard(destination, color, piece_type)
+
+        # Lastly, backfill the graveyard, if possible.
         if self.graveyard.dead_piece_counts[color + piece_type] > 1:
             self.send_message_to_arduino(
                 *self.graveyard.backfill_promotion_area_from_graveyard(color, piece_type),
                 OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
-            self.graveyard.update_dead_piece_count(color, piece_type, delta=1)
+            self.graveyard.update_dead_piece_count(color, piece_type, delta=-1)  # decrement
         else:
             print(f"All pieces of type {color}{piece_type} have been used!")
+
+    # TODO: clean up interaction between this and backfill_promo_area in Graveyard. Need to be
+    # careful about updating counts of dead pieces.
+
+    def send_to_graveyard(self, color, piece_type, origin=None):
+        '''Send piece to graveyard and increment dead piece count.
+
+        Increments the number of dead pieces from k to k + 1, then sends captured piece to
+        graveyard[piece types][k + 1].
+        '''
+        self.graveyard.update_dead_piece_count(color, piece_type, delta=1)  # increment
+        piece_counts, piece_locations = get_graveyard_info_for_piece_type(color, piece_type)
+        count = piece_counts[color + piece_type]
+        if not origin:
+            origin = self.graveyard.w_capture_sq if color == 'w' else self.graveyard.b_capture_sq
+        dest = piece_locations[color + piece_type][count]
+
+        self.send_message_to_arduino(origin, dest, OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
+
+    def retrieve_from_graveyard(dest, color, piece_type):
+        '''Retrieve piece from graveyard and decrement dead piece count.
+
+        Decrements the number of dead pieces from k to k - 1, then sends graveyard piece at
+        graveyard[piece types][k] to `dest`.
+        '''
+        piece_counts, piece_locations = get_graveyard_info_for_piece_type(color, piece_type)
+        count = piece_counts[color + piece_type]
+        # Can only retrieve piece from graveyard if there is at least one piece of specified type
+        if count == 0:
+            raise ValueError(f"There are not enough pieces in the graveyard to support promotion "
+                              "to piece of type {piece_type}.")
+        self.graveyard.update_dead_piece_count(color, piece_type, delta=-1)  # decrement
+
+        self.send_message_to_arduino(piece_locations[color + piece_type][count], dest,
+                                     OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
 
 class Graveyard:
     '''Class holds coordinates and state information of board graveyard.
@@ -223,40 +311,9 @@ class Graveyard:
             human player when they capture a black piece).
     '''
     def __init__(self):
-        self.dead_piece_counts = {}
-        self.dead_piece_graveyards = {}
-
-        self.dead_piece_counts["wq"] = 2
-        self.dead_piece_graveyards["wq"] = [BoardCell(0, 9), BoardCell(0, 7), BoardCell(1, 7)]
-        self.dead_piece_counts["wb"] = 1
-        self.dead_piece_graveyards["wb"] = [BoardCell(1, 9), BoardCell(0, 6), BoardCell(1, 6)]
-        self.dead_piece_counts["wn"] = 1
-        self.dead_piece_graveyards["wn"] = [BoardCell(0, 8), BoardCell(0, 5), BoardCell(1, 5)]
-        self.dead_piece_counts["wr"] = 1
-        self.dead_piece_graveyards["wr"] = [BoardCell(1, 8), BoardCell(0, 4), BoardCell(1, 4)]
-        self.dead_piece_counts["wp"] = 0
-        self.dead_piece_graveyards["wp"] = [
-            BoardCell(0, 0), BoardCell(1, 0), BoardCell(0, 1), BoardCell(1, 1),
-            BoardCell(0, 2), BoardCell(1, 2), BoardCell(0, 3), BoardCell(1, 3),
-        ]
-
-        self.dead_piece_counts["bq"] = 2
-        self.dead_piece_graveyards["bq"] = [BoardCell(10, 9), BoardCell(10, 7), BoardCell(11, 7)]
-        self.dead_piece_counts["bb"] = 1
-        self.dead_piece_graveyards["bb"] = [BoardCell(11, 9), BoardCell(10, 6), BoardCell(11, 6)]
-        self.dead_piece_counts["bn"] = 1
-        self.dead_piece_graveyards["bn"] = [BoardCell(10, 8), BoardCell(10, 5), BoardCell(11, 5)]
-        self.dead_piece_counts["br"] = 1
-        self.dead_piece_graveyards["br"] = [BoardCell(11, 8), BoardCell(10, 4), BoardCell(11, 4)]
-        self.dead_piece_counts["bp"] = 0
-        self.dead_piece_graveyards["bp"] = [
-            BoardCell(10, 0), BoardCell(11, 0), BoardCell(10, 1), BoardCell(11, 1),
-            BoardCell(10, 2), BoardCell(11, 2), BoardCell(10, 3), BoardCell(11, 3),
-        ]
-
-        self.w_capture_sq = BoardCell(1, 10)
-        self.b_capture_sq = BoardCell(10, 10)
-
+        self.dead_piece_counts = util.init_dead_piece_counts()
+        self.dead_piece_graveyards = util.init_dead_piece_graveyards()
+        self.w_capture_sq, self.b_capture_sq = util.init_capture_squares()
 
     def backfill_promotion_area_from_graveyard(self, color, piece_type):
         '''
@@ -281,7 +338,6 @@ class Graveyard:
         '''
         piece_w_color = color + piece_type
         return self.dead_piece_counts[piece_w_color], self.dead_piece_graveyards[piece_w_color]
-
 
     def update_dead_piece_count(self, color, piece_type, delta):
         '''Updates number of dead pieces by specified delta, either 1 or -1.
