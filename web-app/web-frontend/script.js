@@ -5,7 +5,7 @@ let board = null;
 const game = new Chess();
 const $status = $('#status');
 const $pgn = $('#pgn');
-const $gan = $('#gan');
+const $uci = $('#uci');
 
 /** checks if game is over if valid player move
  * @param {Object} source location
@@ -212,7 +212,7 @@ function updateStatus() {
   }
   $status.html(status);
   $pgn.html(game.pgn());
-  $gan.html(game.gan());
+  $uci.html(game.uci());
 }
 
 const config = {

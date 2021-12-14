@@ -731,25 +731,19 @@ var Chess = function (fen) {
       return output
     }
      
-    /* convert a move from 0x88 coordinates to Grid Algebraic Notation
-     * (GAN)
+    /* convert a move from 0x88 coordinates to Universal Chess Interface
+     * (UCI)
      *
      * displays move in the form of p1p2, p1 as the starting position and p2 as the destination position
      * displays promotion move in the form of p1p2<lowercase-piece-type>
      * 
      */
-    function move_to_gan(move) {
+    function move_to_uci(move) {
       var output = ''
-      if (move.flags & BITS.KSIDE_CASTLE) {
-        output = 'O-O'
-      } else if (move.flags & BITS.QSIDE_CASTLE) {
-        output = 'O-O-O'
-      } else {
-        output += algebraic(move.from)
-        output += algebraic(move.to)
-        if (move.flags & BITS.PROMOTION) {
-          output += move.promotion.toLowerCase()
-        }
+      output += algebraic(move.from)
+      output += algebraic(move.to)
+      if (move.flags & BITS.PROMOTION) {
+        output += move.promotion.toLowerCase()
       }
       return output
     }
@@ -1415,7 +1409,7 @@ var Chess = function (fen) {
         return moves
       },
       
-      gan: function (options) {
+      uci: function (options) {
         var newline =
           typeof options === 'object' && typeof options.newline_char === 'string'
             ? options.newline_char
@@ -1427,7 +1421,7 @@ var Chess = function (fen) {
         var result = []
         var header_exists = false
   
-        /* add the GAN header headerrmation */
+        /* add the UCI header headerrmation */
         for (var i in header) {
           /* TODO: order of enumerated properties in header object is not
            * guaranteed, see ECMA-262 spec (section 12.6.4)
@@ -1435,10 +1429,6 @@ var Chess = function (fen) {
           result.push('[' + i + ' "' + header[i] + '"]' + newline)
           header_exists = true
         }
-  
-       /*if (header_exists && history.length) {
-          result.push(newline)
-        }*/
   
         var append_comment = function (move_string) {
           var comment = comments[generate_fen()]
@@ -1468,7 +1458,7 @@ var Chess = function (fen) {
           //move_string = append_comment(move_string)
           var move = reversed_history.pop()
           move_string =
-          move_to_gan(move)
+          move_to_uci(move)
           make_move(move)
         }
   
@@ -1482,7 +1472,7 @@ var Chess = function (fen) {
           moves.push(header.Result)
         }
   
-        /* history should be back to what it was before we started generating GAN,
+        /* history should be back to what it was before we started generating UCI,
          * so join together moves
          */
         if (max_width === 0) {
