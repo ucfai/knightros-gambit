@@ -196,7 +196,7 @@ class Board:
         # This function can also be used for sending moves to graveyard or to promote
         # So need to add move validation as well
         # Maybe message should be constructed before being sent here?
-        print("Need to implement")
+        print("Need to implement sending message to arduino")
 
     def get_status_from_arduino(self):
         '''Read status from Arduino over UART connection.
