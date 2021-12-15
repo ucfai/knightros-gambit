@@ -154,21 +154,24 @@ class Board:
         Returns true if the uci_move was successfully sent to Arduino
         '''
         try:
-            # Send captured piece to graveyard first, then do all the other ops 
+            # Send captured piece to graveyard first, then do all the other ops
             if self.engine.is_capture(uci_move):
                 self.send_to_graveyard(*self.engine.get_piece_info_from_square(uci_move[2:4]))
             # If move is promotion, send pawn to graveyard, then send promotion piece to board
             if Engine.is_promotion(uci_move):
+                # TODO: Add error handling here if the piece we wish to promote to is not
+                # available (e.g., all queens have been used already).
                 self.handle_promotion(*self.engine.get_piece_info_from_square(uci_move[:2]))
             # If castle, decompose move into king move, then castle move
             if self.engine.is_castle(uci_move):
                 # King move
-                self.send_message_to_arduino(*Engine.get_coords_from_uci_move(uci_move),
-                                             opcode=OpCode.MOVE_PIECE_IN_STRAIGHT_LINE)
+                self.send_message_to_arduino(
+                    *Engine.get_coords_from_uci_move(uci_move),
+                    opcode=OpCode.MOVE_PIECE_IN_STRAIGHT_LINE)
                 # Rook move
-                self.send_message_to_arduino(*Engine.get_coords_from_uci_move(
-                                                self.king_to_rook_moves[uci_move]),
-                                             opcode=OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
+                self.send_message_to_arduino(
+                    *Engine.get_coords_from_uci_move(self.engine.king_to_rook_moves[uci_move]),
+                    opcode=OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
             else:
                 # TODO: Update this to have a real opcode
                 # need to consider direct vs. indirect moves; see notes for move types
@@ -193,7 +196,7 @@ class Board:
         # This function can also be used for sending moves to graveyard or to promote
         # So need to add move validation as well
         # Maybe message should be constructed before being sent here?
-        pass
+        print("Need to implement")
 
     def get_status_from_arduino(self):
         '''Read status from Arduino over UART connection.
@@ -215,7 +218,7 @@ class Board:
     def show_w_graveyard_on_cli(self):
         '''Prints 2d grid of board, also showing which graveyard squares are occupied/empty.
         '''
-        pass
+        print("Need to implement")
 
     def show_on_cli(self):
         '''Prints board as 2d grid.
@@ -246,54 +249,48 @@ class Board:
 
         Backfills promotion area from graveyard if possible.
         '''
-        # TODO: First move the pawn being promoted to the graveyard.
-        # self.send_to_graveyard(color, 'p', origin=square)
+        if self.graveyard.dead_piece_counts[color + piece_type] == 0:
+            raise ValueError(f"All pieces of type {color}{piece_type} have been used!")
 
-        # TODO: Put the to-be-promoted piece on the appropriate square.
-        # self.retrieve_from_graveyard(destination, color, piece_type)
+        # First move the pawn being promoted to the graveyard.
+        self.send_to_graveyard(color, 'p', origin=square)
 
-        # Lastly, backfill the graveyard, if possible.
-        if self.graveyard.dead_piece_counts[color + piece_type] > 1:
-            self.send_message_to_arduino(
-                *self.graveyard.backfill_promotion_area_from_graveyard(color, piece_type),
-                OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
-            self.graveyard.update_dead_piece_count(color, piece_type, delta=-1)  # decrement
-        else:
-            print(f"All pieces of type {color}{piece_type} have been used!")
-
-    # TODO: clean up interaction between this and backfill_promo_area in Graveyard. Need to be
-    # careful about updating counts of dead pieces.
+        # Put the to-be-promoted piece (from "back" of graveyard) on the appropriate square.
+        self.retrieve_from_graveyard(color, piece_type, square)
 
     def send_to_graveyard(self, color, piece_type, origin=None):
         '''Send piece to graveyard and increment dead piece count.
 
         Increments the number of dead pieces from k to k + 1, then sends captured piece to
-        graveyard[piece types][k + 1].
+        graveyard[piece types][k + 1]. Note that the piece at index k is the k + 1th piece.
         '''
         self.graveyard.update_dead_piece_count(color, piece_type, delta=1)  # increment
-        piece_counts, piece_locations = get_graveyard_info_for_piece_type(color, piece_type)
+        piece_counts, piece_locs = self.graveyard.get_graveyard_info_for_piece_type(color,
+                                                                                    piece_type)
         count = piece_counts[color + piece_type]
         if not origin:
             origin = self.graveyard.w_capture_sq if color == 'w' else self.graveyard.b_capture_sq
-        dest = piece_locations[color + piece_type][count]
+        dest = piece_locs[color + piece_type][count]
 
         self.send_message_to_arduino(origin, dest, OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
 
-    def retrieve_from_graveyard(dest, color, piece_type):
-        '''Retrieve piece from graveyard and decrement dead piece count.
+    def retrieve_from_graveyard(self, color, piece_type, destination):
+        '''Retrieve piece from the "back" of the graveyard and decrement dead piece count.
 
-        Decrements the number of dead pieces from k to k - 1, then sends graveyard piece at
-        graveyard[piece types][k] to `dest`.
+        Decrements the number of dead pieces for the retrieved piece type from k to k - 1, then
+        sends graveyard piece at graveyard[piece types][k - 1] to `destination`. Note that the
+        piece at index k - 1 is the kth piece.
         '''
-        piece_counts, piece_locations = get_graveyard_info_for_piece_type(color, piece_type)
+        piece_counts, piece_locs = self.graveyard.get_graveyard_info_for_piece_type(color,
+                                                                                    piece_type)
         count = piece_counts[color + piece_type]
         # Can only retrieve piece from graveyard if there is at least one piece of specified type
         if count == 0:
             raise ValueError(f"There are not enough pieces in the graveyard to support promotion "
-                              "to piece of type {piece_type}.")
+                             "to piece of type {piece_type}.")
         self.graveyard.update_dead_piece_count(color, piece_type, delta=-1)  # decrement
 
-        self.send_message_to_arduino(piece_locations[color + piece_type][count], dest,
+        self.send_message_to_arduino(piece_locs[color + piece_type][count-1], destination,
                                      OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
 
 class Graveyard:
@@ -315,6 +312,7 @@ class Graveyard:
         self.dead_piece_graveyards = util.init_dead_piece_graveyards()
         self.w_capture_sq, self.b_capture_sq = util.init_capture_squares()
 
+    # TODO: call this method after human makes a move if needed.
     def backfill_promotion_area_from_graveyard(self, color, piece_type):
         '''
         color = 'w' or 'b'
