@@ -95,7 +95,7 @@ class Engine:
     def get_coords_from_square(square):
         '''Returns tuple of integers indicating grid coordinates from square
         '''
-        # TODO: verify that this is the proper indexing for grid created by get_2d_grid
+        # TODO: verify that this is the proper indexing for grid created by get_2d_board
         # TODO: make this a BoardCell? Then we need to update the offset when accessing the 2d grid
         return (ord(square[0]) - ord('a'), ord(square[1]) - ord('1'))
 
@@ -104,7 +104,7 @@ class Engine:
         '''Returns tuple of int tuples, start and end points from provided uci_move.
         '''
         return (Engine.get_coords_from_square(uci_move[:2]),
-                Engine.get_coords_from_square(uci_move[2:]))
+                Engine.get_coords_from_square(uci_move[2:4]))
 
     def get_piece_info_from_square(self, square):
         '''Returns tuple of color and piece type from provided square.
@@ -173,10 +173,12 @@ class Board:
                     *Engine.get_coords_from_uci_move(self.engine.king_to_rook_moves[uci_move]),
                     opcode=OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
             else:
-                # TODO: Update this to have a real opcode
-                # need to consider direct vs. indirect moves; see notes for move types
-                self.send_message_to_arduino(*Engine.get_coords_from_uci_move(uci_move),
-                                             opcode=OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
+                if self.is_knight_move_w_neighbors(uci_move):
+                    self.send_message_to_arduino(*Engine.get_coords_from_uci_move(uci_move),
+                                                 opcode=OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
+                else:
+                    self.send_message_to_arduino(*Engine.get_coords_from_uci_move(uci_move),
+                                                 opcode=OpCode.MOVE_PIECE_IN_STRAIGHT_LINE)
         except ArduinoException as a_e:
             print(f"Unable to send move to Arduino: {a_e.__str__()}")
             return False
@@ -292,6 +294,44 @@ class Board:
 
         self.send_message_to_arduino(piece_locs[color + piece_type][count-1], destination,
                                      OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
+
+    def is_knight_move_w_neighbors(self, uci_move):
+        '''Return true if uci_move is a knight move with neighbors.
+        '''
+        source, dest = get_coords_from_uci_move(uci_move)
+        _, piece_type = get_piece_info_from_square(source)
+        if piece_type != "n":
+            return False
+
+        board_2d = self.get_2d_board()
+        # Cut number of cases from 8 to 4 by treating soure and dest interchangeably
+        A, B = source, dest if source.x < dest.x else dest, source
+        if A.x == B.x - 1:
+            if A.y == B.y - 2:
+                # Case 1, dx=1, dy=2
+                return [sq != '.' for sq in [board_2d[A.x][A.y + 1],
+                                             board_2d[A.x][A.y + 2],
+                                             board_2d[A.x + 1][A.y],
+                                             board_2d[A.x + 1][A.y + 1]]]
+            else:
+                # Case 1, dx=1, dy=-2
+                return [sq != '.' for sq in [board_2d[A.x][A.y - 1],
+                                             board_2d[A.x][A.y - 2],
+                                             board_2d[A.x + 1][A.y],
+                                             board_2d[A.x + 1][A.y - 1]]]
+        else:
+            if A.y == B.y - 1:
+                # Case 1, dx=2, dy=1
+                return [sq != '.' for sq in [board_2d[A.x + 1][A.y],
+                                             board_2d[A.x + 2][A.y],
+                                             board_2d[A.x][A.y + 1],
+                                             board_2d[A.x + 1][A.y + 1]]]
+            else:
+                # Case 1, dx=2, dy=-1
+                return [sq != '.' for sq in [board_2d[A.x + 1][A.y],
+                                             board_2d[A.x + 2][A.y],
+                                             board_2d[A.x][A.y - 1],
+                                             board_2d[A.x + 1][A.y - 1]]]
 
 class Graveyard:
     '''Class holds coordinates and state information of board graveyard.
