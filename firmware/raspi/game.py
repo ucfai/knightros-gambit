@@ -53,6 +53,10 @@ def handle_human_move(mode_of_interaction, board):
             send_move_to_board(board, uci_move)
         except NotImplementedError as nie:
             print(nie.__str__())
+    elif mode_of_interaction == 'over_the_board':
+        # TODO: think about handling backfill of promotion area if person made a promotion move.
+        # If needed, backfill the promotion area (if possible).
+        # board.graveyard.backfill_promotion_area_from_graveyard(color, piece_type)
     else:
         raise ValueError("Other modes of interaction are unimplemented")
 
