@@ -41,22 +41,42 @@ void moveDiagonal(int dirX, int dirY, int spacesX, int spacesY)
 
   // similary subject to change as above function dictation, same number as above though
   float numStepsX = spacesX * stepsPerSpace;
-  float numStepsX = spacesY * stepsPerSpace;
+  float numStepsY = spacesY * stepsPerSpace;
 
   digitalWrite(MOTOR_SLEEP, HIGH);
   digitalWrite(MOTOR_RESET, HIGH);
   digitalWrite(MOTOR_ENABLE, LOW);
 
   digitalWrite(xMotor[1], dirX);
-  digitalWrite(yMotor[1], dirX);
-
-  for(i = 0; i < numSteps; i++)
+  digitalWrite(yMotor[1], dirY);
+  
+  if (numStepsX = numStepsY) 
   {
+    for(i = 0; i < numStepsX; i++)
+    {
     digitalWrite(xMotor[0], LOW);
     digitalWrite(yMotor[0], LOW);
     delay(1);
     digitalWrite(xMotor[0], HIGH);
     digitalWrite(yMotor[0], HIGH);
+    }
+  } 
+
+  else 
+  {
+    float dist = sqrt(numStepsX * numStepsX + numStepsY * numStepsY);
+    float delayX = dist / numStepsX;
+    float delayY = dist / numStepsY;
+
+    for(i=0; i < dist; i++)
+      digitalWrite(xMotor[0], LOW);
+      //do i have to convert this into an int, can i keep it as a variable?
+      delay(delayX);
+      digitalWrite(xMotor[0], HIGH);
+
+      digitalWrite(yMotor[0], LOW);
+      delay(delayY);
+      digitalWrite(yMotor[0], HIGH);
   }
 }
 
