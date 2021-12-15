@@ -59,19 +59,14 @@
         If the queue is non-empty, we dispatch moves until it is. In order to pop the front of the queue, the Arduino needs to send 
         back the move count of the previously dispatched move and idle status. Only then do we pop that move from the queue and start 
         sending the next move to be processed. Once the queue is empty, we proceed to the rest of the loop.</div>
-      <div id="subBackground">BoardInterface</div>
-      <img class="bdiagrm" src="images/boarddiagram.png">
-      <div id="imgdescription">Diagram showing indexing scheme, graveyard, capture squares, and promotion area</div>
-      <div class="sideContainer">
-        <div id="sideSub">Board</div>
-        <div id="sideText">The Board class is the interface point between the Arduino and the Raspberry Pi. Board is used to send and 
+      <div id="subBackground">BoardInterface</div><br>
+      <div class="grid-container">
+        <div class="grid-img"><img src="images/boarddiagram.png"><br>Diagram showing indexing scheme, graveyard, capture squares, and promotion area</div>
+        <div class="grid-text"><div id="grid-sub">Board</div><br>The Board class is the interface point between the Arduino and the Raspberry Pi. Board is used to send and 
           receive messages through the Board interface (see <a href="#ard">ArduinoStatus</a> and <a href="#opCode">OpCode</a>), validate 
-          moves, and handle captures/promotions.</div>
-        <div id="sideSub">Engine</div>
-        <div id="sideText">We construct a simple wrapper around <a href="https://python-chess.readthedocs.io/" 
-          onclick="window.open(this.href,'');return false;">python-chess</a> and add some helper functions to keep track of board state.</div>
-        <div id="sideSub"><a id="grave">Graveyard</a></div>
-        <div id="sideText">We formulate the Graveyard to avoid the need to use computer vision to keep track of captures and promotions. 
+          moves, and handle captures/promotions.<br><div id="grid-sub">Engine</div><br>We construct a simple wrapper around <a href="https://python-chess.readthedocs.io/" 
+          onclick="window.open(this.href,'');return false;">python-chess</a> and add some helper functions to keep track of board state.<br><div id="grid-sub">
+          <a id="grave">Graveyard</a></div><br>We formulate the Graveyard to avoid the need to use computer vision to keep track of captures and promotions. 
           By having a capture square, we can determine from the state of the board which piece was captured, and automatically move it to 
           a specified position in the graveyard. When the user wants to promote their pawn to a new piece, they select the replacement 
           piece from the designated promotion area. When the board state determines a promotion happens, the promotion area is backfilled 
@@ -142,8 +137,9 @@
         if a pawn promotion is necessary. In summary, our problem statement is to use the state of the board at time t-1 and an image of the board at time t to get 
         the board state at time t.</div>
       <div id="subBackground">Preliminary Ideas</div>
-      <img class="cvImg" src="images/cv.png">
-      <div id="imgdescription2">Outline of ideas about computer vision</div>
+      <div class="grid-container2">
+        <div class="grid-img"><img src="images/cv.png"><br>Outline of ideas about computer vision</div>
+      </div>
       <div id="subBackground">Approach</div>
       <div id="text">Our approach given the above problem statement is as follows:</div>
       <ol class="a">
@@ -161,9 +157,12 @@
           <li>If occupied, determine piece color</li>
           <li>Determine difference between B[t-1] and B[t] to compute delta_matrix[i][j]</li>
         </ol>
-        <div id="textIn">Using pixel difference to compute change in board state. If a square is either empty in both or occupied in both images, we 
-          assign a 0 to the corresponding cell (to indicate no difference in board state for that cell); if a square is occupied at time t and is 
-          empty at t-1, we assign a -1; lastly, if a square was empty at time t and is occupied at t-1, we assign a 1.</div>
+        <div class="grid-mini">
+          <div class="grid-miniT">Using pixel difference to compute change in board state. If a square is either empty in both or occupied in both images, we 
+            assign a 0 to the corresponding cell (to indicate no difference in board state for that cell); if a square is occupied at time t and is 
+            empty at t-1, we assign a -1; lastly, if a square was empty at time t and is occupied at t-1, we assign a 1.</div>
+          <div class="grid-miniT"><img src="images/boardstate.png"></div>
+        </div>
         <li>If needed, handle piece promotion</li>
         <ol class ="b" type="a">
           <li>Approach 1: Use a neural network based classifier to determine which piece was chosen for promotion</li>
@@ -172,8 +171,7 @@
         </ol>
         <div id="text">Steps 2-6 are done a single time at program startup; we can then reuse the computed values to segment the board and 
           isolate each square.<br>To avoid using computer vision to keep track of the Graveyard state (see <a href="#grave">Graveyard</a>), we 
-          have a capture square and designated promotion spaces in the graveyard so that we only need computer vision for the main part of the board.</div>    
-        <img class="bState"src="images/boardstate.png">
+          have a capture square and designated promotion spaces in the graveyard so that we only need computer vision for the main part of the board.</div><br><br><br>
         <div id="background2"><a id="speechRecognition">Speech Recognition</a></div>
         <div id="text">The <a href="https://www.youtube.com/watch?v=IwjZ1J2b8UY" onclick="window.open(this.href,'');return false;">Harry Potter scene</a> 
           where Harry and Ron give commands to move pieces using their voice alone while playing Wizard's Chess inspired us to implement something similar 

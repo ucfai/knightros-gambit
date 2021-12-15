@@ -104,10 +104,9 @@ a:active {
 .container img {
   margin-top: 130px;
   opacity: 60%;
-  display: block;
-  margin-left: 230px;
+  margin-left: 220px;
   margin-right: auto;
-  width: 80%;
+  width: 85%;
 }
 /* The header line */
 .site-header hr{

@@ -32,39 +32,24 @@ body {
   letter-spacing: 3px;
   font-family: 'Exo';
   color: rgb(238, 233, 224);
-  padding-top: px;
-  padding-right: 100px;
-  padding-bottom: 10px;
-  padding-left: 700px;
-}
-/* page subheading */
-#background {
-  font-size: 25px;
-  letter-spacing: 3px;
-  font-family: 'Exo';
-  color: rgb(219, 206, 173);
-  padding-top: -10px;
-  padding-right: 30px;
-  padding-bottom: 10px;
-  padding-left: 220px;
+  text-align: center;
+  padding-left: 200px;
 }
 /* Container w/main body of text and images */
 .container {
-  overflow-x: hidden;
-  overflow-y: hidden;
-  height: 1600px;
+  overflow-y: scroll;
   width: 100%;
 }
-/* grid w/role catagories */
-.grid-container-main {
+/* grid w/images and names */
+.grid-container {
   display: grid;
-  grid-template-columns: 340px 340px 340px;
+  grid-template-columns: 33% 33% 33%;
   grid-gap: 10px;
   padding: 10px;
   margin-left: 250px;
   margin-right: 50px;
 }
-.grid-container-main > div {
+.grid-item-main {
   text-align: center;
   font-size: 25px;
   letter-spacing: 3px;
@@ -73,16 +58,7 @@ body {
   padding: 10px 0;
   font-weight: bold;
 }
-/* grid w/images and names */
-.grid-container {
-  display: grid;
-  grid-template-columns: 340px 340px 340px;
-  grid-gap: 10px;
-  padding: 10px;
-  margin-left: 250px;
-  margin-right: 50px;
-}
-.grid-container > div {
+.grid-item {
   text-align: center;
   font-size: 20px;
   letter-spacing: 1px;

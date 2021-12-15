@@ -31,10 +31,8 @@ body {
   letter-spacing: 3px;
   font-family: 'Exo';
   color: rgb(238, 233, 224);
-  padding-top: px;
-  padding-right: 100px;
-  padding-bottom: 10px;
-  padding-left: 700px;
+  text-align: center;
+  padding-left: 200px;
 }
 /* page title */
 #background {
@@ -47,116 +45,68 @@ body {
   padding-bottom: 10px;
   padding-left: 220px;
 }
-/* text indented left */
-#textL {
+/* grid containing text and images */
+.grid-container {
+  display: inline-grid;
+  grid-gap: 20px;
+  padding: 10px;
+  margin-left: 230px;
+  margin-right: 20px;
+  grid-template-columns: fit-content(50%) fit-content(50%);
+}
+.grid-item {
   font-size: 15px;
   font-family: 'Roboto';
-  color: rgb(172, 172, 172);
-  padding-top: 8px;
-  padding-right: 600px;
-  padding-bottom: 15px;
-  padding-left: 220px;
+  color: rgb(172, 172, 172); 
   line-height: 20px; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-/* text indented right */
-#textR {
+.grid-item1 {
+  text-align: center;
   font-size: 15px;
-  font-family: 'Roboto';
-  position: relative;
-  color: rgb(172, 172, 172);
-  top: -250px;
-  padding-right: 10px;
-  padding-bottom: 1px;
-  padding-left: 820px;
-  line-height: 20px;  
-}
-/* descriptions underneath images */
-#imgdescription {
-  font-size: 15px;
-  font-family: 'Roboto';
-  position: relative;
+  font-family: 'Roboto'; 
   color: rgb(160, 150, 124);
-  top: 25px;
-  padding-right: 10px;
-  padding-bottom: 1px;
-  padding-left: 940px;  
 }
-#imgdescription2 {
-  font-size: 15px;
-  font-family: 'Roboto';
-  position: relative;
-  color: rgb(160, 150, 124);
-  top: -640px;
-  padding-bottom: 1px;
-  padding-left: 280px; 
-  padding-right: 680px; 
-}
-#imgdescription3 {
-  font-size: 15px;
-  font-family: 'Roboto';
-  position: relative;
-  color: rgb(160, 150, 124);
-  top: -570px;
-  padding-bottom: 1px;
-  padding-left: 670px; 
-  padding-right: 220px; 
-}
-/* Electric Design subheading */
-#ele {
-  font-size: 25px;
-  letter-spacing: 3px;
-  font-family: 'Exo';
-  color: rgb(219, 206, 173);
-  position: relative;
-  top: -600px;
-  padding-right: 30px;
-  padding-bottom: 10px;
-  padding-left: 220px;  
-}
-/* body text format */
-#text {
-  font-size: 15px;
-  font-family: 'Roboto';
-  color: rgb(172, 172, 172);
-  position: relative;
-  top: -550px;
-  padding-right: 30px;
-  padding-bottom: 1px;
-  padding-left: 220px; 
-}
-/* image formatting */
-.assbly {
-  padding-right: 250px;
-  padding-left: 240px;
-  top: -654px;
-  position: relative;
-  max-width: 37%;
-  max-height:37%;
+.grid-item1 img {
+  justify-content: center;
+  max-width: 90%;
+  max-height: 90%;
   opacity: 80%; 
 }
-.es {
-  padding-right: 250px;
-  padding-left: 350px;
-  top: -580px;
-  position: relative;
-  max-width: 60%;
-  max-height:60%;
-  opacity: 80%; 
+.grid-container2 {
+  display: inline-grid;
+  grid-gap: 20px;
+  padding: 10px;
+  margin-left: 230px;
+  margin-right: 20px;
+  grid-template-columns: fit-content(100%);
 }
-.slider {
-  padding-right: 90px;
-  padding-left: 650px;
-  top: -300px;
-  position: relative;
-  max-width: 30%;
-  max-height:30%;
-  opacity: 80%;
+.grid {
+  font-size: 15px;
+  font-family: 'Roboto';
+  color: rgb(172, 172, 172); 
+  line-height: 20px; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.grid-img {
+  text-align: center;
+  font-size: 15px;
+  font-family: 'Roboto'; 
+  color: rgb(160, 150, 124); 
+}
+.grid-img img {
+  justify-content: center;
+  max-width: 90%;
+  max-height: 90%;
+  opacity: 80%; 
 }
 /* Container w/main body of text and images */
 .container {
-  overflow-x: hidden;
-  overflow-y: hidden;
-  height: 1600px;
+  overflow-y: scroll;
   width: 100%;
 }
 /* The header line */
