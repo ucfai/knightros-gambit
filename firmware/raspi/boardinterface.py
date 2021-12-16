@@ -179,7 +179,7 @@ class Board:
                 # TODO: Add error handling here if the piece we wish to promote to is not
                 # available (e.g., all queens have been used already).
                 self.handle_promotion(*self.engine.get_piece_info_from_square(uci_move[:2]))
-            # If castle, decompose move into king move, then castle move
+            # If castle, decompose move into king move, then rook move
             if self.engine.is_castle(uci_move):
                 # King move
                 self.add_move_to_queue(
@@ -207,7 +207,7 @@ class Board:
         return self.engine.valid_moves_from_position()
 
     # TODO: implement this function
-    def send_message_to_arduino(self, move):
+    def send_message_to_arduino(self, board_move):
         '''Constructs and sends message according to pi-arduino message format doc.
         '''
         # Have to send metadata about type of move, whether it's a capture/castle/knight move etc
@@ -217,7 +217,7 @@ class Board:
         # TODO: Implement sending message to arduino
 
         # TODO: This is for game loop dev, remove once we read from arduino
-        self.set_status_from_arduino(ArduinoStatus.EXECUTING_MOVE, move.move_count, None)
+        self.set_status_from_arduino(ArduinoStatus.EXECUTING_MOVE, board_move.move_count, None)
 
     def get_status_from_arduino(self):
         '''Read status from Arduino over UART connection.
@@ -317,7 +317,6 @@ class Board:
     def is_knight_move_w_neighbors(self, uci_move):
         '''Return true if uci_move is a knight move with neighbors.
         '''
-        # TODO: need to update get_coords_from_uci_move to return board cell
         source, dest = Engine.get_coords_from_uci_move(uci_move)
         _, piece_type = self.engine.get_piece_info_from_square(uci_move[:2])
         if piece_type != "n":
@@ -329,27 +328,27 @@ class Board:
         if left.col == right.col - 1:
             if left.row == right.row - 2:
                 # Case 1, dx=1, dy=2
-                return [sq != '.' for sq in [board_2d[left.row][left.col + 1],  # P1
-                                             board_2d[left.row + 1][left.col + 1],  # P2
-                                             board_2d[left.row + 1][left.col],  # P3
-                                             board_2d[left.row + 2][left.col]]]  # P4
+                return any([sq != '.' for sq in [board_2d[left.row][left.col + 1],  # P1
+                                                 board_2d[left.row + 1][left.col + 1],  # P2
+                                                 board_2d[left.row + 1][left.col],  # P3
+                                                 board_2d[left.row + 2][left.col]]])  # P4
             # Else, case 3, dx=1, dy=-2
-            return [sq != '.' for sq in [board_2d[left.row][left.col + 1],  # P1
-                                         board_2d[left.row - 1][left.col + 1],  # P2
-                                         board_2d[left.row - 1][left.col],  # P3
-                                         board_2d[left.row - 2][left.col]]]  # P4
+            return any([sq != '.' for sq in [board_2d[left.row][left.col + 1],  # P1
+                                             board_2d[left.row - 1][left.col + 1],  # P2
+                                             board_2d[left.row - 1][left.col],  # P3
+                                             board_2d[left.row - 2][left.col]]])  # P4
         # Else, case 2 or 4
         if left.row == right.row - 1:
             # Case 2, dx=2, dy=1
-            return [sq != '.' for sq in [board_2d[left.row + 1][left.col],  # P1
-                                         board_2d[left.row + 1][left.col + 1],  # P2
-                                         board_2d[left.row][left.col + 1],  # P3
-                                         board_2d[left.row][left.col + 2]]]  # P4
+            return any([sq != '.' for sq in [board_2d[left.row + 1][left.col],  # P1
+                                             board_2d[left.row + 1][left.col + 1],  # P2
+                                             board_2d[left.row][left.col + 1],  # P3
+                                             board_2d[left.row][left.col + 2]]])  # P4
         # Else, case 4, dx=2, dy=-1
-        return [sq != '.' for sq in [board_2d[left.row - 1][left.col],  # P1
-                                     board_2d[left.row - 1][left.col + 1],  # P2
-                                     board_2d[left.row][left.col + 1],  # P3
-                                     board_2d[left.row][left.col + 2]]]  # P4
+        return any([sq != '.' for sq in [board_2d[left.row - 1][left.col],  # P1
+                                         board_2d[left.row - 1][left.col + 1],  # P2
+                                         board_2d[left.row][left.col + 1],  # P3
+                                         board_2d[left.row][left.col + 2]]])  # P4
 
     def dispatch_move_from_queue(self):
         if not self.move_queue:
