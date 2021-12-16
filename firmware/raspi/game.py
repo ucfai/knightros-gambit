@@ -29,28 +29,13 @@ def is_human_turn_at_start():
             return True
         print("Please choose one of [w], [b], or [r].")
 
-# TODO: maybe this should be in Board class instead?
-def send_move_to_board(board, uci_move):
-    '''Validate move and send to board interface.
-    '''
-    if board.is_valid_move(uci_move):
-        board.make_move(uci_move)
-        # TODO: This is for game loop dev, remove once we read from arduino
-        board.set_status_from_arduino(ArduinoStatus.EXECUTING_MOVE)
-    else:
-        # TODO: do error handling
-        raise NotImplementedError("Need to handle case of invalid move input. "
-                                  "Should we loop until move is valid? What if "
-                                  "the board is messed up? Need to revisit.")
-
-
 def handle_human_move(mode_of_interaction, board):
     '''Handle human move based on specified mode of interaction.
     '''
     if mode_of_interaction == 'cli':
         uci_move = CLHumanPlayer.select_move(board)
         try:
-            send_move_to_board(board, uci_move)
+            board.send_move_to_board(uci_move)
         except NotImplementedError as nie:
             print(nie.__str__())
     elif mode_of_interaction == 'over_the_board':
@@ -66,7 +51,7 @@ def handle_ai_move(ai_player, board):
     '''
     uci_move = ai_player.select_move(board.engine.fen())
     try:
-        send_move_to_board(board, uci_move)
+        board.send_move_to_board(uci_move)
         print(f"AI made move: {uci_move}")
     except NotImplementedError as nie:
         print(nie.__str__())
@@ -103,7 +88,7 @@ def main():
     # board.setup_board(is_human_turn)
 
     # TODO: remove this after real Arduino communication is set up
-    board.set_status_from_arduino(ArduinoStatus.IDLE)
+    board.set_status_from_arduino(ArduinoStatus.IDLE, 0, None)
 
     if mode_of_interaction == "cli":
         print("Using CLI mode of interaction for human player")
@@ -128,26 +113,28 @@ def main():
         board_status = board.get_status_from_arduino()
         print(f"Board Status: {board_status}")
 
-        if board_status in (ArduinoStatus.EXECUTING_MOVE, ArduinoStatus.MESSAGE_IN_PROGRESS):
+        if board_status.status in (ArduinoStatus.EXECUTING_MOVE,
+                                   ArduinoStatus.MESSAGE_IN_PROGRESS):
             # Wait for move in progress to finish executing
             time.sleep(1) # reduce the amount of polling while waiting for move to finish
 
             # TODO: This is just so we have game loop working, remove once we read from arduino
-            board.set_status_from_arduino(ArduinoStatus.IDLE)
+            board.set_status_from_arduino(ArduinoStatus.IDLE,
+                                          board.move_queue[0].move_count % 256,
+                                          None)
             continue
 
-        if board_status == ArduinoStatus.ERROR:
+        if board_status.status == ArduinoStatus.ERROR:
             # TODO: figure out edge/error cases and handle them here
             raise ValueError("Unimplemented, need to handle errors")
 
         if board.move_queue:
-            # TODO: update arduino status to have move count
             # Arduino sends and receives move_count % 256, since it can only transmit one byte
             if all([board_status.move_count == board.move_queue[0].move_count % 256,
                     board_status.status == ArduinoStatus.IDLE]):
-                board.move_queue.pop_left()
+                board.move_queue.popleft()
 
-            # TODO: need to implement dispatch_queue
+        if board.move_queue:
             board.dispatch_move_from_queue()
             continue
 

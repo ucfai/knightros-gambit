@@ -96,14 +96,17 @@ class Engine:
     def get_coords_from_square(square):
         '''Returns tuple of integers indicating grid coordinates from square
         '''
-        # TODO: verify that this is the proper indexing for grid created by get_2d_board
-        # TODO: make this a BoardCell? Then we need to update the offset when accessing the 2d grid
-        return (ord(square[0]) - ord('a'), ord(square[1]) - ord('1'))
+        # TODO: fix indexing for offset when accessing full 2d board grid. Also need to handle
+        # change of perspective when human is white vs when they are black
+        x, y = ord(square[0]) - ord('a'), ord(square[1]) - ord('1')
+        return util.BoardCell(x, y)
 
     @staticmethod
     def get_coords_from_uci_move(uci_move):
         '''Returns tuple of int tuples, start and end points from provided uci_move.
         '''
+        # TODO: consider case of promotion. Maybe this should return three-tuple with optional
+        # third value that is None when not a promotion.
         return (Engine.get_coords_from_square(uci_move[:2]),
                 Engine.get_coords_from_square(uci_move[2:4]))
 
@@ -113,8 +116,8 @@ class Engine:
         # TODO: verify this works as intended
         # when given square 'a1' at game start, should return 'w', 'p', etc.
         grid = self.get_2d_board()
-        i, j = Engine.get_coords_from_square(square)
-        piece_w_color = grid[i][j]
+        coords = Engine.get_coords_from_square(square)
+        piece_w_color = grid[coords.row][coords.col]
         if piece_w_color != '.':
             return None
         color = 'w' if piece_w_color.isupper() else 'b'
@@ -145,10 +148,22 @@ class Board:
     '''
     def __init__(self):
         self.engine = Engine()
-        self.arduino_status = ArduinoStatus.IDLE
+        self.move_count = 0
+        self.arduino_status = ArduinoStatus(ArduinoStatus.IDLE, self.move_count, None)
 
         self.graveyard = Graveyard()
         self.move_queue = deque()
+
+    def send_move_to_board(self, uci_move):
+        '''Validate move and send to board interface.
+        '''
+        if self.is_valid_move(uci_move):
+            self.make_move(uci_move)
+        else:
+            # TODO: do error handling
+            raise NotImplementedError("Need to handle case of invalid move input. "
+                                      "Should we loop until move is valid? What if "
+                                      "the board is messed up? Need to revisit.")
 
     def make_move(self, uci_move):
         ''' This function assumes that is_valid_move has been called for the uci_move.
@@ -167,20 +182,19 @@ class Board:
             # If castle, decompose move into king move, then castle move
             if self.engine.is_castle(uci_move):
                 # King move
-                self.send_message_to_arduino(
-                    *Engine.get_coords_from_uci_move(uci_move),
-                    opcode=OpCode.MOVE_PIECE_IN_STRAIGHT_LINE)
+                self.add_move_to_queue(
+                    *Engine.get_coords_from_uci_move(uci_move), OpCode.MOVE_PIECE_IN_STRAIGHT_LINE)
                 # Rook move
-                self.send_message_to_arduino(
+                self.add_move_to_queue(
                     *Engine.get_coords_from_uci_move(self.engine.king_to_rook_moves[uci_move]),
                     opcode=OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
             else:
                 if self.is_knight_move_w_neighbors(uci_move):
-                    self.send_message_to_arduino(*Engine.get_coords_from_uci_move(uci_move),
-                                                 opcode=OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
+                    self.add_move_to_queue(*Engine.get_coords_from_uci_move(uci_move),
+                                           OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
                 else:
-                    self.send_message_to_arduino(*Engine.get_coords_from_uci_move(uci_move),
-                                                 opcode=OpCode.MOVE_PIECE_IN_STRAIGHT_LINE)
+                    self.add_move_to_queue(*Engine.get_coords_from_uci_move(uci_move),
+                                           OpCode.MOVE_PIECE_IN_STRAIGHT_LINE)
         except ArduinoException as a_e:
             print(f"Unable to send move to Arduino: {a_e.__str__()}")
             return False
@@ -193,14 +207,17 @@ class Board:
         return self.engine.valid_moves_from_position()
 
     # TODO: implement this function
-    def send_message_to_arduino(self, start, end, opcode):
+    def send_message_to_arduino(self, move):
         '''Constructs and sends message according to pi-arduino message format doc.
         '''
         # Have to send metadata about type of move, whether it's a capture/castle/knight move etc
         # This function can also be used for sending moves to graveyard or to promote
         # So need to add move validation as well
         # Maybe message should be constructed before being sent here?
-        print("Need to implement sending message to arduino")
+        # TODO: Implement sending message to arduino
+
+        # TODO: This is for game loop dev, remove once we read from arduino
+        self.set_status_from_arduino(ArduinoStatus.EXECUTING_MOVE, move.move_count, None)
 
     def get_status_from_arduino(self):
         '''Read status from Arduino over UART connection.
@@ -208,10 +225,10 @@ class Board:
         # TODO: update this function to actually read from arduino
         return self.arduino_status
 
-    def set_status_from_arduino(self, arduino_status=ArduinoStatus.IDLE):
+    def set_status_from_arduino(self, status, move_count, extra):
         '''Placeholder function; used for game loop development only.
         '''
-        self.arduino_status = arduino_status
+        self.arduino_status = ArduinoStatus(status, move_count, extra)
         # TODO: send status to Arduino
 
     def is_valid_move(self, uci_move):
@@ -276,7 +293,7 @@ class Board:
             origin = self.graveyard.w_capture_sq if color == 'w' else self.graveyard.b_capture_sq
         dest = piece_locs[color + piece_type][count]
 
-        self.send_message_to_arduino(origin, dest, OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
+        self.add_move_to_queue(origin, dest, OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
 
     def retrieve_from_graveyard(self, color, piece_type, destination):
         '''Retrieve piece from the "back" of the graveyard and decrement dead piece count.
@@ -294,15 +311,15 @@ class Board:
                              "to piece of type {piece_type}.")
         self.graveyard.update_dead_piece_count(color, piece_type, delta=-1)  # decrement
 
-        self.send_message_to_arduino(piece_locs[color + piece_type][count-1], destination,
-                                     OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
+        self.add_move_to_queue(piece_locs[color + piece_type][count-1], destination,
+                               OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
 
     def is_knight_move_w_neighbors(self, uci_move):
         '''Return true if uci_move is a knight move with neighbors.
         '''
         # TODO: need to update get_coords_from_uci_move to return board cell
         source, dest = Engine.get_coords_from_uci_move(uci_move)
-        _, piece_type = self.engine.get_piece_info_from_square(source)
+        _, piece_type = self.engine.get_piece_info_from_square(uci_move[:2])
         if piece_type != "n":
             return False
 
@@ -335,13 +352,14 @@ class Board:
                                      board_2d[left.row][left.col + 2]]]  # P4
 
     def dispatch_move_from_queue(self):
-        if not queue:
+        if not self.move_queue:
             raise ValueError("No moves to dispatch")
         # Note: move is only removed from the queue in the main game loop when the status received
         # from the Arduino confirms that the move has successfully been executed on the Arduino.
         self.send_message_to_arduino(self.move_queue[0])
 
     def add_move_to_queue(self, source, dest, op_code):
+        # source, dest = board.Engine.get_coords_from_uci_move(uci_move)
         self.move_count += 1
         move = Move(self.move_count, source, dest, op_code)
         self.move_queue.append(move)
