@@ -3,6 +3,7 @@
 In addition to encapsulating serial communication to facilitate the game loop,
 this file also manages the game state, move validation, etc.
 '''
+from collections import deque
 
 import chess
 
@@ -147,6 +148,7 @@ class Board:
         self.arduino_status = ArduinoStatus.IDLE
 
         self.graveyard = Graveyard()
+        self.move_queue = deque()
 
     def make_move(self, uci_move):
         ''' This function assumes that is_valid_move has been called for the uci_move.
@@ -298,40 +300,51 @@ class Board:
     def is_knight_move_w_neighbors(self, uci_move):
         '''Return true if uci_move is a knight move with neighbors.
         '''
-        source, dest = get_coords_from_uci_move(uci_move)
-        _, piece_type = get_piece_info_from_square(source)
+        # TODO: need to update get_coords_from_uci_move to return board cell
+        source, dest = Engine.get_coords_from_uci_move(uci_move)
+        _, piece_type = self.engine.get_piece_info_from_square(source)
         if piece_type != "n":
             return False
 
-        board_2d = self.get_2d_board()
+        board_2d = self.engine.get_2d_board()
         # Cut number of cases from 8 to 4 by treating soure and dest interchangeably
-        A, B = source, dest if source.x < dest.x else dest, source
-        if A.x == B.x - 1:
-            if A.y == B.y - 2:
+        left, right = (source, dest) if source.col < dest.col else (dest, source)
+        if left.col == right.col - 1:
+            if left.row == right.row - 2:
                 # Case 1, dx=1, dy=2
-                return [sq != '.' for sq in [board_2d[A.x][A.y + 1],
-                                             board_2d[A.x][A.y + 2],
-                                             board_2d[A.x + 1][A.y],
-                                             board_2d[A.x + 1][A.y + 1]]]
-            else:
-                # Case 1, dx=1, dy=-2
-                return [sq != '.' for sq in [board_2d[A.x][A.y - 1],
-                                             board_2d[A.x][A.y - 2],
-                                             board_2d[A.x + 1][A.y],
-                                             board_2d[A.x + 1][A.y - 1]]]
-        else:
-            if A.y == B.y - 1:
-                # Case 1, dx=2, dy=1
-                return [sq != '.' for sq in [board_2d[A.x + 1][A.y],
-                                             board_2d[A.x + 2][A.y],
-                                             board_2d[A.x][A.y + 1],
-                                             board_2d[A.x + 1][A.y + 1]]]
-            else:
-                # Case 1, dx=2, dy=-1
-                return [sq != '.' for sq in [board_2d[A.x + 1][A.y],
-                                             board_2d[A.x + 2][A.y],
-                                             board_2d[A.x][A.y - 1],
-                                             board_2d[A.x + 1][A.y - 1]]]
+                return [sq != '.' for sq in [board_2d[left.row][left.col + 1],  # P1
+                                             board_2d[left.row + 1][left.col + 1],  # P2
+                                             board_2d[left.row + 1][left.col],  # P3
+                                             board_2d[left.row + 2][left.col]]]  # P4
+            # Else, case 3, dx=1, dy=-2
+            return [sq != '.' for sq in [board_2d[left.row][left.col + 1],  # P1
+                                         board_2d[left.row - 1][left.col + 1],  # P2
+                                         board_2d[left.row - 1][left.col],  # P3
+                                         board_2d[left.row - 2][left.col]]]  # P4
+        # Else, case 2 or 4
+        if left.row == right.row - 1:
+            # Case 2, dx=2, dy=1
+            return [sq != '.' for sq in [board_2d[left.row + 1][left.col],  # P1
+                                         board_2d[left.row + 1][left.col + 1],  # P2
+                                         board_2d[left.row][left.col + 1],  # P3
+                                         board_2d[left.row][left.col + 2]]]  # P4
+        # Else, case 4, dx=2, dy=-1
+        return [sq != '.' for sq in [board_2d[left.row - 1][left.col],  # P1
+                                     board_2d[left.row - 1][left.col + 1],  # P2
+                                     board_2d[left.row][left.col + 1],  # P3
+                                     board_2d[left.row][left.col + 2]]]  # P4
+
+    def dispatch_move_from_queue(self):
+        if not queue:
+            raise ValueError("No moves to dispatch")
+        # Note: move is only removed from the queue in the main game loop when the status received
+        # from the Arduino confirms that the move has successfully been executed on the Arduino.
+        self.send_message_to_arduino(self.move_queue[0])
+
+    def add_move_to_queue(self, source, dest, op_code):
+        self.move_count += 1
+        move = Move(self.move_count, source, dest, op_code)
+        self.move_queue.append(move)
 
 class Graveyard:
     '''Class holds coordinates and state information of board graveyard.
@@ -384,3 +397,21 @@ class Graveyard:
             self.dead_piece_counts[color + piece_type] += delta
         else:
             raise ValueError("Cannot modify graveyard in increments greater than 1")
+
+class Move:
+    def __init__(self, move_count, source, dest, op_code):
+        """Wrapper class for moves from specified source to dest.
+
+        Attributes:
+            move_count: int specifying move number in current game. Note, a single chess move may
+                be composed of multiple Move objects. For example, a capture is one Move to send
+                the captured piece to the graveyard, and another to move the capturing piece to
+                the new square.
+            source: BoardCell at which to start move.
+            dest: BoardCell at which to end move.
+            op_code: OpCode specifying how piece should be moved.
+        """
+        self.move_count = move_count
+        self.source = source
+        self.dest = dest
+        self.op_code = op_code

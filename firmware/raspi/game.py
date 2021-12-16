@@ -140,6 +140,17 @@ def main():
             # TODO: figure out edge/error cases and handle them here
             raise ValueError("Unimplemented, need to handle errors")
 
+        if board.move_queue:
+            # TODO: update arduino status to have move count
+            # Arduino sends and receives move_count % 256, since it can only transmit one byte
+            if all([board_status.move_count == board.move_queue[0].move_count % 256,
+                    board_status.status == ArduinoStatus.IDLE]):
+                board.move_queue.pop_left()
+
+            # TODO: need to implement dispatch_queue
+            board.dispatch_move_from_queue()
+            continue
+
         board.show_on_cli()
 
         if is_human_turn:
