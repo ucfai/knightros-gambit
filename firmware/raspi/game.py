@@ -41,7 +41,7 @@ def handle_human_move(mode_of_interaction, board):
     elif mode_of_interaction == 'over_the_board':
         # TODO: think about handling backfill of promotion area if person made a promotion move.
         # If needed, backfill the promotion area (if possible).
-        # board.graveyard.backfill_promotion_area_from_graveyard(color, piece_type)
+        # board.backfill_promotion_area_from_graveyard(color, piece_type)
         pass
     else:
         raise ValueError("Other modes of interaction are unimplemented")

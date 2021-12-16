@@ -363,6 +363,27 @@ class Board:
         move = Move(self.move_count, source, dest, op_code)
         self.move_queue.append(move)
 
+    def backfill_promotion_area_from_graveyard(self, color, piece_type):
+        '''
+        color = 'w' or 'b'
+        piece_type in {q, b, n, r}
+        Send piece at back of the graveyard to the position to be filled.
+        If there are three queens and one is taken, sends Q3 to fill Q1 spot.
+        If there are two queens and one is taken, sends Q2 to fill Q1 spot.
+        etc...
+        '''
+        count, graveyard = self.graveyard.get_graveyard_info_for_piece_type(color, piece_type)
+
+        # This method is only called if human promoted a piece, which means they took a piece
+        # from the promotion area of the graveyard. Thus, it's always safe to decrement dead
+        # piece count.
+        self.graveyard.update_dead_piece_count(color, piece_type, delta=-1)  # decrement
+        if count > 0:
+            self.add_move_to_queue(Move(graveyard[count-1], graveyard[0],
+                                        OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES))
+        raise ValueError("All promotional pieces from graveyard have been used!!")
+
+
 class Graveyard:
     '''Class holds coordinates and state information of board graveyard.
 
@@ -381,23 +402,6 @@ class Graveyard:
         self.dead_piece_counts = util.init_dead_piece_counts()
         self.dead_piece_graveyards = util.init_dead_piece_graveyards()
         self.w_capture_sq, self.b_capture_sq = util.init_capture_squares()
-
-    # TODO: call this method after human makes a move if needed.
-    def backfill_promotion_area_from_graveyard(self, color, piece_type):
-        '''
-        color = 'w' or 'b'
-        piece_type in {q, b, n, r}
-        Send piece at back of the graveyard to the position to be filled.
-        If there are three queens and one is taken, sends Q3 to fill Q1 spot.
-        If there are two queens and one is taken, sends Q2 to fill Q1 spot.
-        etc...
-        '''
-        piece_count, graveyard = self.get_graveyard_info_for_piece_type(color, piece_type)
-
-        if piece_count > 1:
-            return (graveyard[piece_count-1], graveyard[piece_count-2])
-        print("All pieces from graveyard have been used!!")
-        return None
 
     def get_graveyard_info_for_piece_type(self, color, piece_type):
         '''Returns number of dead pieces and list containing coordinates of dead pieces.
