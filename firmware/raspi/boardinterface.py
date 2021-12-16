@@ -16,8 +16,10 @@ class Engine:
     Attributes:
         board: A python wrapper around a python-chess board.
     '''
-    def __init__(self):
+    def __init__(self, human_plays_white_pieces):
         self.chess_board = chess.Board()
+
+        self.human_plays_white_pieces = human_plays_white_pieces
 
         self.king_to_rook_moves = {}
         self.king_to_rook_moves['e1g1'] = 'h1f1'
@@ -92,23 +94,44 @@ class Engine:
         '''
         return self.chess_board.is_capture(self.chess_board.parse_uci(uci_move))
 
-    @staticmethod
-    def get_coords_from_square(square):
+    def get_chess_coords_from_square(self, square):
+        '''Converts chess squares to 2d grid coords.
+
+        Example: a1 <=> [0, 0], h8 <=> [7, 7], regardless of whether human plays white or black
+        pieces.
+        '''
+        # Nums correspond to row (rank), letters correspond to col (files)
+        return util.BoardCell(ord(square[1]) - ord('1'), ord(square[0]) - ord('a'))
+
+    def get_board_coords_from_square(self, square):
         '''Returns tuple of integers indicating grid coordinates from square
         '''
-        # TODO: fix indexing for offset when accessing full 2d board grid. Also need to handle
-        # change of perspective when human is white vs when they are black
-        x, y = ord(square[0]) - ord('a'), ord(square[1]) - ord('1')
-        return util.BoardCell(x, y)
+        sq_to_xy = self.get_chess_coords_from_square(square)
 
-    @staticmethod
-    def get_coords_from_uci_move(uci_move):
+        # From top down perspective with human on "bottom", bottom left corner is (0, 0)
+        # If human plays white pieces, then "a1" corresponds to BoardCell (2, 2) and "h8"
+        # corresponds to BoardCell (9, 9). Vice versa for black pieces. Below logic converts
+        # chess coordinates to board coordinates.
+        if self.human_plays_white_pieces:
+            return util.BoardCell(sq_to_xy.row + 2, sq_to_xy.col + 2)
+
+        return util.BoardCell(9 - sq_to_xy.row, 9 - sq_to_xy.col)
+
+    def get_chess_coords_from_uci_move(self, uci_move):
         '''Returns tuple of int tuples, start and end points from provided uci_move.
         '''
         # TODO: consider case of promotion. Maybe this should return three-tuple with optional
         # third value that is None when not a promotion.
-        return (Engine.get_coords_from_square(uci_move[:2]),
-                Engine.get_coords_from_square(uci_move[2:4]))
+        return (self.get_chess_coords_from_square(uci_move[:2]),
+                self.get_chess_coords_from_square(uci_move[2:4]))
+
+    def get_board_coords_from_uci_move(self, uci_move):
+        '''Returns tuple of int tuples, start and end points from provided uci_move.
+        '''
+        # TODO: consider case of promotion. Maybe this should return three-tuple with optional
+        # third value that is None when not a promotion.
+        return (self.get_board_coords_from_square(uci_move[:2]),
+                self.get_board_coords_from_square(uci_move[2:4]))
 
     def get_piece_info_from_square(self, square):
         '''Returns tuple of color and piece type from provided square.
@@ -116,10 +139,10 @@ class Engine:
         # TODO: verify this works as intended
         # when given square 'a1' at game start, should return 'w', 'p', etc.
         grid = self.get_2d_board()
-        coords = Engine.get_coords_from_square(square)
+        coords = self.get_chess_coords_from_square(square)
         piece_w_color = grid[coords.row][coords.col]
-        if piece_w_color != '.':
-            return None
+        if piece_w_color == '.':
+            return (None, None)
         color = 'w' if piece_w_color.isupper() else 'b'
         return (color, piece_w_color.lower())
 
@@ -147,7 +170,7 @@ class Board:
             the dead pieces on the board (captured/spare pieces).
     '''
     def __init__(self, human_plays_white_pieces):
-        self.engine = Engine()
+        self.engine = Engine(human_plays_white_pieces)
         self.move_count = 0
         self.arduino_status = ArduinoStatus(ArduinoStatus.IDLE, self.move_count, None)
 
@@ -184,17 +207,18 @@ class Board:
             if self.engine.is_castle(uci_move):
                 # King move
                 self.add_move_to_queue(
-                    *Engine.get_coords_from_uci_move(uci_move), OpCode.MOVE_PIECE_IN_STRAIGHT_LINE)
+                    *self.engine.get_board_coords_from_uci_move(uci_move),
+                    OpCode.MOVE_PIECE_IN_STRAIGHT_LINE)
                 # Rook move
                 self.add_move_to_queue(
-                    *Engine.get_coords_from_uci_move(self.engine.king_to_rook_moves[uci_move]),
-                    opcode=OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
+                    *self.engine.get_board_coords_from_uci_move(self.engine.king_to_rook_moves[uci_move]),
+                    OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
             else:
                 if self.is_knight_move_w_neighbors(uci_move):
-                    self.add_move_to_queue(*Engine.get_coords_from_uci_move(uci_move),
+                    self.add_move_to_queue(*self.engine.get_board_coords_from_uci_move(uci_move),
                                            OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
                 else:
-                    self.add_move_to_queue(*Engine.get_coords_from_uci_move(uci_move),
+                    self.add_move_to_queue(*self.engine.get_board_coords_from_uci_move(uci_move),
                                            OpCode.MOVE_PIECE_IN_STRAIGHT_LINE)
         except ArduinoException as a_e:
             print(f"Unable to send move to Arduino: {a_e.__str__()}")
@@ -318,10 +342,11 @@ class Board:
     def is_knight_move_w_neighbors(self, uci_move):
         '''Return true if uci_move is a knight move with neighbors.
         '''
-        source, dest = Engine.get_coords_from_uci_move(uci_move)
         _, piece_type = self.engine.get_piece_info_from_square(uci_move[:2])
         if piece_type != "n":
             return False
+
+        source, dest = self.engine.get_chess_coords_from_uci_move(uci_move)
 
         board_2d = self.engine.get_2d_board()
         # Cut number of cases from 8 to 4 by treating soure and dest interchangeably
@@ -359,7 +384,6 @@ class Board:
         self.send_message_to_arduino(self.move_queue[0])
 
     def add_move_to_queue(self, source, dest, op_code):
-        # source, dest = board.Engine.get_coords_from_uci_move(uci_move)
         self.move_count += 1
         move = Move(self.move_count, source, dest, op_code)
         self.move_queue.append(move)
@@ -380,8 +404,8 @@ class Board:
         # piece count.
         self.graveyard.update_dead_piece_count(color, piece_type, delta=-1)  # decrement
         if count > 0:
-            self.add_move_to_queue(Move(graveyard[count-1], graveyard[0],
-                                        OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES))
+            self.add_move_to_queue(graveyard[count-1], graveyard[0],
+                                   OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
         raise ValueError("All promotional pieces from graveyard have been used!!")
 
 
