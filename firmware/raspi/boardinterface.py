@@ -234,10 +234,13 @@ class Board:
     def send_message_to_arduino(self, board_move):
         '''Constructs and sends message according to pi-arduino message format doc.
         '''
-        # Have to send metadata about type of move, whether it's a capture/castle/knight move etc
-        # This function can also be used for sending moves to graveyard or to promote
-        # So need to add move validation as well
-        # Maybe message should be constructed before being sent here?
+        # Convert BoardCell integer coordinates to chars s.t. 0 <=> 'A', ..., 11 <=> 'L' before
+        # sending message so that each coord only takes up one byte. This will need to be
+        # converted back on the Arduino side.
+        msg = f"~{board_move.op_code}{board_move.move_count % 256}" +
+              f"{chr(board_move.source.row + ord('A'))}{chr(board_move.source.row + ord('A'))}" +
+              f"{chr(board_move.dest.row + ord('A'))}{chr(board_move.dest.row + ord('A'))}"
+
         # TODO: Implement sending message to arduino
 
         # TODO: This is for game loop dev, remove once we read from arduino
