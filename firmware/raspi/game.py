@@ -73,9 +73,6 @@ def main():
     '''
     random.seed()
 
-    # board initialization
-    elo_rating = 1300
-    board = Board()
     print("Welcome to Knightro's Gambit")
 
     # TODO: update this to handle physical, web, speech interaction
@@ -85,6 +82,7 @@ def main():
     is_human_turn = is_human_turn_at_start()
 
     # TODO: Set up board with either white or black on human side.
+    board = Board(human_plays_white_pieces=is_human_turn)
     # board.setup_board(is_human_turn)
 
     # TODO: remove this after real Arduino communication is set up
@@ -96,7 +94,7 @@ def main():
         raise ValueError("Other modes of interaction are unimplemented")
     # TODO: update this to handle physical, web, speech interaction
 
-    ai_player = StockfishPlayer(elo_rating)
+    ai_player = StockfishPlayer(elo_rating=1400)
 
     # Main game loop
     while True:

@@ -146,13 +146,14 @@ class Board:
         graveyard: See the `Graveyard` class below: A set of coordinates and metadata about
             the dead pieces on the board (captured/spare pieces).
     '''
-    def __init__(self):
+    def __init__(self, human_plays_white_pieces):
         self.engine = Engine()
         self.move_count = 0
         self.arduino_status = ArduinoStatus(ArduinoStatus.IDLE, self.move_count, None)
 
         self.graveyard = Graveyard()
         self.move_queue = deque()
+        self.human_plays_white_pieces = human_plays_white_pieces
 
     def send_move_to_board(self, uci_move):
         '''Validate move and send to board interface.
