@@ -35,12 +35,11 @@ class Engine:
         '''
         fen = self.chess_board.fen()
         board = []
-        for row in fen.split('/'):
+        for row in reversed(fen.split('/')):
             brow = []
             for char in row:
                 if char == ' ':
                     break
-
                 if char in '12345678':
                     brow.extend(['.'] * int(char))
                 else:
@@ -269,7 +268,9 @@ class Board:
     def show_on_cli(self):
         '''Prints board as 2d grid.
         '''
+        # (0, 0) corresponds to a1, want to print s.t. a1 is bottom left, so reverse rows
         chess_grid = self.engine.get_2d_board()
+        chess_grid.reverse()
         # 8 x 8 chess board
         for i in range(8):
             # Print row, then number indicating rank
