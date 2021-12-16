@@ -137,7 +137,7 @@ class Engine:
         '''Returns tuple of color and piece type from provided square.
         '''
         # TODO: verify this works as intended
-        # when given square 'a1' at game start, should return 'w', 'p', etc.
+        # when given square 'a2' at game start, should return 'w', 'p', etc.
         grid = self.get_2d_board()
         coords = self.get_chess_coords_from_square(square)
         piece_w_color = grid[coords.row][coords.col]
