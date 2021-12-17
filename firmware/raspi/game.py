@@ -104,7 +104,7 @@ def main():
                 print("Thanks for playing")
                 reset_board()
                 break  # Break out of main game loop
-            
+
             print("Ok, resetting board")
             reset_board()
 
@@ -142,8 +142,8 @@ def main():
             handle_human_move(mode_of_interaction, board)
         else:
             handle_ai_move(ai_player, board)
-        # TODO: After every move, center piece that was just moved on its new square
-        # TODO: Need to account for castles as well.
+        # TODO: After every move, center piece that was just moved on its new square. Need to
+        # account for castles as well.
 
         is_human_turn = not is_human_turn
         # Status.write_game_status_to_disk(board)

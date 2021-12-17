@@ -93,7 +93,8 @@ class Engine:
         '''
         return self.chess_board.is_capture(self.chess_board.parse_uci(uci_move))
 
-    def get_chess_coords_from_square(self, square):
+    @staticmethod
+    def get_chess_coords_from_square(square):
         '''Converts chess squares to 2d grid coords.
 
         Example: a1 <=> [0, 0], h8 <=> [7, 7], regardless of whether human plays white or black
@@ -105,7 +106,7 @@ class Engine:
     def get_board_coords_from_square(self, square):
         '''Returns tuple of integers indicating grid coordinates from square
         '''
-        sq_to_xy = self.get_chess_coords_from_square(square)
+        sq_to_xy = Engine.get_chess_coords_from_square(square)
 
         # From top down perspective with human on "bottom", bottom left corner is (0, 0)
         # If human plays white pieces, then "a1" corresponds to BoardCell (2, 2) and "h8"
@@ -116,13 +117,14 @@ class Engine:
 
         return util.BoardCell(9 - sq_to_xy.row, 9 - sq_to_xy.col)
 
-    def get_chess_coords_from_uci_move(self, uci_move):
+    @staticmethod
+    def get_chess_coords_from_uci_move(uci_move):
         '''Returns tuple of int tuples, start and end points from provided uci_move.
         '''
         # TODO: consider case of promotion. Maybe this should return three-tuple with optional
         # third value that is None when not a promotion.
-        return (self.get_chess_coords_from_square(uci_move[:2]),
-                self.get_chess_coords_from_square(uci_move[2:4]))
+        return (Engine.get_chess_coords_from_square(uci_move[:2]),
+                Engine.get_chess_coords_from_square(uci_move[2:4]))
 
     def get_board_coords_from_uci_move(self, uci_move):
         '''Returns tuple of int tuples, start and end points from provided uci_move.
@@ -135,10 +137,8 @@ class Engine:
     def get_piece_info_from_square(self, square):
         '''Returns tuple of color and piece type from provided square.
         '''
-        # TODO: verify this works as intended
-        # when given square 'a2' at game start, should return 'w', 'p', etc.
         grid = self.get_2d_board()
-        coords = self.get_chess_coords_from_square(square)
+        coords = Engine.get_chess_coords_from_square(square)
         piece_w_color = grid[coords.row][coords.col]
         if piece_w_color == '.':
             return (None, None)
@@ -201,7 +201,9 @@ class Board:
             if Engine.is_promotion(uci_move):
                 # TODO: Add error handling here if the piece we wish to promote to is not
                 # available (e.g., all queens have been used already).
-                self.handle_promotion(*self.engine.get_piece_info_from_square(uci_move[:2]))
+                self.handle_promotion(self.engine.get_board_coords_from_square(uci_move[2:4]),
+                                      self.engine.get_piece_info_from_square(uci_move[2:4])[0],
+                                      uci_move[4])
             # If castle, decompose move into king move, then rook move
             if self.engine.is_castle(uci_move):
                 # King move
@@ -210,7 +212,8 @@ class Board:
                     OpCode.MOVE_PIECE_IN_STRAIGHT_LINE)
                 # Rook move
                 self.add_move_to_queue(
-                    *self.engine.get_board_coords_from_uci_move(self.engine.king_to_rook_moves[uci_move]),
+                    *self.engine.get_board_coords_from_uci_move(
+                        self.engine.king_to_rook_moves[uci_move]),
                     OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
             else:
                 if self.is_knight_move_w_neighbors(uci_move):
@@ -230,16 +233,17 @@ class Board:
         '''
         return self.engine.valid_moves_from_position()
 
-    # TODO: implement this function
     def send_message_to_arduino(self, board_move):
         '''Constructs and sends message according to pi-arduino message format doc.
         '''
         # Convert BoardCell integer coordinates to chars s.t. 0 <=> 'A', ..., 11 <=> 'L' before
         # sending message so that each coord only takes up one byte. This will need to be
         # converted back on the Arduino side.
-        msg = f"~{board_move.op_code}{board_move.move_count % 256}" +
-              f"{chr(board_move.source.row + ord('A'))}{chr(board_move.source.row + ord('A'))}" +
-              f"{chr(board_move.dest.row + ord('A'))}{chr(board_move.dest.row + ord('A'))}"
+        source_str = chr(board_move.source.row + ord('A')) + chr(board_move.source.col + ord('A'))
+        dest_str = chr(board_move.dest.row + ord('A')) + chr(board_move.dest.col + ord('A'))
+        msg = f"~{board_move.op_code}{board_move.move_count % 256}{source_str}{dest_str}"
+
+        print(f"Sending message \"{msg}\" to arduino")
 
         # TODO: Implement sending message to arduino
 
@@ -350,7 +354,7 @@ class Board:
         if piece_type != "n":
             return False
 
-        source, dest = self.engine.get_chess_coords_from_uci_move(uci_move)
+        source, dest = Engine.get_chess_coords_from_uci_move(uci_move)
 
         board_2d = self.engine.get_2d_board()
         # Cut number of cases from 8 to 4 by treating soure and dest interchangeably
@@ -381,6 +385,8 @@ class Board:
                                          board_2d[left.row][left.col + 2]]])  # P4
 
     def dispatch_move_from_queue(self):
+        '''Send move at front of self.move_queue to Arduino, if queue is non-empty.
+        '''
         if not self.move_queue:
             raise ValueError("No moves to dispatch")
         # Note: move is only removed from the queue in the main game loop when the status received
@@ -388,6 +394,8 @@ class Board:
         self.send_message_to_arduino(self.move_queue[0])
 
     def add_move_to_queue(self, source, dest, op_code):
+        '''Increment move count and add Move to self.move_queue.
+        '''
         self.move_count += 1
         move = Move(self.move_count, source, dest, op_code)
         self.move_queue.append(move)
@@ -449,18 +457,18 @@ class Graveyard:
             raise ValueError("Cannot modify graveyard in increments greater than 1")
 
 class Move:
-    def __init__(self, move_count, source, dest, op_code):
-        """Wrapper class for moves from specified source to dest.
+    """Wrapper class for moves from specified source to dest.
 
-        Attributes:
-            move_count: int specifying move number in current game. Note, a single chess move may
-                be composed of multiple Move objects. For example, a capture is one Move to send
-                the captured piece to the graveyard, and another to move the capturing piece to
-                the new square.
-            source: BoardCell at which to start move.
-            dest: BoardCell at which to end move.
-            op_code: OpCode specifying how piece should be moved.
-        """
+    Attributes:
+        move_count: int specifying move number in current game. Note, a single chess move may
+            be composed of multiple Move objects. For example, a capture is one Move to send
+            the captured piece to the graveyard, and another to move the capturing piece to
+            the new square.
+        source: BoardCell at which to start move.
+        dest: BoardCell at which to end move.
+        op_code: OpCode specifying how piece should be moved.
+    """
+    def __init__(self, move_count, source, dest, op_code):
         self.move_count = move_count
         self.source = source
         self.dest = dest

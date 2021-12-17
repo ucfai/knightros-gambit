@@ -38,7 +38,7 @@ def create_stockfish_wrapper():
         stockfish_path = "n/a"
     else:
         raise ValueError("Operating system must be one of "
-                        "'darwin' (osx), 'linux', 'windows', 'raspi'")
+                         "'darwin' (osx), 'linux', 'windows', 'raspi'")
     return Stockfish(stockfish_path)
 
 def init_dead_piece_counts():

@@ -15,7 +15,8 @@ class ArduinoStatus:
         self.move_count = move_count
         self.extra = extra
 
-    def parse_message(self, message):
+    @staticmethod
+    def parse_message(message):
         """Parse message to construct and return an ArduinoStatus.
         """
         if message[0] != '~' or len(message) != 4:
@@ -31,6 +32,7 @@ class ArduinoStatus:
             return "EXECUTING_MOVE"
         if self.status == ArduinoStatus.ERROR:
             return "ERROR"
+        return ""
 
 class Status:
     '''Helper class that stores current status of game, along with related metadata.
