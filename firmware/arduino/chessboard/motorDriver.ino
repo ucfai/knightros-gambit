@@ -28,63 +28,11 @@ void moveMotor(int motor[], int steps, int dir)
 void moveSpaces(int motor[], int spaces, int dir)
 {
   // How many steps per space
-  float numSteps = spaces * stepsPerSpace;
+  int numSteps = spaces * stepsPerSpace;
 
   digitalWrite(motor[1], dir);
 
-  moveMotor(motor[], (int)numSteps, dir)
-}
-
-void moveDiagonal(int dirX, int dirY, int spacesX, int spacesY)
-{
-  int i;
-
-  // similary subject to change as above function dictation, same number as above though
-  float numStepsX = spacesX * stepsPerSpace;
-  float numStepsY = spacesY * stepsPerSpace;
-
-  digitalWrite(MOTOR_SLEEP, HIGH);
-  digitalWrite(MOTOR_RESET, HIGH);
-  digitalWrite(MOTOR_ENABLE, LOW);
-
-  digitalWrite(xMotor[1], dirX);
-  digitalWrite(yMotor[1], dirY);
-  
-  if (numStepsX = numStepsY) 
-  {
-    for(i = 0; i < numStepsX; i++)
-    {
-    digitalWrite(xMotor[0], LOW);
-    digitalWrite(yMotor[0], LOW);
-    delay(1);
-    digitalWrite(xMotor[0], HIGH);
-    digitalWrite(yMotor[0], HIGH);
-    }
-  } 
-
-  else 
-  {
-    float dist = sqrt(numStepsX * numStepsX + numStepsY * numStepsY);
-    float delayX = dist / numStepsX;
-    float delayY = dist / numStepsY;
-
-    for(i=0; i < dist; i++)
-      digitalWrite(xMotor[0], LOW);
-      //do i have to convert this into an int, can i keep it as a variable?
-      delay(delayX);
-      digitalWrite(xMotor[0], HIGH);
-
-      digitalWrite(yMotor[0], LOW);
-      delay(delayY);
-      digitalWrite(yMotor[0], HIGH);
-  }
-}
-
-void disableMotors() 
-{
-  digitalWrite(MOTOR_SLEEP, LOW);
-  digitalWrite(MOTOR_RESET, LOW);
-  digitalWrite(MOTOR_ENABLE, HIGH);
+  moveMotor(motor[], numSteps, dir)
 }
 
 /*
@@ -115,4 +63,68 @@ void setScale(int motor[], int scale)
     digitalWrite(motor[2], HIGH);
     digitalWrite(motor[3], HIGH);
   }
+}
+
+void moveDiagonal(int dirX, int dirY, int spacesX, int spacesY)
+{
+  int i;
+
+  // similary subject to change as above function dictation, same number as above though
+  float numStepsX = spacesX * stepsPerSpace;
+  float numStepsY = spacesY * stepsPerSpace;
+
+  digitalWrite(MOTOR_SLEEP, HIGH);
+  digitalWrite(MOTOR_RESET, HIGH);
+  digitalWrite(MOTOR_ENABLE, LOW);
+
+  digitalWrite(xMotor[1], dirX);
+  digitalWrite(yMotor[1], dirY);
+  
+  if (numStepsX == numStepsY) 
+  {
+    for(i = 0; i < numStepsX; i++)
+    {
+      digitalWrite(xMotor[0], LOW);
+      digitalWrite(yMotor[0], LOW);
+      delay(1);
+      digitalWrite(xMotor[0], HIGH);
+      digitalWrite(yMotor[0], HIGH);
+    }
+  } 
+
+  else if (numStepsY > numStepsX && (numStepsY / numStepsX) == 2)
+  {
+    //can I call setScale here even thought it's declared after?
+    //This should be a slope of 2
+    setScale(xMotor, 2);
+
+    for(i = 0; i < numStepsX; i++)
+    {
+      digitalWrite(xMotor[0], LOW);
+      digitalWrite(yMotor[0], LOW);
+      delay(1);
+      digitalWrite(xMotor[0], HIGH);
+      digitalWrite(yMotor[0], HIGH);
+    }
+  }
+  else if (numStepsY < numStepsX)
+  {
+    setScale(yMotor, 2);
+
+    for(i = 0; i < numStepsX; i++)
+    {
+      digitalWrite(xMotor[0], LOW);
+      digitalWrite(yMotor[0], LOW);
+      delay(1);
+      digitalWrite(xMotor[0], HIGH);
+      digitalWrite(yMotor[0], HIGH);
+    }
+  }
+}
+
+void disableMotors() 
+{
+  digitalWrite(MOTOR_SLEEP, LOW);
+  digitalWrite(MOTOR_RESET, LOW);
+  digitalWrite(MOTOR_ENABLE, HIGH);
 }
