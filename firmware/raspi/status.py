@@ -1,5 +1,3 @@
-from enum import Enum
-
 class ArduinoStatus:
     '''Wrapper around messages received from Arduino.
     # TODO: add in some more documentation here w.r.t. message formatting.
@@ -43,7 +41,7 @@ class Status:
         '''
         raise NotImplementedError("Not implemented")
 
-class OpCode(Enum):
+class OpCode:
     '''Enum of op codes used to provide information about type of move Arduino should make.
     '''
     # This code indicates Arduino should use straight-line path, diagonals allowed
