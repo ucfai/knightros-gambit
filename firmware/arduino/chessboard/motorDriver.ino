@@ -32,7 +32,7 @@ void moveSpaces(int motor[], int spaces, int dir)
 
   digitalWrite(motor[1], dir);
 
-  moveMotor(motor[], numSteps, dir)
+  moveMotor(motor, numSteps, dir);
 }
 
 /*
@@ -69,7 +69,6 @@ void moveDiagonal(int dirX, int dirY, int spacesX, int spacesY)
 {
   int i;
 
-  // similary subject to change as above function dictation, same number as above though
   float numStepsX = spacesX * stepsPerSpace;
   float numStepsY = spacesY * stepsPerSpace;
 
@@ -80,38 +79,22 @@ void moveDiagonal(int dirX, int dirY, int spacesX, int spacesY)
   digitalWrite(xMotor[1], dirX);
   digitalWrite(yMotor[1], dirY);
   
-  if (numStepsX == numStepsY) 
+  if (numStepsX == numStepsY)
   {
-    for(i = 0; i < numStepsX; i++)
-    {
-      digitalWrite(xMotor[0], LOW);
-      digitalWrite(yMotor[0], LOW);
-      delay(1);
-      digitalWrite(xMotor[0], HIGH);
-      digitalWrite(yMotor[0], HIGH);
-    }
-  } 
-
-  else if (numStepsY > numStepsX && (numStepsY / numStepsX) == 2)
+    setScale(xMotor, 1);
+    setScale(yMotor, 1);
+  }
+ else if (numStepsY > numStepsX && (numStepsY / numStepsX) == 2)
   {
-    //can I call setScale here even thought it's declared after?
-    //This should be a slope of 2
     setScale(xMotor, 2);
-
-    for(i = 0; i < numStepsX; i++)
-    {
-      digitalWrite(xMotor[0], LOW);
-      digitalWrite(yMotor[0], LOW);
-      delay(1);
-      digitalWrite(xMotor[0], HIGH);
-      digitalWrite(yMotor[0], HIGH);
-    }
+    setScale(yMotor, 1);
   }
-  else if (numStepsY < numStepsX)
+  else if (numStepsY < numStepsX && (numStepsX / numStepsY) == 2)
   {
+    setScale(xMotor, 1);
     setScale(yMotor, 2);
-
-    for(i = 0; i < numStepsX; i++)
+  }
+  for(i = 0; i < numStepsX; i++)
     {
       digitalWrite(xMotor[0], LOW);
       digitalWrite(yMotor[0], LOW);
@@ -119,7 +102,6 @@ void moveDiagonal(int dirX, int dirY, int spacesX, int spacesY)
       digitalWrite(xMotor[0], HIGH);
       digitalWrite(yMotor[0], HIGH);
     }
-  }
 }
 
 void disableMotors() 
