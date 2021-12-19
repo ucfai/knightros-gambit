@@ -17,7 +17,8 @@ void moveMotor(int motor[], int steps, int dir)
   digitalWrite(motor[1], dir);
 
   // Rotate motor some number of steps
-  for (i = 0; i < steps; i++) {
+  for (i = 0; i < steps; i++) 
+  {
     digitalWrite(motor[0], LOW);
     delay(1);  // 1 milliSecond
     digitalWrite(motor[0], HIGH);
@@ -69,8 +70,8 @@ void moveDiagonal(int dirX, int dirY, int spacesX, int spacesY)
 {
   int i;
 
-  float numStepsX = spacesX * stepsPerSpace;
-  float numStepsY = spacesY * stepsPerSpace;
+  int numStepsX = spacesX * stepsPerSpace;
+  int numStepsY = spacesY * stepsPerSpace;
 
   digitalWrite(MOTOR_SLEEP, HIGH);
   digitalWrite(MOTOR_RESET, HIGH);
@@ -84,7 +85,7 @@ void moveDiagonal(int dirX, int dirY, int spacesX, int spacesY)
     setScale(xMotor, 1);
     setScale(yMotor, 1);
   }
- else if (numStepsY > numStepsX && (numStepsY / numStepsX) == 2)
+  else if (numStepsY > numStepsX && (numStepsY / numStepsX) == 2)
   {
     setScale(xMotor, 2);
     setScale(yMotor, 1);
@@ -94,6 +95,7 @@ void moveDiagonal(int dirX, int dirY, int spacesX, int spacesY)
     setScale(xMotor, 1);
     setScale(yMotor, 2);
   }
+
   for(i = 0; i < numStepsX; i++)
     {
       digitalWrite(xMotor[0], LOW);
