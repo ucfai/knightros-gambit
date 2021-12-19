@@ -95,7 +95,7 @@ class Engine:
 
     @staticmethod
     def get_chess_coords_from_square(square):
-        '''Converts chess squares to 2d grid coords.
+        '''Converts chess square to a BoardCell.
 
         Example: a1 <=> [0, 0], h8 <=> [7, 7], regardless of whether human plays white or black
         pieces.
@@ -119,7 +119,9 @@ class Engine:
 
     @staticmethod
     def get_chess_coords_from_uci_move(uci_move):
-        '''Returns tuple of int tuples, start and end points from provided uci_move.
+        '''Returns tuple of BoardCells w.r.t. 8x8 chess grid.
+
+        BoardCells specifying start and end points from provided uci_move.
         '''
         # TODO: consider case of promotion. Maybe this should return three-tuple with optional
         # third value that is None when not a promotion.
@@ -127,7 +129,9 @@ class Engine:
                 Engine.get_chess_coords_from_square(uci_move[2:4]))
 
     def get_board_coords_from_uci_move(self, uci_move):
-        '''Returns tuple of int tuples, start and end points from provided uci_move.
+        '''Returns tuple of BoardCells w.r.t. phyiscal board (including graveyard and edges).
+
+        BoardCells specifying start and end points from provided uci_move.
         '''
         # TODO: consider case of promotion. Maybe this should return three-tuple with optional
         # third value that is None when not a promotion.
