@@ -1,12 +1,36 @@
-from enum import Enum
-
-class ArduinoStatus(Enum):
-    '''Enum of status codes used to indicate current status of Arduino controlling physical board.
+class ArduinoStatus:
+    '''Wrapper around messages received from Arduino.
+    # TODO: add in some more documentation here w.r.t. message formatting.
     '''
+    # Status codes used to indicate current status of Arduino controlling physical board.
     IDLE = 0
     MESSAGE_IN_PROGRESS = 1
     EXECUTING_MOVE = 2
     ERROR = 3
+
+    def __init__(self, status, move_count, extra):
+        self.status = status
+        self.move_count = move_count
+        self.extra = extra
+
+    @staticmethod
+    def parse_message(message):
+        """Parse message to construct and return an ArduinoStatus.
+        """
+        if message[0] != '~' or len(message) != 4:
+            return None
+        return ArduinoStatus(message[1], message[2], message[3])
+
+    def __str__(self):
+        if self.status == ArduinoStatus.IDLE:
+            return "IDLE"
+        if self.status == ArduinoStatus.MESSAGE_IN_PROGRESS:
+            return "MESSAGE_IN_PROGRESS"
+        if self.status == ArduinoStatus.EXECUTING_MOVE:
+            return "EXECUTING_MOVE"
+        if self.status == ArduinoStatus.ERROR:
+            return "ERROR"
+        return ""
 
 class Status:
     '''Helper class that stores current status of game, along with related metadata.
@@ -17,7 +41,7 @@ class Status:
         '''
         raise NotImplementedError("Not implemented")
 
-class OpCode(Enum):
+class OpCode:
     '''Enum of op codes used to provide information about type of move Arduino should make.
     '''
     # This code indicates Arduino should use straight-line path, diagonals allowed

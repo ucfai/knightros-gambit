@@ -38,7 +38,7 @@ def create_stockfish_wrapper():
         stockfish_path = "n/a"
     else:
         raise ValueError("Operating system must be one of "
-                        "'darwin' (osx), 'linux', 'windows', 'raspi'")
+                         "'darwin' (osx), 'linux', 'windows', 'raspi'")
     return Stockfish(stockfish_path)
 
 def init_dead_piece_counts():
@@ -63,22 +63,22 @@ def init_dead_piece_graveyards():
     '''Creates and returns a dictionary of BoardCell for each dead piece type.
     '''
     dead_piece_graveyards = {}
-    dead_piece_graveyards["wq"] = [BoardCell(0, 9), BoardCell(0, 7), BoardCell(1, 7)]
-    dead_piece_graveyards["wb"] = [BoardCell(1, 9), BoardCell(0, 6), BoardCell(1, 6)]
-    dead_piece_graveyards["wn"] = [BoardCell(0, 8), BoardCell(0, 5), BoardCell(1, 5)]
-    dead_piece_graveyards["wr"] = [BoardCell(1, 8), BoardCell(0, 4), BoardCell(1, 4)]
+    dead_piece_graveyards["wq"] = [BoardCell(2, 10), BoardCell(4, 10), BoardCell(4, 11)]
+    dead_piece_graveyards["wb"] = [BoardCell(2, 11), BoardCell(5, 10), BoardCell(5, 11)]
+    dead_piece_graveyards["wn"] = [BoardCell(3, 10), BoardCell(6, 10), BoardCell(6, 11)]
+    dead_piece_graveyards["wr"] = [BoardCell(3, 11), BoardCell(7, 10), BoardCell(7, 11)]
     dead_piece_graveyards["wp"] = [
-        BoardCell(0, 0), BoardCell(1, 0), BoardCell(0, 1), BoardCell(1, 1),
-        BoardCell(0, 2), BoardCell(1, 2), BoardCell(0, 3), BoardCell(1, 3),
+        BoardCell(8, 10), BoardCell(8, 11), BoardCell(9, 10), BoardCell(9, 11),
+        BoardCell(10, 10), BoardCell(10, 11), BoardCell(11, 10), BoardCell(11, 11),
     ]
 
-    dead_piece_graveyards["bq"] = [BoardCell(10, 9), BoardCell(10, 7), BoardCell(11, 7)]
-    dead_piece_graveyards["bb"] = [BoardCell(11, 9), BoardCell(10, 6), BoardCell(11, 6)]
-    dead_piece_graveyards["bn"] = [BoardCell(10, 8), BoardCell(10, 5), BoardCell(11, 5)]
-    dead_piece_graveyards["br"] = [BoardCell(11, 8), BoardCell(10, 4), BoardCell(11, 4)]
+    dead_piece_graveyards["bq"] = [BoardCell(2, 0), BoardCell(4, 0), BoardCell(4, 1)]
+    dead_piece_graveyards["bb"] = [BoardCell(2, 1), BoardCell(5, 0), BoardCell(5, 1)]
+    dead_piece_graveyards["bn"] = [BoardCell(3, 0), BoardCell(6, 0), BoardCell(6, 1)]
+    dead_piece_graveyards["br"] = [BoardCell(3, 1), BoardCell(7, 0), BoardCell(7, 1)]
     dead_piece_graveyards["bp"] = [
-        BoardCell(10, 0), BoardCell(11, 0), BoardCell(10, 1), BoardCell(11, 1),
-        BoardCell(10, 2), BoardCell(11, 2), BoardCell(10, 3), BoardCell(11, 3),
+        BoardCell(8, 0), BoardCell(8, 1), BoardCell(9, 0), BoardCell(9, 1),
+        BoardCell(10, 0), BoardCell(10, 1), BoardCell(11, 0), BoardCell(11, 1),
     ]
 
     return dead_piece_graveyards
@@ -86,7 +86,7 @@ def init_dead_piece_graveyards():
 def init_capture_squares():
     '''Creates and returns two BoardCell objects corresponding to capture squares.
     '''
-    w_capture_sq = BoardCell(1, 10)
-    b_capture_sq = BoardCell(10, 10)
+    w_capture_sq = BoardCell(1, 1)
+    b_capture_sq = BoardCell(1, 10)
 
     return w_capture_sq, b_capture_sq

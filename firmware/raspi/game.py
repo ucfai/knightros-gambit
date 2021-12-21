@@ -29,30 +29,20 @@ def is_human_turn_at_start():
             return True
         print("Please choose one of [w], [b], or [r].")
 
-# TODO: maybe this should be in Board class instead?
-def send_move_to_board(board, uci_move):
-    '''Validate move and send to board interface.
-    '''
-    if board.is_valid_move(uci_move):
-        board.make_move(uci_move)
-        # TODO: This is for game loop dev, remove once we read from arduino
-        board.set_status_from_arduino(ArduinoStatus.EXECUTING_MOVE)
-    else:
-        # TODO: do error handling
-        raise NotImplementedError("Need to handle case of invalid move input. "
-                                  "Should we loop until move is valid? What if "
-                                  "the board is messed up? Need to revisit.")
-
-
 def handle_human_move(mode_of_interaction, board):
     '''Handle human move based on specified mode of interaction.
     '''
     if mode_of_interaction == 'cli':
         uci_move = CLHumanPlayer.select_move(board)
         try:
-            send_move_to_board(board, uci_move)
+            board.send_move_to_board(uci_move)
         except NotImplementedError as nie:
             print(nie.__str__())
+    elif mode_of_interaction == 'over_the_board':
+        # TODO: think about handling backfill of promotion area if person made a promotion move.
+        # If needed, backfill the promotion area (if possible).
+        # board.backfill_promotion_area_from_graveyard(color, piece_type)
+        pass
     else:
         raise ValueError("Other modes of interaction are unimplemented")
 
@@ -61,7 +51,7 @@ def handle_ai_move(ai_player, board):
     '''
     uci_move = ai_player.select_move(board.engine.fen())
     try:
-        send_move_to_board(board, uci_move)
+        board.send_move_to_board(uci_move)
         print(f"AI made move: {uci_move}")
     except NotImplementedError as nie:
         print(nie.__str__())
@@ -83,9 +73,6 @@ def main():
     '''
     random.seed()
 
-    # board initialization
-    elo_rating = 1300
-    board = Board()
     print("Welcome to Knightro's Gambit")
 
     # TODO: update this to handle physical, web, speech interaction
@@ -95,10 +82,11 @@ def main():
     is_human_turn = is_human_turn_at_start()
 
     # TODO: Set up board with either white or black on human side.
+    board = Board(human_plays_white_pieces=is_human_turn)
     # board.setup_board(is_human_turn)
 
     # TODO: remove this after real Arduino communication is set up
-    board.set_status_from_arduino(ArduinoStatus.IDLE)
+    board.set_status_from_arduino(ArduinoStatus.IDLE, 0, None)
 
     if mode_of_interaction == "cli":
         print("Using CLI mode of interaction for human player")
@@ -106,7 +94,7 @@ def main():
         raise ValueError("Other modes of interaction are unimplemented")
     # TODO: update this to handle physical, web, speech interaction
 
-    ai_player = StockfishPlayer(elo_rating)
+    ai_player = StockfishPlayer(elo_rating=1400)
 
     # Main game loop
     while True:
@@ -116,24 +104,37 @@ def main():
                 print("Thanks for playing")
                 reset_board()
                 break  # Break out of main game loop
-            
+
             print("Ok, resetting board")
             reset_board()
 
         board_status = board.get_status_from_arduino()
         print(f"Board Status: {board_status}")
 
-        if board_status in (ArduinoStatus.EXECUTING_MOVE, ArduinoStatus.MESSAGE_IN_PROGRESS):
+        if board_status.status in (ArduinoStatus.EXECUTING_MOVE,
+                                   ArduinoStatus.MESSAGE_IN_PROGRESS):
             # Wait for move in progress to finish executing
             time.sleep(1) # reduce the amount of polling while waiting for move to finish
 
             # TODO: This is just so we have game loop working, remove once we read from arduino
-            board.set_status_from_arduino(ArduinoStatus.IDLE)
+            board.set_status_from_arduino(ArduinoStatus.IDLE,
+                                          board.move_queue[0].move_count % 256,
+                                          None)
             continue
 
-        if board_status == ArduinoStatus.ERROR:
+        if board_status.status == ArduinoStatus.ERROR:
             # TODO: figure out edge/error cases and handle them here
             raise ValueError("Unimplemented, need to handle errors")
+
+        if board.move_queue:
+            # Arduino sends and receives move_count % 256, since it can only transmit one byte
+            if all([board_status.move_count == board.move_queue[0].move_count % 256,
+                    board_status.status == ArduinoStatus.IDLE]):
+                board.move_queue.popleft()
+
+        if board.move_queue:
+            board.dispatch_move_from_queue()
+            continue
 
         board.show_on_cli()
 
@@ -141,8 +142,8 @@ def main():
             handle_human_move(mode_of_interaction, board)
         else:
             handle_ai_move(ai_player, board)
-        # TODO: After every move, center piece that was just moved on its new square
-        # TODO: Need to account for castles as well.
+        # TODO: After every move, center piece that was just moved on its new square. Need to
+        # account for castles as well.
 
         is_human_turn = not is_human_turn
         # Status.write_game_status_to_disk(board)
