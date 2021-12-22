@@ -42,6 +42,47 @@ void disableMotors()
   digitalWrite(MOTOR_ENABLE, HIGH);
 }
 
+void homeMotor(int motor[])
+{
+  int i;
+
+  // Loop until endstop collision, then fine tune it
+  // Since we're reusing this code for the x and y axis, 
+  // LEFT and RIGHT don't always apply to the motor passed in, but the values are the same 
+
+  digitalWrite(motor[1], LEFT);
+  setScale(motor, 1);
+  while (digitalRead(X_AXIS_ENDSTOP_SWITCH) == LOW))
+  {
+    digitalWrite(motor[0], LOW);
+    delay(1);  // 1 milliSecond
+    digitalWrite(motor[0], HIGH);
+  }
+
+  digitalWrite(motor[1], RIGHT);
+  for (i = 0; i < HOME_OFFSET; i++)
+  {
+    digitalWrite(motor[0], LOW);
+    delay(1);  // 1 milliSecond
+    digitalWrite(motor[0], HIGH);
+  }
+
+  digitalWrite(motor[1], LEFT);
+  setScale(motor, 8);
+  while (digitalRead(X_AXIS_ENDSTOP_SWITCH) == LOW))
+  {
+    digitalWrite(motor[0], LOW);
+    delay(1);  // 1 milliSecond
+    digitalWrite(motor[0], HIGH);
+  }
+}
+
+void home()
+{
+  homeAxis(xMotor);
+  homeAxis(yMotor);
+}
+
 /*
   Motor array format in order of indicies:
   Index:

@@ -39,7 +39,9 @@ int yMotor[4] = {MOTOR2_STEP_PIN, MOTOR2_DIR, MOTOR2_MS1, MOTOR2_MS2};
 // Distance Definitions
 #define MILLIMETERS_PER_SQUARE 63
 #define STEPS_PER_MILLIMETER 5
+#define homeOffset 100
 float stepsPerSpace;
+int currentX, currentY;
 
 void setup()
 {
