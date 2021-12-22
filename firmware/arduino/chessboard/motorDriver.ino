@@ -42,7 +42,7 @@ void disableMotors()
   digitalWrite(MOTOR_ENABLE, HIGH);
 }
 
-void homeMotor(int motor[])
+void homeAxis(int motor[])
 {
   int i;
 
@@ -52,7 +52,7 @@ void homeMotor(int motor[])
 
   digitalWrite(motor[1], LEFT);
   setScale(motor, 1);
-  while (digitalRead(X_AXIS_ENDSTOP_SWITCH) == LOW))
+  while (digitalRead(motor[4]) == LOW)
   {
     digitalWrite(motor[0], LOW);
     delay(1);  // 1 milliSecond
@@ -69,7 +69,7 @@ void homeMotor(int motor[])
 
   digitalWrite(motor[1], LEFT);
   setScale(motor, 8);
-  while (digitalRead(X_AXIS_ENDSTOP_SWITCH) == LOW))
+  while (digitalRead(motor[4]) == LOW)
   {
     digitalWrite(motor[0], LOW);
     delay(1);  // 1 milliSecond
