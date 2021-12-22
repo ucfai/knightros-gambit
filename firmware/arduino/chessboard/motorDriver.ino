@@ -28,6 +28,13 @@ void setScale(int motor[], int scale)
   }
 }
 
+void enableMotors()
+{
+  digitalWrite(MOTOR_SLEEP, HIGH);
+  digitalWrite(MOTOR_RESET, HIGH);
+  digitalWrite(MOTOR_ENABLE, LOW);
+}
+
 void disableMotors() 
 {
   digitalWrite(MOTOR_SLEEP, LOW);
@@ -67,9 +74,7 @@ void moveStraight(int motor[], int startCol, int startRow, int endCol, int endRo
   numSteps = spaces * stepsPerSpace;
 
   // Enable motor driver inputs/output
-  digitalWrite(MOTOR_SLEEP, HIGH);
-  digitalWrite(MOTOR_RESET, HIGH);
-  digitalWrite(MOTOR_ENABLE, LOW);
+  enableMotors();
 
   // Set direction of motor
   digitalWrite(motor[1], dir);
@@ -99,9 +104,7 @@ void moveDiagonal(int startCol, int startRow, int endCol, int endRow)
   numStepsX = spacesX * stepsPerSpace;
   numStepsY = spacesY * stepsPerSpace;
 
-  digitalWrite(MOTOR_SLEEP, HIGH);
-  digitalWrite(MOTOR_RESET, HIGH);
-  digitalWrite(MOTOR_ENABLE, LOW);
+  enableMotors();
 
   digitalWrite(xMotor[1], dirX);
   digitalWrite(yMotor[1], dirY);
