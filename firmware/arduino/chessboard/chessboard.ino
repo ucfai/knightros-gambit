@@ -19,8 +19,8 @@ int xMotor[4] = {MOTOR1_STEP_PIN, MOTOR1_DIR, MOTOR1_MS1, MOTOR1_MS2};
 int yMotor[4] = {MOTOR2_STEP_PIN, MOTOR2_DIR, MOTOR2_MS1, MOTOR2_MS2};
 
 // Motor directions
-#define FORWARD 0 
-#define BACKWARD 1
+#define UP 0 
+#define DOWN 1
 #define LEFT 0
 #define RIGHT 1 
 
@@ -66,8 +66,7 @@ void setup()
 
   stepsPerSpace = MILLIMETERS_PER_SQUARE * STEPS_PER_MILLIMETER;
 
-  // Setup the UART here
-  //Serial2.begin(115200, SERIAL_8N1, RX2, TX2);
+  Serial2.begin(115200, SERIAL_8N1, RX2, TX2);
 }
 
 void loop()

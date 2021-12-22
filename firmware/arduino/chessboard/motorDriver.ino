@@ -42,11 +42,29 @@ void disableMotors()
   Step pin, Dir pin, MS1 pin, MS2 pin
 */
 
-void moveStraight(int motor[], int spaces, int dir)
+void moveStraight(int motor[], int startCol, int startRow, int endCol, int endRow)
 {
+  // A specific motor is passed to this function since we are only moving one here
+  
   // How many steps per space
-  int numSteps = spaces * stepsPerSpace;
+  int spaces, dir, numSteps;
   int i;
+
+  // This could be two cases, x or y movement
+  if (endRow == startRow)
+  {
+    // X movement
+    spaces = abs(endCol - startCol);
+    dir = (endCol > startCol) ? RIGHT : LEFT;
+  }
+  else if (endCol == startCol)
+  {
+    // Y movement
+    spaces = abs(endRow - startRow);
+    dir = (endRow > startRow) ? UP : DOWN;
+  }
+
+  numSteps = spaces * stepsPerSpace;
 
   // Enable motor driver inputs/output
   digitalWrite(MOTOR_SLEEP, HIGH);
