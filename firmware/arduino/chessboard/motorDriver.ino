@@ -4,8 +4,11 @@
   0         1        2        3
   Step pin, Dir pin, MS1 pin, MS2 pin
 */
-void moveMotor(int motor[], int steps, int dir) 
+
+void moveStraight(int motor[], int spaces, int dir)
 {
+  // How many steps per space
+  int numSteps = spaces * stepsPerSpace;
   int i;
 
   // Enable motor driver inputs/output
@@ -17,23 +20,12 @@ void moveMotor(int motor[], int steps, int dir)
   digitalWrite(motor[1], dir);
 
   // Rotate motor some number of steps
-  for (i = 0; i < steps; i++) 
+  for (i = 0; i < numSteps; i++) 
   {
     digitalWrite(motor[0], LOW);
     delay(1);  // 1 milliSecond
     digitalWrite(motor[0], HIGH);
   }
-
-}
-
-void moveSpaces(int motor[], int spaces, int dir)
-{
-  // How many steps per space
-  int numSteps = spaces * stepsPerSpace;
-
-  digitalWrite(motor[1], dir);
-
-  moveMotor(motor, numSteps, dir);
 }
 
 /*
