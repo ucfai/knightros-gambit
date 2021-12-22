@@ -83,12 +83,21 @@ void moveStraight(int motor[], int startCol, int startRow, int endCol, int endRo
   }
 }
 
-void moveDiagonal(int dirX, int dirY, int spacesX, int spacesY)
+void moveDiagonal(int startCol, int startRow, int endCol, int endRow)
 {
+  int dirX, dirY, spacesX, spacesY;
+  int numStepsX, numStepsY;
   int i;
 
-  int numStepsX = spacesX * stepsPerSpace;
-  int numStepsY = spacesY * stepsPerSpace;
+  // Abs ensures that numStepsx and numStepsY will be positive
+  spacesX = abs(endCol - startCol);
+  dirX = (endCol > startCol) ? RIGHT : LEFT;
+
+  spacesY = abs(endRow - startRow);
+  dirY = (endRow > startRow) ? UP : DOWN;
+
+  numStepsX = spacesX * stepsPerSpace;
+  numStepsY = spacesY * stepsPerSpace;
 
   digitalWrite(MOTOR_SLEEP, HIGH);
   digitalWrite(MOTOR_RESET, HIGH);
