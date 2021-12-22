@@ -63,12 +63,14 @@ void moveStraight(int motor[], int startCol, int startRow, int endCol, int endRo
     // X movement
     spaces = abs(endCol - startCol);
     dir = (endCol > startCol) ? RIGHT : LEFT;
+    setScale(xMotor, 1);
   }
   else if (endCol == startCol)
   {
     // Y movement
     spaces = abs(endRow - startRow);
     dir = (endRow > startRow) ? UP : DOWN;
+    setScale(yMotor, 1);
   }
 
   numSteps = spaces * stepsPerSpace;
