@@ -1,4 +1,4 @@
-void moveStraight(int startRow, int startCol, int endRow, int endCol)
+void moveDirect(int startRow, int startCol, int endRow, int endCol)
 {
     return;
 }
