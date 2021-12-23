@@ -6,7 +6,8 @@ class ArduinoStatus:
     IDLE = 0
     MESSAGE_IN_PROGRESS = 1
     EXECUTING_MOVE = 2
-    ERROR = 3
+    END_TURN_BUTTON_PRESSED = 3
+    ERROR = 4
 
     def __init__(self, status, move_count, extra):
         self.status = status
@@ -28,6 +29,8 @@ class ArduinoStatus:
             return "MESSAGE_IN_PROGRESS"
         if self.status == ArduinoStatus.EXECUTING_MOVE:
             return "EXECUTING_MOVE"
+        if self.status == ArduinoStatus.END_TURN_BUTTON_PRESSED:
+            return "END_TURN_BUTTON_PRESSED"
         if self.status == ArduinoStatus.ERROR:
             return "ERROR"
         return ""
@@ -61,4 +64,6 @@ class OpCode:
 class ArduinoException(Exception):
     '''Helper class for custom Arduino exceptions.
     '''
-    GENERIC_ERROR = 0
+    NONE = 0
+    INVALID_OP = 1
+    INVALID_LOCATION = 2
