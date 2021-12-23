@@ -2,6 +2,7 @@ char incomingByte;
 char buffer[6];
 int byteNum = -1; // -1 indicates that the start code hasn't been received
 char currentState = '0';
+char errorCode;
 
 enum ArduinoState
 {
@@ -17,6 +18,13 @@ enum MoveCommandType
     DIRECT = '0',
     EDGES = '1',
     ALIGN = '2'
+};
+
+enum ErrorCode
+{
+    NONE = '0',
+    INVALID_OP = '1',
+    INVALID_LOCATION = '2'
 };
 
 
@@ -52,7 +60,11 @@ void serialEvent2()
             // Process input
             // Returns true for valid input and false for invalid input. Calls movement function
             currentState = EXECUTING;
-            parseMessageFromPi(buffer);
+            if (parseMessageFromPi(buffer))
+                errorCode = NONE;
+
+            // Send response
+            sendMessageToPi(currentState, buffer[5], errorCode);
         }
     }
 }
@@ -68,6 +80,7 @@ bool parseMessageFromPi(char * message)
            ||  message[3] < 'A'  ||  message[3] > 'L' 
            ||  message[4] < 'A'  ||   message[4] > 'L') 
         {
+            errorCode = INVALID_LOCATION;
             currentState = ERROR;
             return false;
         }
@@ -86,6 +99,7 @@ bool parseMessageFromPi(char * message)
         if (message[1] < 'A'  ||  message[1] > 'L' 
            ||  message[2] < 'A'  ||  message[2] > 'L') 
         {
+            errorCode = INVALID_LOCATION;
             currentState = ERROR;
             return false;
         }
@@ -96,11 +110,21 @@ bool parseMessageFromPi(char * message)
     else
     {
         // Invalid opcode
+        errorCode = INVALID_OP;
         currentState = ERROR;
         return false;
     }
 
     // Move is valid and was made
+    errorCode = NONE;
     currentState = IDLE;
     return true;
+}
+
+void sendMessageToPi(char status, char moveCount, char errorMessage)
+{
+    Serial2.write('~');
+    Serial2.write(status);
+    Serial2.write(moveCount);
+    Serial2.write(errorMessage);
 }
