@@ -111,8 +111,7 @@ def main():
         board_status = board.get_status_from_arduino()
         print(f"Board Status: {board_status}")
 
-        if board_status.status in (ArduinoStatus.EXECUTING_MOVE,
-                                   ArduinoStatus.MESSAGE_IN_PROGRESS):
+        if board_status.status == ArduinoStatus.EXECUTING_MOVE:
             # Wait for move in progress to finish executing
             time.sleep(1) # reduce the amount of polling while waiting for move to finish
 

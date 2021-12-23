@@ -4,10 +4,9 @@ class ArduinoStatus:
     '''
     # Status codes used to indicate current status of Arduino controlling physical board.
     IDLE = 0
-    MESSAGE_IN_PROGRESS = 1
-    EXECUTING_MOVE = 2
-    END_TURN_BUTTON_PRESSED = 3
-    ERROR = 4
+    EXECUTING_MOVE = 1
+    END_TURN_BUTTON_PRESSED = 2
+    ERROR = 3
 
     def __init__(self, status, move_count, extra):
         self.status = status
@@ -25,8 +24,6 @@ class ArduinoStatus:
     def __str__(self):
         if self.status == ArduinoStatus.IDLE:
             return "IDLE"
-        if self.status == ArduinoStatus.MESSAGE_IN_PROGRESS:
-            return "MESSAGE_IN_PROGRESS"
         if self.status == ArduinoStatus.EXECUTING_MOVE:
             return "EXECUTING_MOVE"
         if self.status == ArduinoStatus.END_TURN_BUTTON_PRESSED:
