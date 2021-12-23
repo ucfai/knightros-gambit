@@ -48,6 +48,12 @@ int yMotor[5] = {MOTOR2_STEP_PIN, MOTOR2_DIR, MOTOR2_MS1, MOTOR2_MS2, Y_AXIS_END
 #define QUARTER_STEPS 4
 #define EIGHTH_STEPS 8
 
+#define STEP_PIN 0
+#define DIR_PIN 1
+#define MS1_PIN 2
+#define MS2_PIN 3
+#define ENDSTOP_PIN 4
+
 void setup()
 {
   // Define our pinModes

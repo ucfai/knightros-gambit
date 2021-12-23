@@ -8,23 +8,23 @@ void setScale(int motor[], int scale)
 {
   if (scale == WHOLE_STEPS)
   {
-    digitalWrite(motor[2], LOW);
-    digitalWrite(motor[3], LOW);
+    digitalWrite(motor[MS1_PIN], LOW);
+    digitalWrite(motor[MS2_PIN], LOW);
   }
   else if (scale == HALF_STEPS)
   {
-    digitalWrite(motor[2], HIGH);
-    digitalWrite(motor[3], LOW);
+    digitalWrite(motor[MS1_PIN], HIGH);
+    digitalWrite(motor[MS2_PIN], LOW);
   }
   else if (scale == QUARTER_STEPS)
   {
-    digitalWrite(motor[2], LOW);
-    digitalWrite(motor[3], HIGH);
+    digitalWrite(motor[MS1_PIN], LOW);
+    digitalWrite(motor[MS2_PIN], HIGH);
   }
   else if (scale == EIGHTH_STEPS)
   {
-    digitalWrite(motor[2], HIGH);
-    digitalWrite(motor[3], HIGH);
+    digitalWrite(motor[MS1_PIN], HIGH);
+    digitalWrite(motor[MS2_PIN], HIGH);
   }
 }
 
@@ -50,30 +50,30 @@ void homeAxis(int motor[])
   // Since we're reusing this code for the x and y axis, 
   // LEFT and RIGHT don't always apply to the motor passed in, but the values are the same 
 
-  digitalWrite(motor[1], LEFT);
+  digitalWrite(motor[DIR_PIN], LEFT);
   setScale(motor, WHOLE_STEPS);
-  while (digitalRead(motor[4]) == LOW)
+  while (digitalRead(motor[ENDSTOP_PIN]) == LOW)
   {
-    digitalWrite(motor[0], LOW);
+    digitalWrite(motor[STEP_PIN], LOW);
     delay(1);  // 1 milliSecond
-    digitalWrite(motor[0], HIGH);
+    digitalWrite(motor[STEP_PIN], HIGH);
   }
 
-  digitalWrite(motor[1], RIGHT);
+  digitalWrite(motor[DIR_PIN], RIGHT);
   for (i = 0; i < HOME_OFFSET; i++)
   {
-    digitalWrite(motor[0], LOW);
+    digitalWrite(motor[STEP_PIN], LOW);
     delay(1);  // 1 milliSecond
-    digitalWrite(motor[0], HIGH);
+    digitalWrite(motor[STEP_PIN], HIGH);
   }
 
-  digitalWrite(motor[1], LEFT);
+  digitalWrite(motor[DIR_PIN], LEFT);
   setScale(motor, EIGHTH_STEPS);
-  while (digitalRead(motor[4]) == LOW)
+  while (digitalRead(motor[ENDSTOP_PIN]) == LOW)
   {
-    digitalWrite(motor[0], LOW);
+    digitalWrite(motor[STEP_PIN], LOW);
     delay(1);  // 1 milliSecond
-    digitalWrite(motor[0], HIGH);
+    digitalWrite(motor[STEP_PIN], HIGH);
   }
 }
 
@@ -120,7 +120,7 @@ void moveStraight(int motor[], int startCol, int startRow, int endCol, int endRo
   enableMotors();
 
   // Set direction of motor
-  digitalWrite(motor[1], dir);
+  digitalWrite(motor[DIR_PIN], dir);
 
   // Rotate motor some number of steps
   for (i = 0; i < numSteps; i++) 
@@ -128,9 +128,9 @@ void moveStraight(int motor[], int startCol, int startRow, int endCol, int endRo
     if (digitalRead(X_AXIS_ENDSTOP_SWITCH) == HIGH  ||  digitalRead(Y_AXIS_ENDSTOP_SWITCH))
       break;
     
-    digitalWrite(motor[0], LOW);
+    digitalWrite(motor[STEP_PIN], LOW);
     delay(1);  // 1 milliSecond
-    digitalWrite(motor[0], HIGH);
+    digitalWrite(motor[STEP_PIN], HIGH);
   }
 }
 
@@ -152,8 +152,8 @@ void moveDiagonal(int startCol, int startRow, int endCol, int endRow)
 
   enableMotors();
 
-  digitalWrite(xMotor[1], dirX);
-  digitalWrite(yMotor[1], dirY);
+  digitalWrite(xMotor[DIR_PIN], dirX);
+  digitalWrite(yMotor[DIR_PIN], dirY);
   
   if (numStepsX == numStepsY)
   {
@@ -176,10 +176,10 @@ void moveDiagonal(int startCol, int startRow, int endCol, int endRow)
     if (digitalRead(X_AXIS_ENDSTOP_SWITCH) == HIGH  ||  digitalRead(Y_AXIS_ENDSTOP_SWITCH))
       break;
 
-    digitalWrite(xMotor[0], LOW);
-    digitalWrite(yMotor[0], LOW);
+    digitalWrite(xMotor[STEP_PIN], LOW);
+    digitalWrite(yMotor[STEP_PIN], LOW);
     delay(1);
-    digitalWrite(xMotor[0], HIGH);
-    digitalWrite(yMotor[0], HIGH);
+    digitalWrite(xMotor[STEP_PIN], HIGH);
+    digitalWrite(yMotor[STEP_PIN], HIGH);
   }
 }
