@@ -4,6 +4,8 @@
   0         1        2        3
   Step pin, Dir pin, MS1 pin, MS2 pin
 */
+
+// Sets the scale of the motor driver corresponding to "motor"
 void setScale(int motor[], int scale) 
 {
   if (scale == WHOLE_STEPS)
@@ -42,6 +44,7 @@ void disableMotors()
   digitalWrite(MOTOR_ENABLE, HIGH);
 }
 
+// Drives the motor corresponding to "motor" to it's home position (position 0)
 void homeAxis(int motor[])
 {
   int i;
@@ -55,7 +58,7 @@ void homeAxis(int motor[])
   while (digitalRead(motor[ENDSTOP_PIN]) == LOW)
   {
     digitalWrite(motor[STEP_PIN], LOW);
-    delay(1);  // 1 milliSecond
+    delay(1);
     digitalWrite(motor[STEP_PIN], HIGH);
   }
 
@@ -63,7 +66,7 @@ void homeAxis(int motor[])
   for (i = 0; i < HOME_OFFSET; i++)
   {
     digitalWrite(motor[STEP_PIN], LOW);
-    delay(1);  // 1 milliSecond
+    delay(1);
     digitalWrite(motor[STEP_PIN], HIGH);
   }
 
@@ -72,28 +75,24 @@ void homeAxis(int motor[])
   while (digitalRead(motor[ENDSTOP_PIN]) == LOW)
   {
     digitalWrite(motor[STEP_PIN], LOW);
-    delay(1);  // 1 milliSecond
+    delay(1);
     digitalWrite(motor[STEP_PIN], HIGH);
   }
 }
 
+// Homes both axis
 void home()
 {
   homeAxis(xMotor);
   homeAxis(yMotor);
 }
 
-/*
-  Motor array format in order of indicies:
-  Index:
-  0         1        2        3
-  Step pin, Dir pin, MS1 pin, MS2 pin
-*/
-
+// Moves the magnet from the "start" point to the "end" point
+// This can only move in straight lines
 void moveStraight(int motor[], int startCol, int startRow, int endCol, int endRow)
 {
   // A specific motor is passed to this function since we are only moving one here
-  
+
   // How many steps per space
   int spaces, dir, numSteps;
   int i;
@@ -134,13 +133,16 @@ void moveStraight(int motor[], int startCol, int startRow, int endCol, int endRo
   }
 }
 
+// Moves the magnet from the "start" point to the "end" point
+// This can move in diagonal lines of slopes: 1, 2, and 1/2
 void moveDiagonal(int startCol, int startRow, int endCol, int endRow)
 {
   int dirX, dirY, spacesX, spacesY;
   int numStepsX, numStepsY;
   int i;
 
-  // Abs ensures that numStepsx and numStepsY will be positive
+  // Abs ensures that numStepsX and numStepsY will be positive
+  // to ensure proper for loop execution
   spacesX = abs(endCol - startCol);
   dirX = (endCol > startCol) ? RIGHT : LEFT;
 
