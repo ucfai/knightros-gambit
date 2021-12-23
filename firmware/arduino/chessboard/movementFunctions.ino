@@ -1,4 +1,4 @@
-void moveStraight(int startRow, int startCol, int endRow, int endCol)
+void moveDirect(int startRow, int startCol, int endRow, int endCol)
 {
     return;
 }
@@ -14,6 +14,11 @@ void castle(char color, char queenside_or_kingside)
 }
 
 void moveAlongEdges(int startRow, int startCol, int endRow, int endCol)
+{
+    return;
+}
+
+void alignPiece(int row, int col)
 {
     return;
 }

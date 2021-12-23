@@ -1,6 +1,24 @@
 char incomingByte;
-char buffer[5];
+char buffer[6];
 int byteNum = -1; // -1 indicates that the start code hasn't been received
+char currentState = '0';
+
+enum ArduinoState
+{
+    IDLE = '0',
+    IN_PROGRESS = '1',
+    EXECUTING = '2',
+    END_TURN = '3',
+    ERROR = '4'
+};
+
+enum MoveCommandType
+{
+    DIRECT = '0',
+    EDGES = '1',
+    ALIGN = '2'
+};
+
 
 // Wait for input
 void serialEvent2()
@@ -10,6 +28,9 @@ void serialEvent2()
     {
         // Get byte
         incomingByte = (char) Serial2.read();
+        
+        // Arduino is receiving a message from the Pi
+        currentState = IN_PROGRESS;
 
         // Reset buffer position
         if (incomingByte  ==  '~')
@@ -23,13 +44,14 @@ void serialEvent2()
         }
 
         // Check if the buffer is full, process input
-        if (byteNum  ==  5)
+        if (byteNum  ==  6)
         {
             // Reset buffer position
             byteNum = -1;
 
             // Process input
             // Returns true for valid input and false for invalid input. Calls movement function
+            currentState = EXECUTING;
             parseMessageFromPi(buffer);
         }
     }
@@ -37,56 +59,48 @@ void serialEvent2()
 
 bool parseMessageFromPi(char * message)
 {
-    // Move types 0 and 3 are valid for the same range of values
-    if (message[0]  ==  0  ||  message[0]  ==  3)
+    // Move types 0 and 1 are valid for the same range of values
+    if (message[0]  ==  DIRECT  ||  message[0]  ==  EDGES)
     {
         // Check that the inputs are in a valid range
-        if (message[1] < 'a'  ||  message[1] > 'h' 
-           ||  message[2] < '1'  ||  message[2] > '8' 
-           ||  message[3] < 'a'  ||  message[3] > 'h' 
-           ||  message[4] < '1'  ||   message[4] > '8') 
+        if (message[1] < 'A'  ||  message[1] > 'L' 
+           ||  message[2] < 'A'  ||  message[2] > 'L' 
+           ||  message[3] < 'A'  ||  message[3] > 'L' 
+           ||  message[4] < 'A'  ||   message[4] > 'L') 
         {
+            currentState = ERROR;
             return false;
         }
 
         // Move type 0
-        if (message[0]  ==  0)
-            moveStraight(message[1] - 'a', message[2] - '1', message[3] - 'a', message[4] - '1');
-        // Move type 3
-        else
-            moveAlongEdges(message[1] - 'a', message[2] - '1', message[3] - 'a', message[4] - '1');
-
-    }
-    else if (message[0]  ==  1)
-    {
-        // Check validity for the first 3 bytes
-        if (message[1] < 'a'  ||  message[1] > 'h' 
-           ||  message[2] < '1'  ||  message[2] > '8' 
-           ||  message[3] != 'b'  &&  message[3]  !=  'w')
-            return false;
-        
-        //Check for valid piece type
-        if (!(message[4]  ==  'p'  ||  message[4]  ==  'r' 
-           ||  message[4]  ==  'k'  ||  message[4]  ==  'b'  ||  message[4]  ==  'q'))
-            return false;
-
+        if (message[0]  ==  DIRECT)
+            moveDirect(message[1] - 'A', message[2] - 'A', message[3] - 'A', message[4] - 'A');
         // Move type 1
-        moveToGraveyard(message[1] - 'a', message[2] - '1', message[3], message[4]);        
-    }
-    else if (message[0]  ==  2)
-    {
-        // Check input validity
-        if (!(message[1]  ==  'b'  ||  message[1]  ==  'w') 
-           || message[2]  !=  '0'  ||  message[4]  !=  '0' 
-           || !(message[3]  ==  '0'  ||  message[3]  ==  '-'))
-            return false;
+        else if (message[0] == EDGES)
+            moveAlongEdges(message[1] - 'A', message[2] - 'A', message[3] - 'A', message[4] - 'A');
 
-        // Move type 2
-        castle(message[1], message[3]);
+    }
+    else if (message[0] == ALIGN)
+    {
+        // Check that the inputs are in a valid range
+        if (message[1] < 'A'  ||  message[1] > 'L' 
+           ||  message[2] < 'A'  ||  message[2] > 'L') 
+        {
+            currentState = ERROR;
+            return false;
+        }
+
+        // Center piece moved by player
+        alignPiece(message[1] - 'A', message[2] - 'A');
     }
     else
+    {
+        // Invalid opcode
+        currentState = ERROR;
         return false;
+    }
 
     // Move is valid and was made
+    currentState = IDLE;
     return true;
 }
