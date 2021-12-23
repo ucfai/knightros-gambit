@@ -1,10 +1,3 @@
-/*
-  Motor array format in order of indicies:
-  Index:
-  0         1        2        3
-  Step pin, Dir pin, MS1 pin, MS2 pin
-*/
-
 // Sets the scale of the motor driver corresponding to "motor"
 void setScale(int motor[], int scale) 
 {
