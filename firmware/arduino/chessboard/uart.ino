@@ -76,7 +76,7 @@ void serialEvent2()
             // Sends acknowledgement and any errors with the instruction
             sendMessageToPi(currentState, buffer[5], errorCode);
 
-            if (errorCode = NO_ERROR)
+            if (errorCode == NO_ERROR)
             {
                 // Makes move, returns success
                 if(makeMove(buffer))
@@ -92,6 +92,7 @@ void serialEvent2()
 bool validateMessageFromPi(char * message)
 {
     if (message[0] == DIRECT || message[0] == EDGES)
+    {
         if (isInvalidCoord(message[1]) || isInvalidCoord(message[2]) 
             || isInvalidCoord(message[3]) || isInvalidCoord(message[4]))
         {
@@ -99,13 +100,16 @@ bool validateMessageFromPi(char * message)
             currentState = ERROR;
             return false;
         }
+    }
     else if (message[0] == ALIGN)
+    {
         if (isInvalidCoord(message[1]) || isInvalidCoord(message[2]))
         {
             errorCode = INVALID_LOCATION;
             currentState = ERROR;
             return false;
         }
+    }
     else
     {
         // Invalid opcode
