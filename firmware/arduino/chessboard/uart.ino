@@ -22,11 +22,10 @@ enum MoveCommandType
 
 enum ErrorCode
 {
-    NONE = '0',
+    NO_ERROR = '0',
     INVALID_OP = '1',
     INVALID_LOCATION = '2'
 };
-
 
 // Wait for input
 void serialEvent2()
@@ -58,55 +57,46 @@ void serialEvent2()
             byteNum = -1;
 
             // Process input
-            // Returns true for valid input and false for invalid input. Calls movement function
+            // Returns true for valid input and false for invalid input.
             currentState = EXECUTING;
-            if (parseMessageFromPi(buffer))
-                errorCode = NONE;
+            if (validateMessageFromPi(buffer))
+                errorCode = NO_ERROR;
 
-            // Send response
+
+            // Sends acknowledgement and any errors with the instruction
             sendMessageToPi(currentState, buffer[5], errorCode);
+
+            if (errorCode = NO_ERROR)
+            {
+                // Makes move
+                makeMove(buffer);
+
+                // Tells Pi that the move is complete
+                currentState = IDLE;
+                sendMessageToPi(currentState, buffer[5], errorCode);
+            }
         }
     }
 }
 
-bool parseMessageFromPi(char * message)
+// Check that the instruction is valid
+bool validateMessageFromPi(char * message)
 {
-    // Move types 0 and 1 are valid for the same range of values
-    if (message[0]  ==  DIRECT  ||  message[0]  ==  EDGES)
-    {
-        // Check that the inputs are in a valid range
-        if (message[1] < 'A'  ||  message[1] > 'L' 
-           ||  message[2] < 'A'  ||  message[2] > 'L' 
-           ||  message[3] < 'A'  ||  message[3] > 'L' 
-           ||  message[4] < 'A'  ||   message[4] > 'L') 
+    if (message[0] == DIRECT || message[0] == EDGES)
+        if (isInvalidCoord(message[1]) || isInvalidCoord(message[2]) 
+            || isInvalidCoord(message[3]) || isInvalidCoord(message[4]))
         {
             errorCode = INVALID_LOCATION;
             currentState = ERROR;
             return false;
         }
-
-        // Move type 0
-        if (message[0]  ==  DIRECT)
-            moveDirect(message[1] - 'A', message[2] - 'A', message[3] - 'A', message[4] - 'A');
-        // Move type 1
-        else if (message[0] == EDGES)
-            moveAlongEdges(message[1] - 'A', message[2] - 'A', message[3] - 'A', message[4] - 'A');
-
-    }
     else if (message[0] == ALIGN)
-    {
-        // Check that the inputs are in a valid range
-        if (message[1] < 'A'  ||  message[1] > 'L' 
-           ||  message[2] < 'A'  ||  message[2] > 'L') 
+        if (isInvalidCoord(message[1]) || isInvalidCoord(message[2]))
         {
             errorCode = INVALID_LOCATION;
             currentState = ERROR;
             return false;
         }
-
-        // Center piece moved by player
-        alignPiece(message[1] - 'A', message[2] - 'A');
-    }
     else
     {
         // Invalid opcode
@@ -114,11 +104,39 @@ bool parseMessageFromPi(char * message)
         currentState = ERROR;
         return false;
     }
+    errorCode = NO_ERROR;
+    return true;
+}
+
+void makeMove(char * message)
+{
+    // Move type 0
+    if (message[0]  ==  DIRECT)
+    {
+        moveDirect(message[1] - 'A', message[2] - 'A', message[3] - 'A', message[4] - 'A');
+    }
+    // Move type 1
+    else if (message[0] == EDGES)
+    {
+        moveAlongEdges(message[1] - 'A', message[2] - 'A', message[3] - 'A', message[4] - 'A');
+    }
+    // Move type 2
+    else if (message[0] == ALIGN)
+    {
+        alignPiece(message[1] - 'A', message[2] - 'A');
+    }
+    else
+    {
+        // Invalid opcode
+        errorCode = INVALID_OP;
+        currentState = ERROR;
+        return;
+    }
 
     // Move is valid and was made
-    errorCode = NONE;
+    errorCode = NO_ERROR;
     currentState = IDLE;
-    return true;
+    return;
 }
 
 void sendMessageToPi(char status, char moveCount, char errorMessage)
@@ -127,4 +145,9 @@ void sendMessageToPi(char status, char moveCount, char errorMessage)
     Serial2.write(status);
     Serial2.write(moveCount);
     Serial2.write(errorMessage);
+}
+
+bool isInvalidCoord (char c)
+{
+    return c < 'A' || c > 'L';
 }
