@@ -245,7 +245,7 @@ class Board:
         # converted back on the Arduino side.
         source_str = chr(board_move.source.row + ord('A')) + chr(board_move.source.col + ord('A'))
         dest_str = chr(board_move.dest.row + ord('A')) + chr(board_move.dest.col + ord('A'))
-        msg = f"~{board_move.op_code}{board_move.move_count % 256}{source_str}{dest_str}"
+        msg = f"~{board_move.op_code}{source_str}{dest_str}{board_move.move_count % 256}"
 
         print(f"Sending message \"{msg}\" to arduino")
 
