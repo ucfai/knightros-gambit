@@ -171,7 +171,7 @@ void moveDiagonal(int startCol, int startRow, int endCol, int endRow)
     setScale(yMotor, 2);
   }
 
-  for(i = 0; i < numStepsX; i++)
+  for (i = 0; i < numStepsX; i++)
   {
     if (digitalRead(X_AXIS_ENDSTOP_SWITCH) == HIGH  ||  digitalRead(Y_AXIS_ENDSTOP_SWITCH))
       break;
