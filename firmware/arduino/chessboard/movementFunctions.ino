@@ -1,14 +1,14 @@
-void moveDirect(int startCol, int startRow, int endCol, int endRow)
+bool moveDirect(int startCol, int startRow, int endCol, int endRow)
 {
     return;
 }
 
-void moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
+bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
 {
     return;
 }
 
-void alignPiece(int row, int col)
+bool alignPiece(int row, int col)
 {
     return;
 }
