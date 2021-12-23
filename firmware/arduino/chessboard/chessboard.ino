@@ -26,7 +26,7 @@
 // Distance Definitions
 #define MILLIMETERS_PER_SQUARE 63
 #define STEPS_PER_MILLIMETER 5
-#define HOME_OFFSET 100
+#define HOME_CALIBRATION_OFFSET 100
 float stepsPerSpace;
 int currentX, currentY;
 

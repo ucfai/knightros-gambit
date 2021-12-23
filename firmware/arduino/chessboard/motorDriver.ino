@@ -63,7 +63,7 @@ void homeAxis(int motor[])
   }
 
   digitalWrite(motor[DIR_PIN], RIGHT);
-  for (i = 0; i < HOME_OFFSET; i++)
+  for (i = 0; i < HOME_CALIBRATION_OFFSET; i++)
   {
     digitalWrite(motor[STEP_PIN], LOW);
     delay(1);
