@@ -50,8 +50,8 @@ void homeAxis(int motor[])
   int i;
 
   // Loop until endstop collision, then fine tune it
-  // Since we're reusing this code for the x and y axis, 
-  // LEFT and RIGHT don't always apply to the motor passed in, but the values are the same 
+  // LEFT and DOWN have same value, as do RIGHT and UP. Use LEFT
+  // and RIGHT arbitrarily while tuning end stop for both x and y axes.
 
   digitalWrite(motor[DIR_PIN], LEFT);
   setScale(motor, WHOLE_STEPS);
@@ -89,7 +89,8 @@ void home()
 
 // Moves the magnet from the "start" point to the "end" point
 // This can only move in straight lines
-void moveStraight(int motor[], int startCol, int startRow, int endCol, int endRow)
+// Returns a boolean indicating success/error
+bool moveStraight(int motor[], int startCol, int startRow, int endCol, int endRow)
 {
   // A specific motor is passed to this function since we are only moving one here
 
@@ -112,6 +113,10 @@ void moveStraight(int motor[], int startCol, int startRow, int endCol, int endRo
     dir = (endRow > startRow) ? UP : DOWN;
     setScale(yMotor, WHOLE_STEPS);
   }
+  else
+  {
+    return false;
+  }
 
   numSteps = spaces * stepsPerSpace;
 
@@ -125,17 +130,20 @@ void moveStraight(int motor[], int startCol, int startRow, int endCol, int endRo
   for (i = 0; i < numSteps; i++) 
   {
     if (digitalRead(X_AXIS_ENDSTOP_SWITCH) == HIGH  ||  digitalRead(Y_AXIS_ENDSTOP_SWITCH))
-      break;
+      return false;
     
     digitalWrite(motor[STEP_PIN], LOW);
     delay(1);  // 1 milliSecond
     digitalWrite(motor[STEP_PIN], HIGH);
   }
+
+  return true;
 }
 
 // Moves the magnet from the "start" point to the "end" point
 // This can move in diagonal lines of slopes: 1, 2, and 1/2
-void moveDiagonal(int startCol, int startRow, int endCol, int endRow)
+// Returns a boolean indicating success/error
+bool moveDiagonal(int startCol, int startRow, int endCol, int endRow)
 {
   int dirX, dirY, spacesX, spacesY;
   int numStepsX, numStepsY;
@@ -172,11 +180,15 @@ void moveDiagonal(int startCol, int startRow, int endCol, int endRow)
     setScale(xMotor, WHOLE_STEPS);
     setScale(yMotor, HALF_STEPS);
   }
+  else
+  {
+    return false;
+  }
 
   for (i = 0; i < numStepsX; i++)
   {
     if (digitalRead(X_AXIS_ENDSTOP_SWITCH) == HIGH  ||  digitalRead(Y_AXIS_ENDSTOP_SWITCH))
-      break;
+      return false;
 
     digitalWrite(xMotor[STEP_PIN], LOW);
     digitalWrite(yMotor[STEP_PIN], LOW);
@@ -184,4 +196,6 @@ void moveDiagonal(int startCol, int startRow, int endCol, int endRow)
     digitalWrite(xMotor[STEP_PIN], HIGH);
     digitalWrite(yMotor[STEP_PIN], HIGH);
   }
+
+  return true;
 }
