@@ -25,7 +25,8 @@ enum ErrorCode
     NO_ERROR = '0',
     INVALID_OP = '1',
     INVALID_LOCATION = '2',
-    INCOMPLETE_INSTRUCTION = '3'
+    INCOMPLETE_INSTRUCTION = '3',
+    MOVEMENT_ERROR = '4'
 };
 
 // Wait for input
@@ -77,11 +78,10 @@ void serialEvent2()
 
             if (errorCode = NO_ERROR)
             {
-                // Makes move
-                makeMove(buffer);
+                // Makes move, returns success
+                if(makeMove(buffer))
+                    currentState = IDLE;
 
-                // Tells Pi that the move is complete
-                currentState = IDLE;
                 sendMessageToPi(currentState, buffer[5], errorCode);
             }
         }
@@ -117,35 +117,50 @@ bool validateMessageFromPi(char * message)
     return true;
 }
 
-void makeMove(char * message)
+bool makeMove(char * message)
 {
     // Move type 0
     if (message[0]  ==  DIRECT)
     {
-        moveDirect(message[1] - 'A', message[2] - 'A', message[3] - 'A', message[4] - 'A');
+        if (!moveDirect(message[1] - 'A', message[2] - 'A', message[3] - 'A', message[4] - 'A'))
+        {
+            currentState = ERROR;
+            errorCode = MOVEMENT_ERROR;
+            return false;
+        }
     }
     // Move type 1
     else if (message[0] == EDGES)
     {
-        moveAlongEdges(message[1] - 'A', message[2] - 'A', message[3] - 'A', message[4] - 'A');
+        if(!moveAlongEdges(message[1] - 'A', message[2] - 'A', message[3] - 'A', message[4] - 'A'))
+        {
+            currentState = ERROR;
+            errorCode = MOVEMENT_ERROR;
+            return false;
+        }
     }
     // Move type 2
     else if (message[0] == ALIGN)
     {
-        alignPiece(message[1] - 'A', message[2] - 'A');
+        if(!alignPiece(message[1] - 'A', message[2] - 'A'))
+        {
+            currentState = ERROR;
+            errorCode = MOVEMENT_ERROR;
+            return false;
+        }
     }
     else
     {
         // Invalid opcode
         errorCode = INVALID_OP;
         currentState = ERROR;
-        return;
+        return false;
     }
 
     // Move is valid and was made
     errorCode = NO_ERROR;
     currentState = IDLE;
-    return;
+    return true;
 }
 
 void sendMessageToPi(char status, char moveCount, char errorMessage)
