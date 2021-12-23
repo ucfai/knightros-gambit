@@ -6,22 +6,22 @@
 */
 void setScale(int motor[], int scale) 
 {
-  if (scale == 1)  // whole steps
+  if (scale == WHOLE_STEPS)
   {
     digitalWrite(motor[2], LOW);
     digitalWrite(motor[3], LOW);
   }
-  else if (scale == 2)  // 1/2 steps
+  else if (scale == HALF_STEPS)
   {
     digitalWrite(motor[2], HIGH);
     digitalWrite(motor[3], LOW);
   }
-  else if (scale == 4)  // 1/4 steps
+  else if (scale == QUARTER_STEPS)
   {
     digitalWrite(motor[2], LOW);
     digitalWrite(motor[3], HIGH);
   }
-  else if (scale == 8)  // 1/8 steps
+  else if (scale == EIGHTH_STEPS)
   {
     digitalWrite(motor[2], HIGH);
     digitalWrite(motor[3], HIGH);
@@ -51,7 +51,7 @@ void homeAxis(int motor[])
   // LEFT and RIGHT don't always apply to the motor passed in, but the values are the same 
 
   digitalWrite(motor[1], LEFT);
-  setScale(motor, 1);
+  setScale(motor, WHOLE_STEPS);
   while (digitalRead(motor[4]) == LOW)
   {
     digitalWrite(motor[0], LOW);
@@ -68,7 +68,7 @@ void homeAxis(int motor[])
   }
 
   digitalWrite(motor[1], LEFT);
-  setScale(motor, 8);
+  setScale(motor, EIGHTH_STEPS);
   while (digitalRead(motor[4]) == LOW)
   {
     digitalWrite(motor[0], LOW);
@@ -104,14 +104,14 @@ void moveStraight(int motor[], int startCol, int startRow, int endCol, int endRo
     // X movement
     spaces = abs(endCol - startCol);
     dir = (endCol > startCol) ? RIGHT : LEFT;
-    setScale(xMotor, 1);
+    setScale(xMotor, WHOLE_STEPS);
   }
   else if (endCol == startCol)
   {
     // Y movement
     spaces = abs(endRow - startRow);
     dir = (endRow > startRow) ? UP : DOWN;
-    setScale(yMotor, 1);
+    setScale(yMotor, WHOLE_STEPS);
   }
 
   numSteps = spaces * stepsPerSpace;
@@ -157,18 +157,18 @@ void moveDiagonal(int startCol, int startRow, int endCol, int endRow)
   
   if (numStepsX == numStepsY)
   {
-    setScale(xMotor, 1);
-    setScale(yMotor, 1);
+    setScale(xMotor, WHOLE_STEPS);
+    setScale(yMotor, WHOLE_STEPS);
   }
   else if (numStepsY > numStepsX && (numStepsY / numStepsX) == 2)
   {
-    setScale(xMotor, 2);
-    setScale(yMotor, 1);
+    setScale(xMotor, HALF_STEPS);
+    setScale(yMotor, WHOLE_STEPS);
   }
   else if (numStepsY < numStepsX && (numStepsX / numStepsY) == 2)
   {
-    setScale(xMotor, 1);
-    setScale(yMotor, 2);
+    setScale(xMotor, WHOLE_STEPS);
+    setScale(yMotor, HALF_STEPS);
   }
 
   for (i = 0; i < numStepsX; i++)

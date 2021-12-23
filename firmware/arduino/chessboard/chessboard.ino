@@ -43,6 +43,11 @@ int xMotor[5] = {MOTOR1_STEP_PIN, MOTOR1_DIR, MOTOR1_MS1, MOTOR1_MS2, X_AXIS_END
 #define MOTOR2_STEP_PIN 36
 int yMotor[5] = {MOTOR2_STEP_PIN, MOTOR2_DIR, MOTOR2_MS1, MOTOR2_MS2, Y_AXIS_ENDSTOP_SWITCH};
 
+#define WHOLE_STEPS 1
+#define HALF_STEPS 2
+#define QUARTER_STEPS 4
+#define EIGHTH_STEPS 8
+
 void setup()
 {
   // Define our pinModes
