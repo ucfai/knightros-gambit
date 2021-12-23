@@ -24,7 +24,8 @@ enum ErrorCode
 {
     NO_ERROR = '0',
     INVALID_OP = '1',
-    INVALID_LOCATION = '2'
+    INVALID_LOCATION = '2',
+    INCOMPLETE_INSTRUCTION = '3'
 };
 
 // Wait for input
@@ -42,6 +43,14 @@ void serialEvent2()
         // Reset buffer position
         if (incomingByte  ==  '~')
         {
+            // Send message to Pi if the previous instruction was incomplete
+            if (currentState == IN_PROGRESS)
+            {
+                currentState = ERROR;
+                errorCode = INCOMPLETE_INSTRUCTION;
+                sendMessageToPi(currentState, buffer[5], errorCode);
+            }
+
             byteNum = 0;
         }
         // Add byte to buffer
