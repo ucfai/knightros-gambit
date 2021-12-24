@@ -7,9 +7,9 @@ char errorCode;
 enum ArduinoState
 {
     IDLE = '0',
-    EXECUTING = '2',
-    END_TURN = '3',
-    ERROR = '4'
+    EXECUTING = '1',
+    END_TURN = '2',
+    ERROR = '3'
 };
 
 enum MoveCommandType
