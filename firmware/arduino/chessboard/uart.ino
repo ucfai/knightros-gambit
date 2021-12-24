@@ -66,20 +66,15 @@ void serialEvent2()
             // Returns true for valid input and false for invalid input.
             currentState = EXECUTING;
             if (validateMessageFromPi(buffer))
-                errorCode = NO_ERROR;
-
-
-            // Sends acknowledgement and any errors with the instruction
-            sendMessageToPi(currentState, buffer[5], errorCode);
-
-            if (errorCode == NO_ERROR)
-            {
-                // Makes move, returns success
-                if(makeMove(buffer))
-                    currentState = IDLE;
-
+            { 
+                // Sends acknowledgement
                 sendMessageToPi(currentState, buffer[5], errorCode);
+
+                makeMove(buffer);
             }
+
+            // Sends move success/error
+            sendMessageToPi(currentState, buffer[5], errorCode);
         }
     }
 }
