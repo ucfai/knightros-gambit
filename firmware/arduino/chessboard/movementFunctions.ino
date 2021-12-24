@@ -12,3 +12,4 @@ bool alignPiece(int col, int row)
 {
     return true;
 }
+
