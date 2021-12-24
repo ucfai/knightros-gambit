@@ -1,6 +1,32 @@
 char incomingByte;
-char buffer[5];
+char buffer[6];
 int byteNum = -1; // -1 indicates that the start code hasn't been received
+char currentState = '0';
+char errorCode;
+
+enum ArduinoState
+{
+    IDLE = '0',
+    EXECUTING = '1',
+    END_TURN = '2',
+    ERROR = '3'
+};
+
+enum MoveCommandType
+{
+    DIRECT = '0',
+    EDGES = '1',
+    ALIGN = '2'
+};
+
+enum ErrorCode
+{
+    NO_ERROR = '0',
+    INVALID_OP = '1',
+    INVALID_LOCATION = '2',
+    INCOMPLETE_INSTRUCTION = '3',
+    MOVEMENT_ERROR = '4'
+};
 
 // Wait for input
 void serialEvent2()
@@ -14,6 +40,14 @@ void serialEvent2()
         // Reset buffer position
         if (incomingByte  ==  '~')
         {
+            // Send message to Pi if the previous instruction was incomplete
+            if (byteNum != -1)
+            {
+                currentState = ERROR;
+                errorCode = INCOMPLETE_INSTRUCTION;
+                sendMessageToPi(currentState, buffer[5], errorCode);
+            }
+
             byteNum = 0;
         }
         // Add byte to buffer
@@ -23,70 +57,116 @@ void serialEvent2()
         }
 
         // Check if the buffer is full, process input
-        if (byteNum  ==  5)
+        if (byteNum  ==  6)
         {
             // Reset buffer position
             byteNum = -1;
 
             // Process input
-            // Returns true for valid input and false for invalid input. Calls movement function
-            parseMessageFromPi(buffer);
+            // Returns true for valid input and false for invalid input.
+            currentState = EXECUTING;
+            if (validateMessageFromPi(buffer))
+            { 
+                // Sends acknowledgement
+                sendMessageToPi(currentState, buffer[5], errorCode);
+
+                makeMove(buffer);
+            }
+
+            // Sends move success/error
+            sendMessageToPi(currentState, buffer[5], errorCode);
         }
     }
 }
 
-bool parseMessageFromPi(char * message)
+// Check that the instruction is valid
+bool validateMessageFromPi(char * message)
 {
-    // Move types 0 and 3 are valid for the same range of values
-    if (message[0]  ==  0  ||  message[0]  ==  3)
+    if (message[0] == DIRECT || message[0] == EDGES)
     {
-        // Check that the inputs are in a valid range
-        if (message[1] < 'a'  ||  message[1] > 'h' 
-           ||  message[2] < '1'  ||  message[2] > '8' 
-           ||  message[3] < 'a'  ||  message[3] > 'h' 
-           ||  message[4] < '1'  ||   message[4] > '8') 
+        if (isInvalidCoord(message[1]) || isInvalidCoord(message[2]) ||
+            isInvalidCoord(message[3]) || isInvalidCoord(message[4]))
         {
+            errorCode = INVALID_LOCATION;
+            currentState = ERROR;
             return false;
         }
-
-        // Move type 0
-        if (message[0]  ==  0)
-            moveDirect(message[1] - 'a', message[2] - '1', message[3] - 'a', message[4] - '1');
-        // Move type 3
-        else
-            moveAlongEdges(message[1] - 'a', message[2] - '1', message[3] - 'a', message[4] - '1');
-
     }
-    else if (message[0]  ==  1)
+    else if (message[0] == ALIGN)
     {
-        // Check validity for the first 3 bytes
-        if (message[1] < 'a'  ||  message[1] > 'h' 
-           ||  message[2] < '1'  ||  message[2] > '8' 
-           ||  message[3] != 'b'  &&  message[3]  !=  'w')
+        if (isInvalidCoord(message[1]) || isInvalidCoord(message[2]))
+        {
+            errorCode = INVALID_LOCATION;
+            currentState = ERROR;
             return false;
-        
-        //Check for valid piece type
-        if (!(message[4]  ==  'p'  ||  message[4]  ==  'r' 
-           ||  message[4]  ==  'k'  ||  message[4]  ==  'b'  ||  message[4]  ==  'q'))
-            return false;
-
-        // Move type 1
-        moveToGraveyard(message[1] - 'a', message[2] - '1', message[3], message[4]);        
-    }
-    else if (message[0]  ==  2)
-    {
-        // Check input validity
-        if (!(message[1]  ==  'b'  ||  message[1]  ==  'w') 
-           || message[2]  !=  '0'  ||  message[4]  !=  '0' 
-           || !(message[3]  ==  '0'  ||  message[3]  ==  '-'))
-            return false;
-
-        // Move type 2
-        castle(message[1], message[3]);
+        }
     }
     else
+    {
+        // Invalid opcode
+        errorCode = INVALID_OP;
+        currentState = ERROR;
         return false;
+    }
+    errorCode = NO_ERROR;
+    return true;
+}
+
+bool makeMove(char * message)
+{
+    // Move type 0
+    if (message[0]  ==  DIRECT)
+    {
+        if (!moveDirect(message[2] - 'A', message[1] - 'A', message[4] - 'A', message[3] - 'A'))
+        {
+            currentState = ERROR;
+            errorCode = MOVEMENT_ERROR;
+            return false;
+        }
+    }
+    // Move type 1
+    else if (message[0] == EDGES)
+    {
+        if(!moveAlongEdges(message[2] - 'A', message[1] - 'A', message[4] - 'A', message[3] - 'A'))
+        {
+            currentState = ERROR;
+            errorCode = MOVEMENT_ERROR;
+            return false;
+        }
+    }
+    // Move type 2
+    else if (message[0] == ALIGN)
+    {
+        if(!alignPiece(message[2] - 'A', message[1] - 'A'))
+        {
+            currentState = ERROR;
+            errorCode = MOVEMENT_ERROR;
+            return false;
+        }
+    }
+    else
+    {
+        // Invalid opcode
+        errorCode = INVALID_OP;
+        currentState = ERROR;
+        return false;
+    }
 
     // Move is valid and was made
+    errorCode = NO_ERROR;
+    currentState = IDLE;
     return true;
+}
+
+void sendMessageToPi(char status, char moveCount, char errorMessage)
+{
+    Serial2.write('~');
+    Serial2.write(status);
+    Serial2.write(errorMessage);
+    Serial2.write(moveCount);
+}
+
+bool isInvalidCoord (char c)
+{
+    return c < 'A' || c > 'L';
 }
