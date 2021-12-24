@@ -122,7 +122,8 @@ bool moveStraight(int motor[], int startCol, int startRow, int endCol, int endRo
   // Rotate motor some number of steps
   for (i = 0; i < numSteps; i++) 
   {
-    if (digitalRead(X_AXIS_ENDSTOP_SWITCH) == HIGH  ||  digitalRead(Y_AXIS_ENDSTOP_SWITCH))
+    if (digitalRead(X_AXIS_ENDSTOP_SWITCH) == HIGH  ||  
+        digitalRead(Y_AXIS_ENDSTOP_SWITCH) == HIGH)
       return false;
     
     digitalWrite(motor[STEP_PIN], LOW);
@@ -180,7 +181,8 @@ bool moveDiagonal(int startCol, int startRow, int endCol, int endRow)
 
   for (i = 0; i < numStepsX; i++)
   {
-    if (digitalRead(X_AXIS_ENDSTOP_SWITCH) == HIGH  ||  digitalRead(Y_AXIS_ENDSTOP_SWITCH))
+    if (digitalRead(X_AXIS_ENDSTOP_SWITCH) == HIGH  ||  
+        digitalRead(Y_AXIS_ENDSTOP_SWITCH) == HIGH)
       return false;
 
     digitalWrite(xMotor[STEP_PIN], LOW);
