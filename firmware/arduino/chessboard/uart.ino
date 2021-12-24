@@ -126,7 +126,7 @@ bool makeMove(char * message)
     // Move type 0
     if (message[0]  ==  DIRECT)
     {
-        if (!moveDirect(message[1] - 'A', message[2] - 'A', message[3] - 'A', message[4] - 'A'))
+        if (!moveDirect(message[2] - 'A', message[1] - 'A', message[4] - 'A', message[3] - 'A'))
         {
             currentState = ERROR;
             errorCode = MOVEMENT_ERROR;
@@ -136,7 +136,7 @@ bool makeMove(char * message)
     // Move type 1
     else if (message[0] == EDGES)
     {
-        if(!moveAlongEdges(message[1] - 'A', message[2] - 'A', message[3] - 'A', message[4] - 'A'))
+        if(!moveAlongEdges(message[2] - 'A', message[1] - 'A', message[4] - 'A', message[3] - 'A'))
         {
             currentState = ERROR;
             errorCode = MOVEMENT_ERROR;
@@ -146,7 +146,7 @@ bool makeMove(char * message)
     // Move type 2
     else if (message[0] == ALIGN)
     {
-        if(!alignPiece(message[1] - 'A', message[2] - 'A'))
+        if(!alignPiece(message[2] - 'A', message[1] - 'A'))
         {
             currentState = ERROR;
             errorCode = MOVEMENT_ERROR;
