@@ -171,8 +171,8 @@ void sendMessageToPi(char status, char moveCount, char errorMessage)
 {
     Serial2.write('~');
     Serial2.write(status);
-    Serial2.write(moveCount);
     Serial2.write(errorMessage);
+    Serial2.write(moveCount);
 }
 
 bool isInvalidCoord (char c)
