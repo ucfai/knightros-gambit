@@ -93,8 +93,8 @@ bool validateMessageFromPi(char * message)
 {
     if (message[0] == DIRECT || message[0] == EDGES)
     {
-        if (isInvalidCoord(message[1]) || isInvalidCoord(message[2]) 
-            || isInvalidCoord(message[3]) || isInvalidCoord(message[4]))
+        if (isInvalidCoord(message[1]) || isInvalidCoord(message[2]) ||
+            isInvalidCoord(message[3]) || isInvalidCoord(message[4]))
         {
             errorCode = INVALID_LOCATION;
             currentState = ERROR;
