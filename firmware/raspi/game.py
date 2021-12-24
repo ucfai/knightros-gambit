@@ -117,7 +117,7 @@ def main():
 
             # TODO: This is just so we have game loop working, remove once we read from arduino
             board.set_status_from_arduino(ArduinoStatus.IDLE,
-                                          board.move_queue[0].move_count % 256,
+                                          board.move_queue[0].move_count % 10,
                                           None)
             continue
 
@@ -126,8 +126,9 @@ def main():
             raise ValueError("Unimplemented, need to handle errors")
 
         if board.move_queue:
-            # Arduino sends and receives move_count % 256, since it can only transmit one byte
-            if all([board_status.move_count == board.move_queue[0].move_count % 256,
+            # Arduino sends and receives move_count % 10, since it can only transmit one char for
+            # move count
+            if all([board_status.move_count == board.move_queue[0].move_count % 10,
                     board_status.status == ArduinoStatus.IDLE]):
                 board.move_queue.popleft()
 
