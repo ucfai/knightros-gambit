@@ -1,14 +1,14 @@
-bool moveDirect(int startRow, int startCol, int endRow, int endCol)
+bool moveDirect(int startCol, int startRow, int endCol, int endRow)
 {
     return true;
 }
 
-bool moveAlongEdges(int startRow, int startCol, int endRow, int endCol)
+bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
 {
     return true;
 }
 
-bool alignPiece(int row, int col)
+bool alignPiece(int col, int row)
 {
     return true;
 }
