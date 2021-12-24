@@ -7,7 +7,6 @@ char errorCode;
 enum ArduinoState
 {
     IDLE = '0',
-    IN_PROGRESS = '1',
     EXECUTING = '2',
     END_TURN = '3',
     ERROR = '4'
@@ -37,15 +36,12 @@ void serialEvent2()
     {
         // Get byte
         incomingByte = (char) Serial2.read();
-        
-        // Arduino is receiving a message from the Pi
-        currentState = IN_PROGRESS;
 
         // Reset buffer position
         if (incomingByte  ==  '~')
         {
             // Send message to Pi if the previous instruction was incomplete
-            if (currentState == IN_PROGRESS)
+            if (byteNum != -1)
             {
                 currentState = ERROR;
                 errorCode = INCOMPLETE_INSTRUCTION;
