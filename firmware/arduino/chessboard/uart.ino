@@ -51,7 +51,7 @@ bool parseMessageFromPi(char * message)
 
         // Move type 0
         if (message[0]  ==  0)
-            moveStraight(message[1] - 'a', message[2] - '1', message[3] - 'a', message[4] - '1');
+            moveDirect(message[1] - 'a', message[2] - '1', message[3] - 'a', message[4] - '1');
         // Move type 3
         else
             moveAlongEdges(message[1] - 'a', message[2] - '1', message[3] - 'a', message[4] - '1');
