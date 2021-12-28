@@ -5,22 +5,9 @@
 #define MOTOR_SLEEP 13
 #define MOTOR_ENABLE 7
 
-// Separate motor pins
-#define MOTOR1_MS1 14
-#define MOTOR1_MS2 12
-#define MOTOR1_DIR 34
-#define MOTOR1_STEP_PIN 35
-int xMotor[4] = {MOTOR1_STEP_PIN, MOTOR1_DIR, MOTOR1_MS1, MOTOR1_MS2};
-
-#define MOTOR2_MS1 27
-#define MOTOR2_MS2 2
-#define MOTOR2_DIR 36
-#define MOTOR2_STEP_PIN 36
-int yMotor[4] = {MOTOR2_STEP_PIN, MOTOR2_DIR, MOTOR2_MS1, MOTOR2_MS2};
-
 // Motor directions
-#define FORWARD 0 
-#define BACKWARD 1
+#define UP 0 
+#define DOWN 1
 #define LEFT 0
 #define RIGHT 1 
 
@@ -39,7 +26,33 @@ int yMotor[4] = {MOTOR2_STEP_PIN, MOTOR2_DIR, MOTOR2_MS1, MOTOR2_MS2};
 // Distance Definitions
 #define MILLIMETERS_PER_SQUARE 63
 #define STEPS_PER_MILLIMETER 5
+#define HOME_CALIBRATION_OFFSET 100
 float stepsPerSpace;
+int currentX, currentY;
+
+// Separate motor pins
+#define MOTOR1_MS1 14
+#define MOTOR1_MS2 12
+#define MOTOR1_DIR 34
+#define MOTOR1_STEP_PIN 35
+int xMotor[5] = {MOTOR1_STEP_PIN, MOTOR1_DIR, MOTOR1_MS1, MOTOR1_MS2, X_AXIS_ENDSTOP_SWITCH};
+
+#define MOTOR2_MS1 27
+#define MOTOR2_MS2 2
+#define MOTOR2_DIR 36
+#define MOTOR2_STEP_PIN 36
+int yMotor[5] = {MOTOR2_STEP_PIN, MOTOR2_DIR, MOTOR2_MS1, MOTOR2_MS2, Y_AXIS_ENDSTOP_SWITCH};
+
+#define WHOLE_STEPS 1
+#define HALF_STEPS 2
+#define QUARTER_STEPS 4
+#define EIGHTH_STEPS 8
+
+#define STEP_PIN 0
+#define DIR_PIN 1
+#define MS1_PIN 2
+#define MS2_PIN 3
+#define ENDSTOP_PIN 4
 
 void setup()
 {
@@ -66,8 +79,7 @@ void setup()
 
   stepsPerSpace = MILLIMETERS_PER_SQUARE * STEPS_PER_MILLIMETER;
 
-  // Setup the UART here
-  //Serial2.begin(115200, SERIAL_8N1, RX2, TX2);
+  Serial2.begin(115200, SERIAL_8N1, RX2, TX2);
 }
 
 void loop()

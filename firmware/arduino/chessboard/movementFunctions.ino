@@ -1,19 +1,15 @@
-void moveStraight(int startRow, int startCol, int endRow, int endCol)
+bool moveDirect(int startCol, int startRow, int endCol, int endRow)
 {
-    return;
+    return true;
 }
 
-void moveToGraveyard(int startRow, int startCol, char color, char type)
+bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
 {
-    return;
+    return true;
 }
 
-void castle(char color, char queenside_or_kingside)
+bool alignPiece(int col, int row)
 {
-    return;
+    return true;
 }
 
-void moveAlongEdges(int startRow, int startCol, int endRow, int endCol)
-{
-    return;
-}
