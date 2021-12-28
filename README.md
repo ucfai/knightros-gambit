@@ -7,13 +7,13 @@ This repository hosts the code for Knightr0's Gambit, a [University of Central F
 
 <!-- Video of chessboard in action: https://youtu.be/blah -->
 
-[Project webpage](https://ucfai.github.io/knightros-gambit/), [Project overview doc](https://docs.google.com/document/d/1CPY9yEVWDVO99mbckBnCJi-gKKobkBnB4XnjrLc4HFs/edit#)
+[Project webpage](https://ucfai.github.io/knightros-gambit/), [project overview doc](https://docs.google.com/document/d/1CPY9yEVWDVO99mbckBnCJi-gKKobkBnB4XnjrLc4HFs/edit#)
 
 <!-- Build guide: n/a -->
 
 ## How it works
 <!-- ![Overview diagram](docs/imgs/overview-diagram.jpg) -->
-The main program is `game.py` (located in `firmware/raspi/`). This code is the entry point to interacting with the chessboard; it runs a loop that keeps track of game state (whose turn it is, past moves, etc.), computes moves using a custom chess AI, and processes images taken of the board to compute board state after the player moves a piece. This driver program has options for over-the-board play, a command-line interface, a voice interface, and a web interface.
+The main program is `game.py` (located in `firmware/raspi/`). This code is the entry point to interacting with the chessboard; it runs a loop that keeps track of game state (whose turn it is, past moves, etc.), computes moves using a custom chess AI, and processes images taken of the board to compute board state after the player moves a piece. This driver program has options for over-the-board play, a command-line interface, and a web interface. We plan to add a voice interface at a later point.
 
 The `game.py` program runs on a Raspberry Pi, and interacts with arduino code that controls the actuators of the chessboard, the four interfaces (one-at-a-time) described above, a custom AI modeled after Deepmind's AlphaZero, and a computer vision system which keeps track of the current chessboard state.
 
