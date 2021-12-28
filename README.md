@@ -30,7 +30,8 @@ The AI is modeled after [Deepmind's AlphaZero](https://deepmind.com/blog/article
 
 
 <!-- ## How to Build Chessboard
-Main documentation: https://pupper.readthedocs.io/en/latest/
+Main documentation: blah.com
 
 You can find the bill of materials, assembly instructions, software setup, etc at this website.
  -->
+ 
