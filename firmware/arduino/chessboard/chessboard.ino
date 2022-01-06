@@ -31,17 +31,17 @@ float stepsPerSpace;
 int currentX, currentY;
 
 // Separate motor pins
-#define MOTOR1_MS1 14
-#define MOTOR1_MS2 12
-#define MOTOR1_DIR 34
-#define MOTOR1_STEP_PIN 35
-int xMotor[5] = {MOTOR1_STEP_PIN, MOTOR1_DIR, MOTOR1_MS1, MOTOR1_MS2, X_AXIS_ENDSTOP_SWITCH};
+#define X_MOTOR_MS1 14
+#define X_MOTOR_MS2 12
+#define X_MOTOR_DIR 34
+#define X_MOTOR_STEP_PIN 35
+int xMotor[5] = {X_MOTOR_STEP_PIN, X_MOTOR_DIR, X_MOTOR_MS1, X_MOTOR_MS2, X_AXIS_ENDSTOP_SWITCH};
 
-#define MOTOR2_MS1 27
-#define MOTOR2_MS2 2
-#define MOTOR2_DIR 36
-#define MOTOR2_STEP_PIN 36
-int yMotor[5] = {MOTOR2_STEP_PIN, MOTOR2_DIR, MOTOR2_MS1, MOTOR2_MS2, Y_AXIS_ENDSTOP_SWITCH};
+#define Y_MOTOR_MS1 27
+#define Y_MOTOR_MS2 2
+#define Y_MOTOR_DIR 36
+#define Y_MOTOR_STEP_PIN 36
+int yMotor[5] = {Y_MOTOR_STEP_PIN, Y_MOTOR_DIR, Y_MOTOR_MS1, Y_MOTOR_MS2, Y_AXIS_ENDSTOP_SWITCH};
 
 #define WHOLE_STEPS 1
 #define HALF_STEPS 2
@@ -61,15 +61,15 @@ void setup()
   pinMode(MOTOR_SLEEP, OUTPUT);
   pinMode(MOTOR_ENABLE, OUTPUT);
   
-  pinMode(MOTOR1_MS1, OUTPUT);
-  pinMode(MOTOR1_MS2, OUTPUT);
-  pinMode(MOTOR1_DIR, OUTPUT);
-  pinMode(MOTOR1_STEP_PIN, OUTPUT);
+  pinMode(X_MOTOR_MS1, OUTPUT);
+  pinMode(X_MOTOR_MS2, OUTPUT);
+  pinMode(X_MOTOR_DIR, OUTPUT);
+  pinMode(X_MOTOR_STEP_PIN, OUTPUT);
 
-  pinMode(MOTOR2_MS1, OUTPUT);
-  pinMode(MOTOR2_MS2, OUTPUT);
-  pinMode(MOTOR2_DIR, OUTPUT);
-  pinMode(MOTOR2_STEP_PIN, OUTPUT);
+  pinMode(Y_MOTOR_MS1, OUTPUT);
+  pinMode(Y_MOTOR_MS2, OUTPUT);
+  pinMode(Y_MOTOR_DIR, OUTPUT);
+  pinMode(Y_MOTOR_STEP_PIN, OUTPUT);
 
   pinMode(ELECTROMAGNET, OUTPUT);
 
