@@ -1,9 +1,6 @@
-// Pin definitions
 // ================================
-// Shared motor pins
-#define MOTOR_RESET 4
-#define MOTOR_SLEEP 2
-#define MOTOR_ENABLE 15
+// END: Pin definitons
+// ================================
 
 // UART
 #define RX2 16
@@ -31,8 +28,15 @@ int xMotor[5] = {X_MOTOR_STEP_PIN, X_MOTOR_DIR, X_MOTOR_MS1, X_MOTOR_MS2, X_AXIS
 #define Y_MOTOR_STEP_PIN 32
 int yMotor[5] = {Y_MOTOR_STEP_PIN, Y_MOTOR_DIR, Y_MOTOR_MS1, Y_MOTOR_MS2, Y_AXIS_ENDSTOP_SWITCH};
 
-// Preprocessor definitions
+// Shared motor pins
+#define MOTOR_RESET 4
+#define MOTOR_SLEEP 2
+#define MOTOR_ENABLE 15
+
 // ================================
+// END: Pin definitons
+// ================================
+
 // Distance definitions
 #define MILLIMETERS_PER_SQUARE 63
 #define STEPS_PER_MILLIMETER 5
@@ -46,12 +50,13 @@ int currentX, currentY;
 #define LEFT 0
 #define RIGHT 1 
 
-// Array definitions
+// Step size definitions
 #define WHOLE_STEPS 1
 #define HALF_STEPS 2
 #define QUARTER_STEPS 4
 #define EIGHTH_STEPS 8
 
+// Motor array index definitions
 #define STEP_PIN 0
 #define DIR_PIN 1
 #define MS1_PIN 2
