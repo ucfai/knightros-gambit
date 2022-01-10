@@ -29,9 +29,9 @@ int xMotor[5] = {X_MOTOR_STEP, X_MOTOR_DIR, X_MOTOR_MS1, X_MOTOR_MS2, X_AXIS_END
 int yMotor[5] = {Y_MOTOR_STEP, Y_MOTOR_DIR, Y_MOTOR_MS1, Y_MOTOR_MS2, Y_AXIS_ENDSTOP_SWITCH};
 
 // Shared motor pins
-#define MOTOR_RESET 4
-#define MOTOR_SLEEP 2
-#define MOTOR_ENABLE 15
+#define MOTOR_ENABLE 4
+#define MOTOR_RESET 2
+#define MOTOR_SLEEP 15
 
 // ================================
 // END: Pin definitons
