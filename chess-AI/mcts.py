@@ -137,6 +137,7 @@ class Mcts:
 
             # Need to update P with the state and the policy
             self.p_values.update({fen_string: policy})
+            return value
 
         # Finds the best move from the current state
         move = self.find_best_move(board.legal_moves, fen_string)
@@ -157,5 +158,5 @@ class Mcts:
         # We return the negative value of the state, since alternate levels in the search tree
         # are from the perspective of different players. Since value \in [-1, 1], -value is the
         # value of the current board from the perspective of the other player.
-        return -value
+        return value
 
