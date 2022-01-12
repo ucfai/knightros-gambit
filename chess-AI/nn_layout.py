@@ -37,24 +37,27 @@ class PlayNetwork(nn.Module):
         
         # Each conv layer in a residual block uses 256 3x3 filters, padding used
         # to keep the channel dimensions constant.
-        self.res_block = nn.Sequential(nn.Conv2d(in_channels=256,
-                                                 out_channels=256,
-                                                 kernel_size=3,
-                                                 padding=1,
-                                                 bias=False), 
-                                       nn.BatchNorm2d(256), 
-                                       nn.ReLU(inplace=True), 
-                                       nn.Conv2d(in_channels=256,
-                                                 out_channels=256,
-                                                 kernel_size=3,
-                                                 padding=1,
-                                                 bias=False), 
-                                       nn.BatchNorm2d(256))
+
+        self.res_blocks = [nn.Sequential(nn.Conv2d(in_channels=256,
+                                                   out_channels=256,
+                                                   kernel_size=3,
+                                                   padding=1,
+                                                   bias=False),
+                                         nn.BatchNorm2d(256),
+                                         nn.ReLU(inplace=True),
+                                         nn.Conv2d(in_channels=256,
+                                                   out_channels=256,
+                                                   kernel_size=3,
+                                                   padding=1,
+                                                   bias=False),
+                                         nn.BatchNorm2d(256)) for _ in range(self.num_res_blocks)]
         
         # Use 2 1x1 filters to convolve input channels to 2 output channels, one
         # representing piece to move, and the other representing move to take out 
         # of possible moves. Use them to pick move from possible moves, represented
         # by 73 channels of 8x8, or 4672 possible moves
+        # Using more convolutional layers may be preferable to flattening. Couldn't
+        # find which is done by AlphaZero.
         self.policy_head = nn.Sequential(nn.Conv2d(in_channels=256,
                                                    out_channels=2,
                                                    kernel_size=1,
@@ -81,17 +84,15 @@ class PlayNetwork(nn.Module):
                                         nn.Linear(in_features=256,
                                                   out_features=1),
                                         nn.Tanh())
-        
 
-        
     def forward(self, x):
         x = self.conv_layer(x)
         
         # Go through all the residual blocks and add the
         # input of the block to the output before regularization.
-        for _ in range(self.num_res_blocks):
+        for res_block in self.res_blocks:
             shortcut = x
-            x = self.res_block(x)
+            x = res_block(x)
             x = nn.functional.relu_(x + shortcut)
         
         value_out = self.value_head(x)
@@ -99,7 +100,6 @@ class PlayNetwork(nn.Module):
         
         policy = policy_out.reshape(8, 8, 73)
         return policy, value_out
-
 
     def predict(self, policy, board):
         """Function to get neural network output.
