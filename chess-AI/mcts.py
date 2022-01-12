@@ -1,5 +1,7 @@
 from math import sqrt
 
+# from numba import jit
+
 import numpy as np
 
 from state_representation import get_cnn_input
@@ -112,7 +114,7 @@ class Mcts:
         # Return list of uci_moves and corresponding search probabilities
         return list(self.n_values[fen_string].keys()), search_probs
 
- 
+    # @jit
     def search(self, board, nnet):
         """Method for performing a search on the tree.
         """
@@ -130,10 +132,12 @@ class Mcts:
             # input_state = get_cnn_input(fen_string)
 
             # Return predictions and value from the nnet at the current state
-            value, policy = nnet.predict(board, None)
+            policy, value = nnet(get_cnn_input(board).float())
+            policy = nnet.predict(policy, board)
 
             # Need to update P with the state and the policy
             self.p_values.update({fen_string: policy})
+            return value
 
         # Finds the best move from the current state
         move = self.find_best_move(board.legal_moves, fen_string)
@@ -154,5 +158,5 @@ class Mcts:
         # We return the negative value of the state, since alternate levels in the search tree
         # are from the perspective of different players. Since value \in [-1, 1], -value is the
         # value of the current board from the perspective of the other player.
-        return -value
+        return value
 
