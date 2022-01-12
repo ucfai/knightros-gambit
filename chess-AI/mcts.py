@@ -1,5 +1,7 @@
 from math import sqrt
 
+# from numba import jit
+
 import numpy as np
 
 from state_representation import get_cnn_input
@@ -112,7 +114,7 @@ class Mcts:
         # Return list of uci_moves and corresponding search probabilities
         return list(self.n_values[fen_string].keys()), search_probs
 
- 
+    # @jit
     def search(self, board, nnet):
         """Method for performing a search on the tree.
         """

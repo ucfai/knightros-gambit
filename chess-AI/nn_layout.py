@@ -97,9 +97,8 @@ class PlayNetwork(nn.Module):
         value_out = self.value_head(x)
         policy_out = self.policy_head(x)
         
-        value = value_out.item()
         policy = policy_out.reshape(8, 8, 73)
-        return policy, value
+        return policy, value_out
 
 
     def predict(self, policy, board):
