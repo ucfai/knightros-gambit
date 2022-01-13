@@ -53,15 +53,11 @@ class MctsTrain:
 
             for _ in range(epochs):
                 # The board needs to be initialized to the starting state
-                num += 1
-                num2 = 0
-                print(num)
+
                 board = chess.Board()
                 # for __ in range(batch_size):
                 while True:
-                    num2 += 1
-                    print(num2)
-
+            
                     fen_string = board.fen()
 
                     # Perform mcts simulation
@@ -82,7 +78,7 @@ class MctsTrain:
                     self.boards.append(fen_string)
 
                     # Gets a random index from the move values from the network policy and makes random move
-                    # TODO: Choose move according to network move values and exploration.
+                    # TODO: Choose move according to network move values and exploration , (use find best legal move?).
                     rand_move_idx = random.randint(0, len(move_values) - 1)
                     move = moves[rand_move_idx]
 
@@ -156,8 +152,6 @@ class MctsTrain:
                             opt.zero_grad()
                     print(losses)
             
-        
-
     def assign_rewards(self, board):
         """Iterates through training examples and assigns rewards based on result of the game.
         """
@@ -174,16 +168,15 @@ class MctsTrain:
         # For demonstration print the board and outcome
         print(board)
 
-
 def main():
     # Gets the neural network, and performs and episode
     nnet = PlayNetwork()
-    train = MctsTrain(mcts_simulations=15, exploration=1, lr=0.15)
+    train = MctsTrain(mcts_simulations=5, exploration=1, lr=0.15)
 
     # TODO: Make training support epochs
     for _ in range(1):
         train.training_episode(nnet, 1)
- 
+
 
 if __name__ == "__main__":
     main()

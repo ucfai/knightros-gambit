@@ -3,6 +3,7 @@ from math import sqrt
 import pandas as pd
 import numpy as np
 from state_representation import get_cnn_input
+from output_representation import PlayNetworkPolicyConverter
 
 class Mcts:
     """Implementation of Monte Carlo Tree Search.
@@ -15,10 +16,30 @@ class Mcts:
         p_values: Dictionary storing the search probabilites  
     """
     def __init__(self, exploration):
+
         self.states_visited = [] 
         self.exploration = exploration 
         self.state_values = {}
         self.p_values = {}
+        self.policy_converter = PlayNetworkPolicyConverter()
+
+    def get_best_move(self,mcts_simulations,board,nnet):
+
+        """ Runs mcts_simulations number of simulations and 
+        returns the move to make from the AI
+        """
+
+        for _ in range (mcts_simulations):
+            self.search(board,nnet)
+
+        probs = self.find_search_probs(board.fen())
+
+        #TODO: Consider using find_best_move instead of find_best_legal move
+
+        best_move = self.policy_converter.find_best_legal_move(probs,board)
+        
+        return best_move
+
 
     def set_current_qn_value(self, fen_string, uci_move):
 
@@ -86,9 +107,11 @@ class Mcts:
         # been visited/sum of all nodes visited
         
         # TODO: Create correct formula for calculating search probs
+        # Consider Dirchlet noise like in alpha zero
 
         values = self.state_values[fen_string].values()
         n_values = list(zip(*values))[0]
+        
 
         number_of_node_visits = np.array(n_values)
         search_probs = number_of_node_visits/np.sum(number_of_node_visits)
@@ -96,7 +119,6 @@ class Mcts:
         # Return list of uci_moves and corresponding search probabilities
         return list(self.state_values[fen_string].keys()), search_probs
 
-    # @jit
     def search(self, board, nnet):
         """Method for performing a search on the tree.
         """
