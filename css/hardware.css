@@ -96,7 +96,9 @@ body {
   text-align: center;
   font-size: 15px;
   font-family: 'Roboto'; 
-  color: rgb(160, 150, 124); 
+  color: rgb(160, 150, 124);
+  padding-top: 20px; 
+  padding-bottom: -30px;
 }
 .grid-img img {
   justify-content: center;
