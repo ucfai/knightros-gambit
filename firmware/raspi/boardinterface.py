@@ -27,26 +27,6 @@ class Engine:
         self.king_to_rook_moves['e8g8'] = 'h8f8'
         self.king_to_rook_moves['e8c8'] = 'a8d8'
 
-    def get_2d_board(self):
-        '''Returns a 2d board from fen representation
-
-        Taken from this SO answer:
-        https://stackoverflow.com/questions/66451525/how-to-convert-fen-id-onto-a-chess-board
-        '''
-        fen = self.chess_board.fen()
-        board = []
-        for row in reversed(fen.split('/')):
-            brow = []
-            for char in row:
-                if char == ' ':
-                    break
-                if char in '12345678':
-                    brow.extend(['.'] * int(char))
-                else:
-                    brow.append(char)
-            board.append(brow)
-        return board
-
     def valid_moves_from_position(self):
         '''Returns list of all valid moves (in uci format) from the current board position.
         '''
@@ -141,7 +121,7 @@ class Engine:
     def get_piece_info_from_square(self, square):
         '''Returns tuple of color and piece type from provided square.
         '''
-        grid = self.get_2d_board()
+        grid = util.get_2d_board(self.chess_board.fen())
         coords = Engine.get_chess_coords_from_square(square)
         piece_w_color = grid[coords.row][coords.col]
         if piece_w_color == '.':
@@ -280,7 +260,7 @@ class Board:
         '''Prints board as 2d grid.
         '''
         # (0, 0) corresponds to a1, want to print s.t. a1 is bottom left, so reverse rows
-        chess_grid = self.engine.get_2d_board()
+        chess_grid = util.get_2d_board(self.engine.chess_board.fen())
         chess_grid.reverse()
         # 8 x 8 chess board
         for i in range(8):
@@ -360,7 +340,7 @@ class Board:
 
         source, dest = Engine.get_chess_coords_from_uci_move(uci_move)
 
-        board_2d = self.engine.get_2d_board()
+        chess_grid = util.get_2d_board(self.engine.chess_board.fen())
         # Cut number of cases from 8 to 4 by treating soure and dest interchangeably
         left, right = (source, dest) if source.col < dest.col else (dest, source)
         if left.col == right.col - 1:
