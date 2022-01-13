@@ -66,21 +66,15 @@ class MctsTrain:
 
                     # Need to get the moves and policy from the mcts
                     # NOTE: moves[i] corresponds to search_probs[i]
-                    moves, search_probs = self.mcts.find_search_probs(fen_string)
 
-                    # Get network predictions.
-                    policy, _ = nnet(get_cnn_input(board).float())
-                    # self.nn_probs.append(policy)
-                    # self.nn_evals.append(value)
-                    move_values = nnet.predict(policy, board)
-
+                    moves, search_probs, move = self.mcts.find_search_probs(fen_string,True,5)
+            
                     # Store board state (used in training loop)
                     self.boards.append(fen_string)
 
                     # Gets a random index from the move values from the network policy and makes random move
                     # TODO: Choose move according to network move values and exploration , (use find best legal move?).
-                    rand_move_idx = random.randint(0, len(move_values) - 1)
-                    move = moves[rand_move_idx]
+
 
                     # Converts mcts search probabilites to (8,8,73) vector
                     full_search_probs = self.policy_converter.compute_full_search_probs(moves,
@@ -139,7 +133,7 @@ class MctsTrain:
                             value_batch = torch.stack(value_batch).flatten().float()
 
                             # Find the loss and store it
-                            loss = loss_fn1(policy_batch, mcts_probs) + loss_fn2(value_batch, mcts_evals)
+                            loss = loss_fn1(policy_batch, mcts_probs) - loss_fn2(value_batch, mcts_evals)
                             losses.append(loss.item())
 
                             # Calculate Gradients

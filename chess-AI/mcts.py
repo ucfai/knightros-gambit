@@ -1,9 +1,12 @@
 
 from math import sqrt
+from re import S
 import pandas as pd
 import numpy as np
 from state_representation import get_cnn_input
 from output_representation import PlayNetworkPolicyConverter
+import torch
+import random
 
 class Mcts:
     """Implementation of Monte Carlo Tree Search.
@@ -22,6 +25,7 @@ class Mcts:
         self.state_values = {}
         self.p_values = {}
         self.policy_converter = PlayNetworkPolicyConverter()
+
 
     def get_best_move(self,mcts_simulations,board,nnet):
 
@@ -47,12 +51,12 @@ class Mcts:
             if uci_move in self.state_values[fen_string]:
                 return self.state_values[fen_string][uci_move]
             else:
-                self.state_values[fen_string][uci_move] = [1,0]
-                return (1,0)
+                self.state_values[fen_string][uci_move] = [0,0]
+                return (0,0)
         else:
             self.state_values[fen_string] = {}
-            self.state_values[fen_string][uci_move] = [1,0]
-            return (1,0)
+            self.state_values[fen_string][uci_move] = [0,0]
+            return (0,0)
 
     def find_best_move(self, legal_moves, fen_string):
         """Finds and returns the best move given the current state as a fen string and all legal moves.
@@ -75,7 +79,7 @@ class Mcts:
             n_values = list(zip(*values))[0]
 
             u_value = q_value + (self.exploration * self.p_values[fen_string][uci_move]) \
-                      * sqrt(sum(n_values)/n_value)
+                      * sqrt(sum(n_values)/ (1 + n_value))
                         
             if u_value > best_u:
                 best_u = u_value
@@ -94,13 +98,18 @@ class Mcts:
 
         n_value, q_value = self.state_values[fen_string][uci_move]
 
+        if not isinstance(value, int) :
+            value = float(value.numpy())
+        
+        #print(float(value.numpy()))
         self.state_values[fen_string][uci_move][1] = n_value * q_value + value
-        self.state_values[fen_string][uci_move][1] = q_value/ (n_value + 1)
+        self.state_values[fen_string][uci_move][1] = self.state_values[fen_string][uci_move][1]/ (n_value + 1)
 
         # Need to increment the number of times the node has been visited
         self.state_values[fen_string][uci_move][0] += 1
+     
 
-    def find_search_probs(self, fen_string):
+    def find_search_probs(self, fen_string,train,temperature):
         """Calculates and returns the search probabilites from the n_values for given fen_string.
         """
         # Calculates the search probabilites based on the the number of times a node has
@@ -110,14 +119,22 @@ class Mcts:
         # Consider Dirchlet noise like in alpha zero
 
         values = self.state_values[fen_string].values()
-        n_values = list(zip(*values))[0]
-        
+        keys = list(self.state_values[fen_string].keys())
+        n_values = np.array(list(zip(*values))[0])
 
-        number_of_node_visits = np.array(n_values)
-        search_probs = number_of_node_visits/np.sum(number_of_node_visits)
+
+        # Gets probability distribution
+
+        if(train): 
+            n_values = torch.from_numpy(n_values)
+            n_values = n_values ** (1/temperature)
+            search_probs = torch.nn.functional.softmax(n_values.float())
+            move = random.choices(keys, search_probs)[0]
+        else:
+            pass
 
         # Return list of uci_moves and corresponding search probabilities
-        return list(self.state_values[fen_string].keys()), search_probs
+        return list(self.state_values[fen_string].keys()), search_probs, move
 
     def search(self, board, nnet):
         """Method for performing a search on the tree.
@@ -138,7 +155,7 @@ class Mcts:
 
             # Need to update P with the state and the policy
             self.p_values.update({fen_string: policy})
-            return value
+            return -value
 
         # Finds the best move from the current state
         move = self.find_best_move(board.legal_moves, fen_string)
@@ -157,5 +174,5 @@ class Mcts:
         self.update_qn(fen_string, move.uci(), value)
 
         # Returns value to previous nodes
-        return value
+        return -value
 
