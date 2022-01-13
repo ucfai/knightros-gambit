@@ -51,7 +51,7 @@ def get_cnn_input(board_state):
     pointless_count = np.full((1, 8, 8), (int(half_count) / 2))
 
     cnn_input = torch.from_numpy(np.array([np.concatenate((get_piece_planes(board2d, turn), get_castle_planes(castling, turn),
-                                                 get_turn_plane(turn), count_plane, pointless_count), axis=0)])).cuda()
+                                                 get_turn_plane(turn), count_plane, pointless_count), axis=0)]))
 
     return cnn_input
 

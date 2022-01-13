@@ -115,7 +115,7 @@ class PlayNetwork(nn.Module):
         return move_values
                 
 def main():
-    model = PlayNetwork().float().cuda()
+    model = PlayNetwork().float()
 
     import chess
     board = chess.Board()

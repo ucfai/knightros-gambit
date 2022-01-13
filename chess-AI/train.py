@@ -106,7 +106,7 @@ class MctsTrain:
                         break
 
                 # batch_size = len(self.training_examples)
-                self.mcts_probs = torch.tensor(self.mcts_probs).float()
+                self.mcts_probs = torch.tensor(np.array(self.mcts_probs)).float()
                 self.mcts_evals = torch.tensor(self.mcts_evals).float()
 
                 # Create iteratable dataset with mcts labels
@@ -143,7 +143,7 @@ class MctsTrain:
                             value_batch = torch.stack(value_batch).flatten().float()
 
                             # Find the loss and store it
-                            loss = loss_fn1(policy_batch, mcts_probs.cuda()) + loss_fn2(value_batch, mcts_evals.cuda())
+                            loss = loss_fn1(policy_batch, mcts_probs) + loss_fn2(value_batch, mcts_evals)
                             losses.append(loss.item())
 
                             # Calculate Gradients
@@ -177,12 +177,13 @@ class MctsTrain:
 
 def main():
     # Gets the neural network, and performs and episode
-    nnet = PlayNetwork().cuda()
-    train = MctsTrain(mcts_simulations=1, exploration=1, lr=0.15)
+    nnet = PlayNetwork()
+    train = MctsTrain(mcts_simulations=15, exploration=1, lr=0.15)
 
     # TODO: Make training support epochs
-    for _ in range(5):
+    for _ in range(1):
         train.training_episode(nnet, 1)
+ 
 
 if __name__ == "__main__":
     main()

@@ -1,9 +1,7 @@
+
 from math import sqrt
-
-# from numba import jit
-
+import pandas as pd
 import numpy as np
-
 from state_representation import get_cnn_input
 
 class Mcts:
@@ -18,22 +16,22 @@ class Mcts:
     """
     def __init__(self, exploration):
         self.states_visited = [] 
-        self.n_values = {} 
-        self.q_values = {}
         self.exploration = exploration 
+        self.state_values = {}
         self.p_values = {}
 
-    def set_current_qn_value(self, values, fen_string, uci_move, initial_value):
-        if fen_string in values:
-            if uci_move in values[fen_string]:
-                return values[fen_string][uci_move]
+    def set_current_qn_value(self, fen_string, uci_move):
+
+        if fen_string in self.state_values:
+            if uci_move in self.state_values[fen_string]:
+                return self.state_values[fen_string][uci_move]
             else:
-                values[fen_string][uci_move] = initial_value
-                return initial_value
+                self.state_values[fen_string][uci_move] = [1,0]
+                return (1,0)
         else:
-            values[fen_string] = {}
-            values[fen_string][uci_move] = initial_value
-            return initial_value
+            self.state_values[fen_string] = {}
+            self.state_values[fen_string][uci_move] = [1,0]
+            return (1,0)
 
     def find_best_move(self, legal_moves, fen_string):
         """Finds and returns the best move given the current state as a fen string and all legal moves.
@@ -42,44 +40,21 @@ class Mcts:
         best_move = -1
 
         for move in legal_moves:
+
             uci_move = move.uci()
 
-            # Iterate over every legal move at current board state. Initialize q_value if state
-            # has not been visited, otherwise get q_value.
-            # if fen_string in self.q_values:
-            #     if uci_move in self.q_values[fen_string]:
-            #         q_value = self.q_values[fen_string][uci_move]
-            #     else:
-            #         self.q_values[fen_string][uci_move] = 0
-            #         q_value = 0
-            # else:
-            #     self.q_values[fen_string] = {}
-            #     self.q_values[fen_string][uci_move] = 0
-            #     q_value = 0
-            q_value = self.set_current_qn_value(self.q_values, fen_string, uci_move, initial_value=0)
-
-            # TODO: Initial N value for unvisited nodes may need to be updated. Revisit this.
-
-            # Iterate over every legal move at current board state. Initialize n_value if state
-            # has not been visited, otherwise get n_value.
-            # if fen_string in self.n_values:
-            #     if uci_move in self.n_values[fen_string]:
-            #         n_value = self.n_values[fen_string][uci_move]
-            #     else:
-            #         self.n_values[fen_string][uci_move] = 1
-            #         n_value = float("inf")
-            # else:
-            #     self.n_values[fen_string] = {}
-            #     self.n_values[fen_string][uci_move] = 1
-            #     n_value = float("inf")
-            n_value = self.set_current_qn_value(self.n_values, fen_string, uci_move, initial_value=1)
-
+            n_value,q_value = self.set_current_qn_value(fen_string, uci_move)
+            
             # TODO: Look at different formulas for calculating U
             # There could be better formula for evaluating an action
 
             # Calculate U based on the UCB formula
-            u_value = q_value + (self.exploration * self.p_values[fen_string][uci_move])
-            u_value = u_value * sqrt(sum(self.n_values[fen_string].values())/n_value)
+
+            values = self.state_values[fen_string].values()
+            n_values = list(zip(*values))[0]
+
+            u_value = q_value + (self.exploration * self.p_values[fen_string][uci_move]) \
+                      * sqrt(sum(n_values)/n_value)
                         
             if u_value > best_u:
                 best_u = u_value
@@ -87,19 +62,22 @@ class Mcts:
 
         return best_move
  
-    def update_qn(self, fen_string, move, value):
+    def update_qn(self, fen_string, uci_move, value):
         """Calculate q_values and n_values based on the move.
         """
         # TODO: Update this function to receive uci_move instead of creating it here.
-        uci_move = move.uci()
+     
 
         # Calculate q value for specified fen_string, uci_move, and value
         # TODO: Can look into different formulas for this as well
-        self.q_values[fen_string][uci_move] = self.n_values[fen_string][uci_move] * self.q_values[fen_string][uci_move] + value
-        self.q_values[fen_string][uci_move] = self.q_values[fen_string][uci_move] / (self.n_values[fen_string][uci_move] + 1)
+
+        n_value, q_value = self.state_values[fen_string][uci_move]
+
+        self.state_values[fen_string][uci_move][1] = n_value * q_value + value
+        self.state_values[fen_string][uci_move][1] = q_value/ (n_value + 1)
 
         # Need to increment the number of times the node has been visited
-        self.n_values[fen_string][uci_move] += 1
+        self.state_values[fen_string][uci_move][0] += 1
 
     def find_search_probs(self, fen_string):
         """Calculates and returns the search probabilites from the n_values for given fen_string.
@@ -108,11 +86,15 @@ class Mcts:
         # been visited/sum of all nodes visited
         
         # TODO: Create correct formula for calculating search probs
-        number_of_node_visits = np.array(list(self.n_values[fen_string].values()))
+
+        values = self.state_values[fen_string].values()
+        n_values = list(zip(*values))[0]
+
+        number_of_node_visits = np.array(n_values)
         search_probs = number_of_node_visits/np.sum(number_of_node_visits)
 
         # Return list of uci_moves and corresponding search probabilities
-        return list(self.n_values[fen_string].keys()), search_probs
+        return list(self.state_values[fen_string].keys()), search_probs
 
     # @jit
     def search(self, board, nnet):
@@ -128,10 +110,7 @@ class Mcts:
             # Add the state to the list of visited nodes
             self.states_visited.append(fen_string)
 
-            # TODO: Get neural network state representation from fen_string
-            # input_state = get_cnn_input(fen_string)
-
-            # Return predictions and value from the nnet at the current state
+            # Get predictions and value from the nnet at the current state
             policy, value = nnet(get_cnn_input(board).float())
             policy = nnet.predict(policy, board)
 
@@ -153,10 +132,8 @@ class Mcts:
 
         # After undoing the move , the Q and N values need to be updated
         fen_string = board.fen()
-        self.update_qn(fen_string, move, value)
+        self.update_qn(fen_string, move.uci(), value)
 
-        # We return the negative value of the state, since alternate levels in the search tree
-        # are from the perspective of different players. Since value \in [-1, 1], -value is the
-        # value of the current board from the perspective of the other player.
+        # Returns value to previous nodes
         return value
 
