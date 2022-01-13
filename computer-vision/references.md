@@ -9,11 +9,5 @@
 - Chess id
   - https://medium.com/@daylenyang/building-chess-id-99afa57326cd
   - https://github.com/daylen/chess-id/blob/master/img_process.ipynb
-
-
-
-https://www.google.com/search?channel=fs&client=ubuntu&q=detect+chessboard+corners+open+cv
-https://stackoverflow.com/questions/56368537/opencv-fails-to-find-chess-board-corners
-https://stackoverflow.com/questions/27520991/opencv-best-way-to-detect-corners-on-chessboard
-https://stackoverflow.com/questions/19190484/what-is-the-opencv-findchessboardcorners-convention
-https://gist.github.com/hackintoshrao/d32b9c43de7b2149facc2263920108d2
+- [Chess arm (simple blob detector)](https://github.com/noahwhite07/chess-arm/blob/4181d7e952507a7f82bd0295cb7b1b8507350784/computer_vision.py#L8)
+- [Raspberry Turk chess piece presence](http://www.raspberryturk.com/notebooks/chess_piece_presence.html)
