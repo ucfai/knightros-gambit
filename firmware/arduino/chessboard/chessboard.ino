@@ -63,6 +63,9 @@ int currentX, currentY;
 #define MS2_PIN 3
 #define ENDSTOP_PIN 4
 
+// Button debounce time (in milliseconds)
+#define DEBOUNCE_TIME 100 
+
 void setup()
 {
   // Define our pinModes
