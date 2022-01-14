@@ -5,6 +5,8 @@ char currentState = '0';
 char errorCode;
 volatile unsigned long previous_activation_time = 0;
 const unsigned long DEBOUNCE_TIME = 100; // Milliseconds
+bool movementFlag = false;
+volatile bool transmitFlag = false;
 
 enum ArduinoState
 {
@@ -39,8 +41,15 @@ void chessTimerISR()
     if (current_time - previous_activation_time > DEBOUNCE_TIME || 
        (current_time < previous_activation_time && previous_activation_time - current_time > DEBOUNCE_TIME))
     {
-        previous_activation_time = current_time; 
-        sendMessageToPi(END_TURN, 0, buffer[5]);
+        if (movementFlag)
+        {
+            transmitFlag = true;
+        }
+        else
+        {
+            previous_activation_time = current_time; 
+            sendMessageToPi(END_TURN, 0, buffer[5]);
+        }
     }
 }
 
@@ -86,7 +95,14 @@ void serialEvent2()
                 // Sends acknowledgement
                 sendMessageToPi(currentState, buffer[5], errorCode);
 
+                movementFlag = true;
                 makeMove(buffer);
+
+                // Tell Pi that the chess timer button was pressed
+                if (transmitFlag)
+                    sendMessageToPi(END_TURN, 0, buffer[5]);
+                movementFlag = false;
+                transmitFlag = false;
             }
 
             // Sends move success/error
