@@ -89,6 +89,8 @@ void setup()
   stepsPerSpace = MILLIMETERS_PER_SQUARE * STEPS_PER_MILLIMETER;
 
   Serial2.begin(115200, SERIAL_8N1, RX2, TX2);
+  
+  attachInterrupt(digitalPinToInterrupt(CHESS_TIMER_BUTTON), chess_timer_ISR, RISING);
 }
 
 void loop()
