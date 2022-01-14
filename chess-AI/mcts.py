@@ -1,6 +1,5 @@
 
 from math import sqrt
-from re import S
 import pandas as pd
 import numpy as np
 from state_representation import get_cnn_input
@@ -121,7 +120,6 @@ class Mcts:
         values = self.state_values[fen_string].values()
         keys = list(self.state_values[fen_string].keys())
         n_values = np.array(list(zip(*values))[0])
-
 
         # Gets probability distribution
 
