@@ -97,11 +97,11 @@ void serialEvent2()
 
                 movementFlag = true;
                 makeMove(buffer);
+                movementFlag = false;
 
                 // Tell Pi that the chess timer button was pressed
                 if (transmitFlag)
                     sendMessageToPi(END_TURN, 0, buffer[5]);
-                movementFlag = false;
                 transmitFlag = false;
             }
 
