@@ -4,7 +4,7 @@ int byteNum = -1; // -1 indicates that the start code hasn't been received
 char currentState = '0';
 char errorCode;
 volatile unsigned long previous_activation_time = 0;
-bool movementFlag = false; // Prevents END_TURN transmissions during movement function
+volatile bool movementFlag = false; // Prevents END_TURN transmissions during movement function
 volatile bool transmitFlag = false; // Queues END_TURN transmission after movement function
 
 enum ArduinoState
