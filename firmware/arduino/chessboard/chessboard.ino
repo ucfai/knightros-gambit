@@ -90,7 +90,7 @@ void setup()
 
   Serial2.begin(115200, SERIAL_8N1, RX2, TX2);
   
-  attachInterrupt(digitalPinToInterrupt(CHESS_TIMER_BUTTON), chess_timer_ISR, RISING);
+  attachInterrupt(digitalPinToInterrupt(CHESS_TIMER_BUTTON), chessTimerISR, RISING);
 }
 
 void loop()

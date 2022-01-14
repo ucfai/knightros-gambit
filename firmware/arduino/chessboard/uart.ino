@@ -31,7 +31,7 @@ enum ErrorCode
 };
 
 // Send message to Pi when the chess timer is pressed
-void chess_timer_ISR()
+void chessTimerISR()
 {
     unsigned long current_time = millis();
     
