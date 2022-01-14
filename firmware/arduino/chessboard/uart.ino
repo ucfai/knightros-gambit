@@ -41,13 +41,13 @@ void chessTimerISR()
     if (current_time - previous_activation_time > DEBOUNCE_TIME || 
        (current_time < previous_activation_time && previous_activation_time - current_time > DEBOUNCE_TIME))
     {
+        previous_activation_time = current_time; 
         if (movementFlag)
         {
             transmitFlag = true;
         }
         else
         {
-            previous_activation_time = current_time; 
             sendMessageToPi(END_TURN, 0, buffer[5]);
         }
     }
