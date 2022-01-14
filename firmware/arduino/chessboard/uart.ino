@@ -5,8 +5,8 @@ char currentState = '0';
 char errorCode;
 volatile unsigned long previous_activation_time = 0;
 const unsigned long DEBOUNCE_TIME = 100; // Milliseconds
-bool movementFlag = false;
-volatile bool transmitFlag = false;
+bool movementFlag = false; // Prevents END_TURN transmissions during movement function
+volatile bool transmitFlag = false; // Queues END_TURN transmission after movement function
 
 enum ArduinoState
 {
