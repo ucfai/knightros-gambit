@@ -3,6 +3,8 @@ char buffer[6];
 int byteNum = -1; // -1 indicates that the start code hasn't been received
 char currentState = '0';
 char errorCode;
+volatile unsigned long previous_activation_time = 0;
+const unsigned long DEBOUNCE_TIME = 100; // Milliseconds
 
 enum ArduinoState
 {
@@ -27,6 +29,20 @@ enum ErrorCode
     INCOMPLETE_INSTRUCTION = '3',
     MOVEMENT_ERROR = '4'
 };
+
+// Send message to Pi when the chess timer is pressed
+void chess_timer_ISR()
+{
+    unsigned long current_time = millis();
+    
+    // Check if the difference between button presses is longer than the debounce time
+    if (current_time - previous_activation_time > DEBOUNCE_TIME || 
+       (current_time < previous_activation_time && previous_activation_time - current_time > DEBOUNCE_TIME))
+    {
+        previous_activation_time = current_time; 
+        sendMessageToPi(END_TURN, 0, buffer[5]);
+    }
+}
 
 // Wait for input
 void serialEvent2()
