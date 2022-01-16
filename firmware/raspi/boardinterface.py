@@ -340,7 +340,7 @@ class Board:
 
         source, dest = Engine.get_chess_coords_from_uci_move(uci_move)
 
-        chess_grid = util.get_2d_board(self.engine.chess_board.fen())
+        board_2d = util.get_2d_board(self.engine.chess_board.fen())
         # Cut number of cases from 8 to 4 by treating soure and dest interchangeably
         left, right = (source, dest) if source.col < dest.col else (dest, source)
         if left.col == right.col - 1:
