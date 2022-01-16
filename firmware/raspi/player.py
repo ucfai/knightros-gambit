@@ -2,10 +2,9 @@
 
 This class will wrap the custom AI we build, but for now we use it to get moves from stockfish.
 '''
-import numpy as np
-import torch
+# TODO: Uncomment `torch` and `mcts` imports when mcts implementation is finished and integrated.
+# import torch
 
-# TODO: Uncomment this import when mcts implementation is finished and integrated.
 # from mcts import MCTS
 from util import create_stockfish_wrapper
 
