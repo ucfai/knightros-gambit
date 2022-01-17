@@ -90,3 +90,29 @@ def init_capture_squares():
     b_capture_sq = BoardCell(1, 10)
 
     return w_capture_sq, b_capture_sq
+
+def get_2d_board(fen, turn=None):
+    '''Returns a 2d board from fen representation
+
+    Taken from this SO answer:
+    https://stackoverflow.com/questions/66451525/how-to-convert-fen-id-onto-a-chess-board
+    '''
+    board = []
+    for row in reversed(fen.split('/')):
+        brow = []
+        for char in row:
+            if char == ' ':
+                break
+            if char in '12345678':
+                brow.extend(['.'] * int(char))
+            else:
+                brow.append(char)
+        board.append(brow)
+
+    # flips perspective to current player
+    if turn:
+        if turn == 'w':
+            board_state.append(brow)
+        else:
+            board_state.insert(0, brow)
+    return board
