@@ -63,6 +63,9 @@ int currentX, currentY;
 #define MS2_PIN 3
 #define ENDSTOP_PIN 4
 
+// Button debounce time (in milliseconds)
+#define DEBOUNCE_TIME 100 
+
 void setup()
 {
   // Define our pinModes
@@ -89,6 +92,8 @@ void setup()
   stepsPerSpace = MILLIMETERS_PER_SQUARE * STEPS_PER_MILLIMETER;
 
   Serial2.begin(115200, SERIAL_8N1, RX2, TX2);
+  
+  attachInterrupt(digitalPinToInterrupt(CHESS_TIMER_BUTTON), chessTimerISR, RISING);
 }
 
 void loop()
