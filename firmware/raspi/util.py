@@ -90,3 +90,10 @@ def init_capture_squares():
     b_capture_sq = BoardCell(1, 10)
 
     return w_capture_sq, b_capture_sq
+
+# TODO: this should be a static function in board cell
+def sq_from_boardcell(boardcell):
+    return chr(dest[1] + ord('a')) + chr(dest[0] + ord('1'))
+
+def uci_move_from_boardcells(source, dest):
+    return sq_from_boardcell(source) + sq_from_boardcell(dest)
