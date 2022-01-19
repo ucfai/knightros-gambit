@@ -1,5 +1,5 @@
 from math import sqrt
-import pandas as pd
+# import pandas as pd
 import numpy as np
 from state_representation import get_cnn_input
 from output_representation import PlayNetworkPolicyConverter

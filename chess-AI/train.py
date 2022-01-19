@@ -3,6 +3,7 @@ import random
 import chess
 import torch
 import numpy as np
+import time
 from torch.autograd import backward
 from torch.functional import Tensor
 from torch.utils.data import DataLoader, TensorDataset
@@ -57,12 +58,14 @@ class MctsTrain:
                 board = chess.Board()
                 # for __ in range(batch_size):
                 while True:
-            
                     fen_string = board.fen()
 
                     # Perform mcts simulation
+                    start = time.time()
                     for __ in range(self.mcts_simulations):
                         self.mcts.search(board, nnet)
+                    stop = time.time()
+                    print(stop - start)
 
                     # Need to get the moves and policy from the mcts
                     # NOTE: moves[i] corresponds to search_probs[i]
@@ -88,12 +91,15 @@ class MctsTrain:
                     # Makes the random action on the board, and gets fen string
                     move = chess.Move.from_uci(move)
                     board.push(move)
+                    print(board)
 
                     # if the game is over then that is the end of the episode
                     if board.is_game_over() or board.is_stalemate() or board.is_seventyfive_moves() or board.is_fivefold_repetition() or board.can_claim_draw():
                         # Need to assign the rewards to the examples
                         self.assign_rewards(board)
                         break
+
+
 
                 # batch_size = len(self.training_examples)
                 self.mcts_probs = torch.tensor(np.array(self.mcts_probs)).float()
@@ -150,25 +156,25 @@ class MctsTrain:
         """Iterates through training examples and assigns rewards based on result of the game.
         """
         reward = 0
-        winner = True
-        if board.outcome() == None:
-            winner = False
-        if winner and board.outcome().winner:
-            reward = -1
+        if not board.outcome() == None:
+            if not board.outcome().winner == None:
+                reward = -1
         for move_num in range(len(self.mcts_evals) - 1, -1, -1):
             reward *= -1
-            self.mcts_evals[move_num] = reward * -1
+            self.mcts_evals[move_num] = reward
 
         # For demonstration print the board and outcome
-        print(board)
+        # print(board)
+        print(self.mcts_evals)
+        print(board.outcome())
 
 def main():
     # Gets the neural network, and performs and episode
     nnet = PlayNetwork()
-    train = MctsTrain(mcts_simulations=5, exploration=1, lr=0.15)
+    train = MctsTrain(mcts_simulations=100, exploration=5, lr=0.2)
 
     # TODO: Make training support epochs
-    for _ in range(1):
+    for _ in range(5):
         train.training_episode(nnet, 1)
 
 
