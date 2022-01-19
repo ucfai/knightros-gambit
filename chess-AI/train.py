@@ -67,7 +67,7 @@ class MctsTrain:
                     # Need to get the moves and policy from the mcts
                     # NOTE: moves[i] corresponds to search_probs[i]
 
-                    moves, search_probs, move = self.mcts.find_search_probs(fen_string,True,5)
+                    moves, search_probs, move = self.mcts.find_search_probs(fen_string, 5)
             
                     # Store board state (used in training loop)
                     self.boards.append(fen_string)
