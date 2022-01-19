@@ -1,5 +1,7 @@
 '''Helper file to get board state from images of board.
 '''
+from chess import Board
+
 from util import BoardCell, uci_move_from_boardcells
 
 class BoardStateDetector:
@@ -67,13 +69,15 @@ class BoardStateDetector:
         return uci_move_from_boardcells(BoardCell(*source), BoardCell(*dest))
 
     # TODO: Implement
-    def is_promotion(self, prev_board_img, move):
+    def is_promotion(self, prev_board_fen, move):
+        prev_board_2d = get_2d_grid(prev_board_fen)
+
         # if piece in prev_board_img at square move[:2] is a pawn and move[2:] is the final rank, this is a promotion
         pass
 
     # TODO: Implement
     def get_piece_type(self, curr_board_img, square):
-        # Use classifier to identify and piece type at specified square in curr_board_img
+        # Use classifier to identify and return piece type at specified square in curr_board_img
         pass
 
     def get_current_board_state(self, curr_board_img):
