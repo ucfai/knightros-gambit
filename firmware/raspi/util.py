@@ -116,3 +116,29 @@ def get_chess_coords_from_square(square):
     '''
     # Nums correspond to row (rank), letters correspond to col (files)
     return BoardCell(ord(square[1]) - ord('1'), ord(square[0]) - ord('a'))
+
+def get_2d_board(fen, turn=None):
+    '''Returns a 2d board from fen representation
+
+    Taken from this SO answer:
+    https://stackoverflow.com/questions/66451525/how-to-convert-fen-id-onto-a-chess-board
+    '''
+    board = []
+    for row in reversed(fen.split('/')):
+        brow = []
+        for char in row:
+            if char == ' ':
+                break
+            if char in '12345678':
+                brow.extend(['.'] * int(char))
+            else:
+                brow.append(char)
+        board.append(brow)
+
+    # flips perspective to current player
+    if turn:
+        if turn == 'w':
+            board_state.append(brow)
+        else:
+            board_state.insert(0, brow)
+    return board
