@@ -24,6 +24,9 @@ class BoardCell:
         '''
         return (self.row, self.col)
 
+    def to_chess_sq(self):
+        return chr(self.col + ord('a')) + chr(self.row + ord('1'))
+
 def create_stockfish_wrapper():
     '''Create simple wrapper around stockfish python module depending on operating system type.
     '''
@@ -91,12 +94,8 @@ def init_capture_squares():
 
     return w_capture_sq, b_capture_sq
 
-# TODO: this should be a static function in board cell
-def sq_from_boardcell(boardcell):
-    return chr(dest[1] + ord('a')) + chr(dest[0] + ord('1'))
-
 def uci_move_from_boardcells(source, dest):
-    return sq_from_boardcell(source) + sq_from_boardcell(dest)
+    return source.to_chess_sq() + dest.to_chess_sq()
 
 def get_piece_info_from_square(square, grid):
     '''Returns tuple of color and piece type from provided square.
