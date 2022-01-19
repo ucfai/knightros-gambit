@@ -66,6 +66,12 @@ int currentX, currentY;
 // Button debounce time (in milliseconds)
 #define DEBOUNCE_TIME 100 
 
+// Number of concentric circles to make when centering pieces
+#define NUM_CIRCLES 3
+
+// Number of different slope settings for each quarter circle
+#define NUM_SLOPES_PER_QUARTER_CIRCLE 9
+
 void setup()
 {
   // Define our pinModes
