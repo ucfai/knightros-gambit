@@ -1,43 +1,50 @@
 '''Helper file to get board state from images of board.
 '''
-from chess import Board
-
-from util import BoardCell, uci_move_from_boardcells, is_promotion
+import util
 
 class BoardStateDetector:
     def __init__(self):
-        self.prev_state = None
-        self.prev_occupancy_grid = None
+        self.prev_occ_grid = None
         self.board_size = 8
+        # self.type_classifier = torch.load(path_to_piece_classifier_model)
+        # Note: type_classifier returns 0, 1, 2, 3, 4; convert to 'p', 'q', 'b', 'n', 'r'
+        self.type_map = {0: 'p', 1: 'q', 2: 'b', 3: 'n', 4: 'r'}
+        # self.col_classifier = torch.load(path_to_piece_classifier_model)
+        # Note: col_classifier returns 0, 1, 2; convert to '.', 'w', or 'b' respectively
+        self.col_map = {0: '.', 1: 'w', 2: 'b'}
 
-    def get_occupancy_grid(self, board_state_image):
+    def get_occupancy_grid(self, img_arr_2d):
         '''
         '.': empty, 'w': white piece, 'b': black piece.
         '''
-        diff_grid = [[0 for i in range(self.board_size)] for j in range(self.board_size)]
-        # TODO: implement logic to classify each cell in image
-        return diff_grid
+        return [[0 for i in range(self.board_size)] for j in range(self.board_size)]
+        # TODO: After classifier is trained/loaded in constructor, can uncomment below.
+        # return [[self.col_map[self.col_classifier.predict(img_arr_2d[i, j])]
+        #          for i in range(self.board_size)] for j in range(self.board_size)]
 
-    def get_move_from_occupancy_diff(self, curr_occupancy_grid, prev_occupancy_grid):
-        # curr_occupancy_grid[i][j] is either 'b', 'w', or '.' if empty.
-        # Same for prev_occupancy_grid.
-
+    def get_occupancy_diff(self, curr_occ_grid, prev_occ_grid):
+        # curr_occ_grid[i][j] is either 'b', 'w', or '.' if empty.
+        # Same for prev_occ_grid.
         diff = {}
         for i in range(self.board_size):
             for j in range(self.board_size):
                 # same color handled implicitly, diff_grid[i][j] already 0
-                if (curr_occupancy_grid[i] == 'b' and prev_occupancy_grid[i][j] in ('w', '.')) or \
-                   (curr_occupancy_grid[i] == 'w' and prev_occupancy_grid[i][j] in ('b', '.')):
+                if (curr_occ_grid[i] == 'b' and prev_occ_grid[i][j] in ('w', '.')) or \
+                   (curr_occ_grid[i] == 'w' and prev_occ_grid[i][j] in ('b', '.')):
                     if 1 in diff:
                         diff[1].append((i, j))
                     else:
                         diff[1] = [(i, j)]
-                if curr_occupancy_grid[i] == '.' and prev_occupancy_grid[i][j] in ('w', 'b'):
+                if curr_occ_grid[i] == '.' and prev_occ_grid[i][j] in ('w', 'b'):
                     if -1 in diff:
                         diff[-1].append((i, j))
                     else:
                         diff[-1] = [(i, j)]
 
+        return diff
+
+    @staticmethod
+    def get_move_from_diff(diff):
         source, dest = None, None
         # Normal move, includes captures
         if len(diff[-1]) == 1:
@@ -66,20 +73,39 @@ class BoardStateDetector:
             raise RuntimeError("Computer vision detected an invalid change in board state."
                               f"Diff generated between subsequent states = {diff}")
 
-        return uci_move_from_boardcells(BoardCell(*source), BoardCell(*dest))
+        return util.uci_move_from_boardcells(util.BoardCell(*source), util.BoardCell(*dest))
+
+    def get_piece_type_from_square_img(self, square_img):
+        # Use classifier to identify and return piece type at specified square in curr_board_img
+        val = 0
+        # TODO: After classifier is trained/loaded in constructor, can uncomment below.
+        # val = self.type_classifier.predict(square_img)
+        return self.type_map[val] if val in self.type_map else None
 
     # TODO: Implement
-    def get_piece_type(self, curr_board_img, square):
-        # Use classifier to identify and return piece type at specified square in curr_board_img
-        pass
+    def align_and_segment_image(self, curr_board_img):
+        '''Takes in image of board and returns 2d np array of straightened/segmented image.
 
-    def get_current_board_state(self, curr_board_img):
-        curr_occupancy_grid = self.get_occupancy_grid(curr_board_img)
-        move = self.get_move_from_occupancy_diff(curr_occupancy_grid, self.prev_occupancy_grid)
-        if is_promotion(prev_board_img, move):
-            move += get_piece_type(curr_board_img, move)
-        self.prev_occupancy_grid = curr_occupancy_grid
-        self.prev_board_img = curr_board_img
+        First, the corners are detected (or hard coded definition of corners are used), then the
+        image is transformed s.t. all four corners of the board are the four corners of the image.
+        Then, math is used to splice out each board cell and these are stored in a 2d array where
+        each element of the array corresponds to a cell containing at most a single piece.
+        '''
+        return curr_board_img
+
+    def get_current_board_state(self, prev_board_fen, curr_board_img):
+        img_arr_2d = self.align_and_segment_image(curr_board_img)
+        curr_occ_grid = self.get_occupancy_grid(img_arr_2d)
+        move = BoardStateDetector.get_move_from_diff(self.get_occupancy_diff(curr_occ_grid,
+                                                                             self.prev_occ_grid))
+        if util.is_promotion(prev_board_fen, move):
+            idx = util.get_chess_coords_from_square(move[2:])
+            piece_type = self.get_piece_type_from_square_img(img_arr_2d[idx.row, idx.col])
+            if piece_type == 'p' or not piece_type:
+                raise RuntimeError("There was a problem detecting the type of the promoted piece. "
+                                   "Please use the GUI to indicate which piece you promoted to.")
+            move += piece_type
+        self.prev_occ_grid = curr_occ_grid
         return move
 
 def main():
