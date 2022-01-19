@@ -142,3 +142,10 @@ def get_2d_board(fen, turn=None):
         else:
             board_state.insert(0, brow)
     return board
+
+def is_promotion(prev_board_fen, move):
+    # If piece in prev_board_fen at square move[:2] is a pawn and move[2:] is the final rank,
+    # this is a promotion. Note: Don't need to check color since white pawn can't move to row 1
+    # and vice versa for black
+    return (get_piece_info_from_square(square, get_2d_board(prev_board_fen))[1] == 'p') and \
+           (move[3] in ('1', '8'))
