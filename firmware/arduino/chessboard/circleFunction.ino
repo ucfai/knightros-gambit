@@ -29,7 +29,7 @@ void makeCircle(int circle)
         }
 
         int slope;
-        if (quarterCircle == 0 || 2)
+        if (quarterCircle == 0 || quarterCircle == 2)
             slope = 0;
         else
             slope = NUM_SLOPES_PER_QUARTER_CIRCLE - 1;
