@@ -8,14 +8,14 @@ import random
 
 
 class Mcts:
-    # Implementation of Monte Carlo Tree Search.
-    #
-    # Attributes:
-    #     states_visited: List storing the states visited
-    #     n_values: Dictionary storing the n values
-    #     q_values: Dictionary storing the q values
-    #     exploration: The exploration rate for the tree search
-    #     p_values: Dictionary storing the search probabilites
+    """Implementation of Monte Carlo Tree Search.
+
+    Attributes:
+        states_visited: List storing the states visited
+        n_values: Dictionary storing the n values
+        q_values: Dictionary storing the q values
+        exploration: The exploration rate for the tree search
+        p_values: Dictionary storing the search probabilites"""
 
     def __init__(self, exploration):
         self.states_visited = []
@@ -24,23 +24,24 @@ class Mcts:
         self.p_values = {}
         self.policy_converter = PlayNetworkPolicyConverter()
 
-    # Get best possible move after running mcts_simulations number of simulations
     def get_best_move(self, mcts_simulations, board, nnet):
-        # TODO: find_search_probs is unnecessary, as we only need to get the node
-        # with the largest n_value rather than a probability distribution
+        """Get best possible move after running given number of simulations"""
+        fen_string = board.fen()
 
         for _ in range(mcts_simulations):
             self.search(board, nnet)
 
-        probs = self.find_search_probs(board.fen())
+        values = self.state_values[fen_string].values()
+        moves = list(self.state_values[fen_string].keys())
+        n_values = np.array(list(zip(*values))[0])
 
-        # TODO: Consider using find_best_move instead of find_best_legal move
-        best_move = self.policy_converter.find_best_legal_move(probs, board)
+        best_move_index = np.argmax(n_values)[0]
+        best_move = moves[best_move_index]
 
         return best_move
 
-    # Returns q and n values if they exist, otherwise initializes them
     def set_current_qn_value(self, fen_string, uci_move):
+        """Returns q and n values if they exist, otherwise initializes them"""
         if fen_string in self.state_values:
             if uci_move in self.state_values[fen_string]:
                 return self.state_values[fen_string][uci_move]
@@ -52,8 +53,8 @@ class Mcts:
             self.state_values[fen_string][uci_move] = [0, 0]
             return 0, 0
 
-    # Finds and returns the best move given the current state as a fen string and all legal moves.
-    def find_best_move(self, legal_moves, fen_string):
+    def find_tree_move(self, legal_moves, fen_string):
+        """Finds and returns the best move for the tree search."""
         best_u = -float("inf")
         best_move = -1
 
@@ -73,8 +74,8 @@ class Mcts:
 
         return best_move
 
-    # Update q_value and n_value
     def update_qn(self, fen_string, uci_move, value):
+        """Update q and n values after an expansion"""
         n_value, q_value = self.state_values[fen_string][uci_move]
 
         if not isinstance(value, int):
@@ -84,10 +85,10 @@ class Mcts:
         self.state_values[fen_string][uci_move][1] = (n_value * q_value + value)/(n_value + 1)
         self.state_values[fen_string][uci_move][0] += 1
 
-    # Calculates and returns the search probabilities from the n_values for given fen_string.
     def find_search_probs(self, fen_string, temperature):
+        """Returns the overall search probabilities after search() has been run"""
         # TODO: Create correct formula for calculating search probs
-        # Consider Dirchlet noise like in alpha zero for exploration
+        # Consider Dirichlet noise like in alpha zero for exploration
 
         values = self.state_values[fen_string].values()
         moves = list(self.state_values[fen_string].keys())
@@ -102,8 +103,8 @@ class Mcts:
         # Return list of uci_moves and corresponding search probabilities
         return list(self.state_values[fen_string].keys()), search_probs, move
 
-    # Method for performing a search on the tree.
     def search(self, board, nnet):
+        """Descends on the search tree and expands unvisited states"""
         fen_string = board.fen()
 
         # Assigns reward if game is over
@@ -123,7 +124,7 @@ class Mcts:
             return -value
 
         # Select move to descend with
-        move = self.find_best_move(board.legal_moves, fen_string)
+        move = self.find_tree_move(board.legal_moves, fen_string)
 
         # Obtain backed up leaf node evaluation
         board.push(move)
@@ -131,6 +132,7 @@ class Mcts:
         board.pop()
 
         # Update the Q and N values with the new evaluation
+        fen_string = board.fen()
         self.update_qn(fen_string, move.uci(), value)
 
         # Back up value to previous nodes
