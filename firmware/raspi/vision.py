@@ -1,9 +1,11 @@
 '''Helper file to get board state from images of board.
 '''
+# import cv2 as cv
+
 import util
 
 class BoardStateDetector:
-    def __init__(self):
+    def __init__(self, calibration_img):
         self.prev_occ_grid = None
         self.board_size = 8
         # self.type_classifier = torch.load(path_to_piece_classifier_model)
@@ -12,6 +14,46 @@ class BoardStateDetector:
         # self.col_classifier = torch.load(path_to_piece_classifier_model)
         # Note: col_classifier returns 0, 1, 2; convert to '.', 'w', or 'b' respectively
         self.col_map = {0: '.', 1: 'w', 2: 'b'}
+        self.trans_M, self.max_w, self.max_h = self.compute_img_trans_matrix(calibration_img)
+        self.img_dim = (800, 800)
+        self.sq_size = int(self.img_dim[0] / 8)
+
+    # TODO: Implement detecting image corners, 1) hard code them or 2) compute at startup.
+    @staticmethod
+    def get_board_corners(board_img):
+        pass
+
+    def compute_img_trans_matrix(self, calibration_img):
+        return None, None, None
+        # TODO: Once we figure out how to detect corners, can uncomment below
+
+        # corners = BoardStateDetector.get_board_corners(calibration_img)
+
+        # Below code taken from pyimagesearch article:
+        # https://www.pyimagesearch.com/2014/08/25/4-point-opencv-getperspective-transform-example/
+
+        # rect = np.zeros((4, 2), dtype = "float32")
+        # s = corners.sum(axis=1)
+        # rect[0] = corners[np.argmin(s)]
+        # rect[2] = corners[np.argmax(s)]
+        # diff = np.diff(corners, axis=1)
+        # rect[1] = corners[np.argmin(diff)]
+        # rect[3] = corners[np.argmax(diff)]
+        # (tl, tr, br, bl) = rect
+        # widthA = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
+        # widthB = np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
+        # maxWidth = max(int(widthA), int(widthB))
+        # heightA = np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2))
+        # heightB = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
+        # maxHeight = max(int(heightA), int(heightB))
+        # dst = np.array([
+        #     [0, 0],
+        #     [maxWidth - 1, 0],
+        #     [maxWidth - 1, maxHeight - 1],
+        #     [0, maxHeight - 1]], dtype="float32")
+        # # compute the perspective transform matrix and then apply it
+        # M = cv.getPerspectiveTransform(rect, dst)
+        # return M, maxWidth, maxHeight
 
     def get_occupancy_grid(self, img_arr_2d):
         '''
@@ -91,6 +133,14 @@ class BoardStateDetector:
         Then, math is used to splice out each board cell and these are stored in a 2d array where
         each element of the array corresponds to a cell containing at most a single piece.
         '''
+        # trans_img = cv.warpPerspective(curr_board_img, self.trans_M, (self.max_w, self.max_h))
+        # reduc_trans_img = cv.resize(trans_img, self.img_dim, interpolation = cv.INTER_AREA)
+        # img_arr_2d = [[None for _ in range(self.board_size)] for _ in range(self.board_size)]
+        # for i in range(self.board_size):
+        #     for j in range(self.board_size):
+        #         img_arr_2d[i][j] = reduc_trans_img[i * self.sq_size: (i + 1) * self.sq_size,
+        #                                            j * self.sq_size: (j + 1) * self.sq_size,
+        #                                            :]
         return curr_board_img
 
     def get_current_board_state(self, prev_board_fen, curr_board_img):
