@@ -1,13 +1,17 @@
 // Slopes: 0, 1/8, 1/4, 1/2, 1, 2, 4, 8, Vertical
 int stepsPerSlope[NUM_CIRCLES][NUM_SLOPES_PER_QUARTER_CIRCLE];
 
-void makeCircle(int circle)
+void makeCircle(int circle, int firstQuarter, int lastQuarter)
 {
+    bool firstPass = true;
+
     setScale(xMotor, EIGHTH_STEPS);
     digitalWrite(xMotor[STEP_PIN], LOW);
 
-    for (int quarterCircle = 0; quarterCircle < 4; quarterCircle++)
+    for (int quarterCircle = firstQuarter; quarterCircle != firstQuarter || firstPass; quarterCircle = (quarterCircle + 1) % 4)
     {
+        firstPass = false;
+
         // Set Y-direction
         if (quarterCircle == 0 || quarterCircle == 2)
         {
