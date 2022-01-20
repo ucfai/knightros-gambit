@@ -83,26 +83,27 @@ void home()
 // Moves the magnet from the "start" point to the "end" point
 // This can only move in straight lines
 // Returns a boolean indicating success/error
-bool moveStraight(int motor[], int startCol, int startRow, int endCol, int endRow)
+bool moveStraight(int motor[], float startCol, float startRow, float endCol, float endRow)
 {
   // A specific motor is passed to this function since we are only moving one here
 
   // How many steps per space
-  int spaces, dir, numSteps;
+  float pieceSpaces;
+  int dir, numSteps;
   int i;
 
   // This could be two cases, x or y movement
   if (endRow == startRow)
   {
     // X movement
-    spaces = 2 * abs(endCol - startCol);
+    pieceSpaces = fabs(endCol - startCol);
     dir = (endCol > startCol) ? RIGHT : LEFT;
     setScale(xMotor, WHOLE_STEPS);
   }
   else if (endCol == startCol)
   {
     // Y movement
-    spaces = 2 * abs(endRow - startRow);
+    pieceSpaces = fabs(endRow - startRow);
     dir = (endRow > startRow) ? UP : DOWN;
     setScale(yMotor, WHOLE_STEPS);
   }
@@ -111,7 +112,7 @@ bool moveStraight(int motor[], int startCol, int startRow, int endCol, int endRo
     return false;
   }
 
-  numSteps = spaces * stepsPerSpace;
+  numSteps = 2 * pieceSpaces * stepsPerSpace;
 
   // Enable motor driver inputs/output
   enableMotors();
@@ -137,22 +138,23 @@ bool moveStraight(int motor[], int startCol, int startRow, int endCol, int endRo
 // Moves the magnet from the "start" point to the "end" point
 // This can move in diagonal lines of slopes: 1, 2, and 1/2
 // Returns a boolean indicating success/error
-bool moveDiagonal(int startCol, int startRow, int endCol, int endRow)
+bool moveDiagonal(float startCol, float startRow, float endCol, float endRow)
 {
-  int dirX, dirY, spacesX, spacesY;
+  float pieceSpacesX, pieceSpacesY;
+  int dirX, dirY;
   int numStepsX, numStepsY;
   int i;
 
   // Abs ensures that numStepsX and numStepsY will be positive
   // to ensure proper for loop execution
-  spacesX = 2 * abs(endCol - startCol);
+  pieceSpacesX = abs(endCol - startCol);
   dirX = (endCol > startCol) ? RIGHT : LEFT;
 
-  spacesY = 2 * abs(endRow - startRow);
+  pieceSpacesY = abs(endRow - startRow);
   dirY = (endRow > startRow) ? UP : DOWN;
 
-  numStepsX = spacesX * stepsPerSpace;
-  numStepsY = spacesY * stepsPerSpace;
+  numStepsX = 2 * pieceSpacesX * stepsPerSpace;
+  numStepsY = 2 * pieceSpacesY * stepsPerSpace;
 
   enableMotors();
 
