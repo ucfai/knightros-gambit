@@ -34,7 +34,7 @@ class PlayNetwork(nn.Module):
                                                   padding=1,
                                                   bias=False),
                                         nn.BatchNorm2d(self.num_filters),
-                                        nn.ReLU(inplace=True))
+                                        nn.ReLU())
         
         # Each conv layer in a residual block uses 256 3x3 filters, padding used
         # to keep the channel dimensions constant.
@@ -44,7 +44,7 @@ class PlayNetwork(nn.Module):
                                                  padding=1,
                                                  bias=False), 
                                        nn.BatchNorm2d(self.num_filters), 
-                                       nn.ReLU(inplace=True), 
+                                       nn.ReLU(), 
                                        nn.Conv2d(in_channels=self.num_filters,
                                                  out_channels=self.num_filters,
                                                  kernel_size=3,
@@ -61,10 +61,10 @@ class PlayNetwork(nn.Module):
                                                    kernel_size=1,
                                                    bias=False),
                                          nn.BatchNorm2d(2),
-                                         nn.ReLU(inplace=True),
+                                         nn.ReLU(),
                                          nn.Flatten(),
                                          nn.Linear(in_features=2 * 8 * 8,
-                                                   out_features=73 * 8 * 8))
+                                                   out_features=8 * 8 * 73))
          
         # Convolve 256 8x8 channels into 8x8 channel, then use fully connected layer to
         # take 64 input features from 8x8 channel and transform to 256 output features,
@@ -74,11 +74,11 @@ class PlayNetwork(nn.Module):
                                                   kernel_size=1,
                                                   bias=False),
                                         nn.BatchNorm2d(1),
-                                        nn.ReLU(inplace=True),
+                                        nn.ReLU(),
                                         nn.Flatten(),
                                         nn.Linear(in_features=8 * 8,
                                                   out_features=self.num_filters),
-                                        nn.ReLU(inplace = True),
+                                        nn.ReLU(),
                                         nn.Linear(in_features=self.num_filters,
                                                   out_features=1),
                                         nn.Tanh())
@@ -119,7 +119,6 @@ def main():
     board = chess.Board()
     policy_converter = PlayNetworkPolicyConverter()
 
-    # policy, value = model(torch.randn(1, 19, 8, 8))
     policy, value = model(get_cnn_input(board).float())
     print(policy)
     print(value)
