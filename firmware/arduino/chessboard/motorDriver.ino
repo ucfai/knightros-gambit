@@ -95,14 +95,14 @@ bool moveStraight(int motor[], int startCol, int startRow, int endCol, int endRo
   if (endRow == startRow)
   {
     // X movement
-    spaces = abs(endCol - startCol);
+    spaces = 2 * abs(endCol - startCol);
     dir = (endCol > startCol) ? RIGHT : LEFT;
     setScale(xMotor, WHOLE_STEPS);
   }
   else if (endCol == startCol)
   {
     // Y movement
-    spaces = abs(endRow - startRow);
+    spaces = 2 * abs(endRow - startRow);
     dir = (endRow > startRow) ? UP : DOWN;
     setScale(yMotor, WHOLE_STEPS);
   }
@@ -145,10 +145,10 @@ bool moveDiagonal(int startCol, int startRow, int endCol, int endRow)
 
   // Abs ensures that numStepsX and numStepsY will be positive
   // to ensure proper for loop execution
-  spacesX = abs(endCol - startCol);
+  spacesX = 2 * abs(endCol - startCol);
   dirX = (endCol > startCol) ? RIGHT : LEFT;
 
-  spacesY = abs(endRow - startRow);
+  spacesY = 2 * abs(endRow - startRow);
   dirY = (endRow > startRow) ? UP : DOWN;
 
   numStepsX = spacesX * stepsPerSpace;
