@@ -92,6 +92,16 @@ bool moveStraight(int motor[], float startCol, float startRow, float endCol, flo
   int dir, numSteps;
   int i;
 
+  //makes sure all arguments are in whole unitSpaces
+  if (fmodf(startCol, 0.5) != 0)
+    return false;
+  else if (fmodf(startRow, 0.5) != 0)
+    return false;
+  else if (fmodf(endCol, 0.5) != 0)
+    return false;
+  else if (fmodf(endRow, 0.5) != 0)
+    return false;
+
   // This could be two cases, x or y movement
   if (endRow == startRow)
   {
@@ -112,7 +122,10 @@ bool moveStraight(int motor[], float startCol, float startRow, float endCol, flo
     return false;
   }
 
-  numSteps = 2 * pieceSpaces * stepsPerSpace;
+  if (pieceSpaces > floor(pieceSpaces))
+    numSteps = 2 * floor(pieceSpaces) * stepsPerSpace + stepsPerSpace
+  else 
+    numSteps = 2 * pieceSpaces * stepsPerSpace
 
   // Enable motor driver inputs/output
   enableMotors();
@@ -145,16 +158,33 @@ bool moveDiagonal(float startCol, float startRow, float endCol, float endRow)
   int numStepsX, numStepsY;
   int i;
 
+  //makes sure all arguments are in whole unitSpaces
+  if (fmodf(startCol, 0.5) != 0)
+    return false;
+  else if (fmodf(startRow, 0.5) != 0)
+    return false;
+  else if (fmodf(endCol, 0.5) != 0)
+    return false;
+  else if (fmodf(endRow, 0.5) != 0)
+    return false;
+
   // Abs ensures that numStepsX and numStepsY will be positive
   // to ensure proper for loop execution
-  pieceSpacesX = abs(endCol - startCol);
+  pieceSpacesX = fabs(endCol - startCol);
   dirX = (endCol > startCol) ? RIGHT : LEFT;
 
-  pieceSpacesY = abs(endRow - startRow);
+  pieceSpacesY = fabs(endRow - startRow);
   dirY = (endRow > startRow) ? UP : DOWN;
 
-  numStepsX = 2 * pieceSpacesX * stepsPerSpace;
-  numStepsY = 2 * pieceSpacesY * stepsPerSpace;
+  if (pieceSpacesX > floor(pieceSpacesX))
+    numStepsX = 2 * floor(pieceSpacesX) * stepsPerSpace + stepsPerSpace
+  else 
+    numStepsX = 2 * pieceSpacesX * stepsPerSpace
+
+  if (pieceSpacesY > floor(pieceSpacesY))
+    numStepsY = 2 * floor(pieceSpacesY) * stepsPerSpace + stepsPerSpace
+  else 
+    numStepsY = 2 * pieceSpacesY * stepsPerSpace
 
   enableMotors();
 
