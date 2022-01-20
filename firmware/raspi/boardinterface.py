@@ -56,7 +56,6 @@ class Engine:
         return self.chess_board.fen()
 
     @staticmethod
-    # TODO: replace this with a call to util.is_promotion(). Need previous_board_fen available.
     def is_promotion(uci_move):
         '''Returns boolean indicating if uci_move is a promotion.
         '''

@@ -143,8 +143,13 @@ def get_2d_board(fen, turn=None):
     return board
 
 def is_promotion(prev_board_fen, move):
-    # If piece in prev_board_fen at square move[:2] is a pawn and move[2:] is the final rank,
+    # Note: This differs from boardinterface.Engine.is_promotion in that it checks for a promotion
+    # in the case that the UCI move is not yet known. It is less efficient as it creates a 2d grid
+    # to check for the piece previously at the square, corresponding to move[:2], and thus should
+    # only be used when boardinterface.Engine.is_promotion can not be used.
+
+    # If piece in prev_board_fen at square move[:2] is a pawn and move[3] is the final rank,
     # this is a promotion. Note: Don't need to check color since white pawn can't move to row 1
     # and vice versa for black
-    return (get_piece_info_from_square(square, get_2d_board(prev_board_fen))[1] == 'p') and \
+    return (get_piece_info_from_square(move[:2], get_2d_board(prev_board_fen))[1] == 'p') and \
            (move[3] in ('1', '8'))
