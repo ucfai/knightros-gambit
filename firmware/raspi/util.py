@@ -110,8 +110,7 @@ def get_piece_info_from_square(square, grid):
 def get_chess_coords_from_square(square):
     '''Converts chess square to a BoardCell.
 
-    Example: a1 <=> [0, 0], h8 <=> [7, 7], regardless of whether human plays white or black
-    pieces.
+    Example: a1 <=> [0, 0], h8 <=> [7, 7], regardless of whether human plays white or black pieces.
     '''
     # Nums correspond to row (rank), letters correspond to col (files)
     return BoardCell(ord(square[1]) - ord('1'), ord(square[0]) - ord('a'))

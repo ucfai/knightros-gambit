@@ -73,16 +73,6 @@ class Engine:
         '''
         return self.chess_board.is_capture(self.chess_board.parse_uci(uci_move))
 
-    # @staticmethod
-    # def get_chess_coords_from_square(square):
-    #     '''Converts chess square to a BoardCell.
-
-    #     Example: a1 <=> [0, 0], h8 <=> [7, 7], regardless of whether human plays white or black
-    #     pieces.
-    #     '''
-    #     # Nums correspond to row (rank), letters correspond to col (files)
-    #     return util.BoardCell(ord(square[1]) - ord('1'), ord(square[0]) - ord('a'))
-
     def get_board_coords_from_square(self, square):
         '''Returns tuple of integers indicating grid coordinates from square
         '''
