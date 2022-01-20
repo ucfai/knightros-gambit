@@ -46,43 +46,30 @@ class MctsTrain:
             self.mcts_probs = []
             self.mcts_evals = []
             self.boards = []
-            # self.nn_probs = []
-            # self.nn_evals = []
 
             batch_size = 8
             num = 0
 
             for _ in range(epochs):
                 # The board needs to be initialized to the starting state
-
                 board = chess.Board()
-                # for __ in range(batch_size):
+
                 while True:
                     fen_string = board.fen()
 
-                    # Perform mcts simulation
-                    start = time.time()
-                    for __ in range(self.mcts_simulations):
+                    # Perform mcts simulations
+                    for _ in range(self.mcts_simulations):
                         self.mcts.search(board, nnet)
-                    stop = time.time()
-                    print(stop - start)
 
-                    # Need to get the moves and policy from the mcts
+                    # Gets the moves and policy from the mcts, as well as the individual move to take
                     # NOTE: moves[i] corresponds to search_probs[i]
-
                     moves, search_probs, move = self.mcts.find_search_probs(fen_string, 5)
             
                     # Store board state (used in training loop)
                     self.boards.append(fen_string)
 
-                    # Gets a random index from the move values from the network policy and makes random move
-                    # TODO: Choose move according to network move values and exploration , (use find best legal move?).
-
-
                     # Converts mcts search probabilites to (8,8,73) vector
-                    full_search_probs = self.policy_converter.compute_full_search_probs(moves,
-                                                                                        search_probs,
-                                                                                        board)
+                    full_search_probs = self.policy_converter.compute_full_search_probs(moves, search_probs, board)
                     
                     # Adds entry to the training examples
                     self.mcts_probs.append(full_search_probs)
@@ -93,19 +80,15 @@ class MctsTrain:
                     board.push(move)
                     print(board)
 
-                    # if the game is over then that is the end of the episode
+                    # If the game is over, end the episode
                     if board.is_game_over() or board.is_stalemate() or board.is_seventyfive_moves() or board.is_fivefold_repetition() or board.can_claim_draw():
-                        # Need to assign the rewards to the examples
                         self.assign_rewards(board)
                         break
 
-
-
-                # batch_size = len(self.training_examples)
                 self.mcts_probs = torch.tensor(np.array(self.mcts_probs)).float()
                 self.mcts_evals = torch.tensor(self.mcts_evals).float()
 
-                # Create iteratable dataset with mcts labels
+                # Create iterable dataset with mcts labels
                 dataset = TensorDataset(self.mcts_probs, self.mcts_evals)
                 train_dl = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=False)
 
@@ -114,7 +97,7 @@ class MctsTrain:
                 loss_fn2 = torch.nn.MSELoss()
 
                 # Create optimizer for updating parameters during training.
-                opt = torch.optim.SGD(nnet.parameters(), lr=self.lr)
+                opt = torch.optim.SGD(nnet.parameters(), lr=self.lr, weight_decay=0.001, momentum=0.9)
 
                 # Training Loop
                 for _ in range(epochs):
@@ -123,7 +106,6 @@ class MctsTrain:
                         with torch.enable_grad():
                             # Get the batch size based on the batch size of the training dataloader
                             batch_size = mcts_evals.size(dim=0)
-                            # print(batch_index)
 
                             policy_batch = []
                             value_batch = []
@@ -139,17 +121,18 @@ class MctsTrain:
                             value_batch = torch.stack(value_batch).flatten().float()
 
                             # Find the loss and store it
-                            loss = loss_fn1(policy_batch, mcts_probs) - loss_fn2(value_batch, mcts_evals)
+                            loss = loss_fn1(policy_batch, mcts_probs) + loss_fn2(value_batch, mcts_evals)
                             losses.append(loss.item())
 
                             # Calculate Gradients
                             loss.backward()
 
-                            #Update parameters
+                            # Update parameters
                             opt.step()
 
-                            #Reset gradients
+                            # Reset gradients
                             opt.zero_grad()
+
                     print(losses)
             
     def assign_rewards(self, board):

@@ -117,7 +117,7 @@ class Mcts:
 
             # Get predictions and value from the nnet at the current state
             policy, value = nnet(get_cnn_input(board).float())
-            policy = nnet.predict(policy, board)
+            policy = self.policy_converter.find_value_of_all_legal_moves(policy, board)
 
             # Update P with network's policy output
             self.p_values.update({fen_string: policy})

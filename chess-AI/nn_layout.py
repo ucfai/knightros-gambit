@@ -99,19 +99,7 @@ class PlayNetwork(nn.Module):
         policy = policy_out.reshape(8, 8, 73)
         return policy, value_out
 
-    def predict(self, policy, board):
-        """Function to get neural network output.
-        """
-        # TODO: this conversion should be done at the calling function, predict() should return
-        # the policy and value. Then, when you have the policy, you can convert it. This way we
-        # don't need to pass board to this function either. This should solely take the input
-        # state, run it through the net, then return the output.
 
-        policy_converter = PlayNetworkPolicyConverter()
-        move_values = policy_converter.find_value_of_all_legal_moves(policy, board)
-
-        return move_values
-                
 def main():
     model = PlayNetwork().float()
 
