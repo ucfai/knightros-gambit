@@ -147,3 +147,7 @@ cython_debug/
 
 # Jekyll stuff
 _site/
+
+# Mac files
+.DS_Store
+*/.DS_Store

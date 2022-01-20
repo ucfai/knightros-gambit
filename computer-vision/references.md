@@ -9,3 +9,5 @@
 - Chess id
   - https://medium.com/@daylenyang/building-chess-id-99afa57326cd
   - https://github.com/daylen/chess-id/blob/master/img_process.ipynb
+- [Chess arm (simple blob detector)](https://github.com/noahwhite07/chess-arm/blob/4181d7e952507a7f82bd0295cb7b1b8507350784/computer_vision.py#L8)
+- [Raspberry Turk chess piece presence](http://www.raspberryturk.com/notebooks/chess_piece_presence.html)
