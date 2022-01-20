@@ -92,7 +92,7 @@ bool moveStraight(int motor[], float startCol, float startRow, float endCol, flo
   int dir, numSteps;
   int i;
 
-  //makes sure all arguments are in whole unitSpaces
+  // Makes sure all arugments produce a multiple of unitspaces
   if (fmodf(startCol, 0.5) != 0)
     return false;
   else if (fmodf(startRow, 0.5) != 0)
@@ -122,10 +122,10 @@ bool moveStraight(int motor[], float startCol, float startRow, float endCol, flo
     return false;
   }
 
+  numSteps = 2 * (int)floor(pieceSpaces) * stepsPerUnitSpace;
+
   if (pieceSpaces > floor(pieceSpaces))
-    numSteps = 2 * floor(pieceSpaces) * stepsPerSpace + stepsPerSpace
-  else 
-    numSteps = 2 * pieceSpaces * stepsPerSpace
+    numSteps += stepsPerUnitSpace;
 
   // Enable motor driver inputs/output
   enableMotors();
@@ -158,7 +158,7 @@ bool moveDiagonal(float startCol, float startRow, float endCol, float endRow)
   int numStepsX, numStepsY;
   int i;
 
-  //makes sure all arguments are in whole unitSpaces
+  // Makes sure all arugments produce a multiple of unitspaces
   if (fmodf(startCol, 0.5) != 0)
     return false;
   else if (fmodf(startRow, 0.5) != 0)
@@ -176,15 +176,14 @@ bool moveDiagonal(float startCol, float startRow, float endCol, float endRow)
   pieceSpacesY = fabs(endRow - startRow);
   dirY = (endRow > startRow) ? UP : DOWN;
 
-  if (pieceSpacesX > floor(pieceSpacesX))
-    numStepsX = 2 * floor(pieceSpacesX) * stepsPerSpace + stepsPerSpace
-  else 
-    numStepsX = 2 * pieceSpacesX * stepsPerSpace
+  numStepsX = 2 * (int)floor(pieceSpacesX) * stepsPerUnitSpace
+  numStepsY = 2 * (int)floor(pieceSpacesY) * stepsPerUnitSpace
 
+  if (pieceSpacesX > floor(pieceSpacesX))
+    numStepsX += stepsPerUnitSpace;
+ 
   if (pieceSpacesY > floor(pieceSpacesY))
-    numStepsY = 2 * floor(pieceSpacesY) * stepsPerSpace + stepsPerSpace
-  else 
-    numStepsY = 2 * pieceSpacesY * stepsPerSpace
+    numStepsY += stepsPerUnitSpace;
 
   enableMotors();
 

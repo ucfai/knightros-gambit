@@ -41,8 +41,7 @@ int yMotor[5] = {Y_MOTOR_STEP, Y_MOTOR_DIR, Y_MOTOR_MS1, Y_MOTOR_MS2, Y_AXIS_END
 #define MILLIMETERS_PER_UNITSPACE 32
 #define STEPS_PER_MILLIMETER 5
 #define HOME_CALIBRATION_OFFSET 100
-float stepsPerSpace;
-float stepsPerSquare;
+float stepsPerUnitSpace;
 int currentX, currentY;
 
 // Motor directions
@@ -90,7 +89,7 @@ void setup()
   pinMode(Y_AXIS_ENDSTOP_SWITCH, INPUT);
   pinMode(CHESS_TIMER_BUTTON, INPUT);
 
-  stepsPerSpace = MILLIMETERS_PER_UNITSPACE * STEPS_PER_MILLIMETER;
+  stepsPerUnitSpace = MILLIMETERS_PER_UNITSPACE * STEPS_PER_MILLIMETER;
 
   Serial2.begin(115200, SERIAL_8N1, RX2, TX2);
   
