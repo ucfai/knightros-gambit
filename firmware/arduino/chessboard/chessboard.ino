@@ -38,7 +38,7 @@ int yMotor[5] = {Y_MOTOR_STEP, Y_MOTOR_DIR, Y_MOTOR_MS1, Y_MOTOR_MS2, Y_AXIS_END
 // ================================
 
 // Distance definitions
-#define MILLIMETERS_PER_SQUARE 63
+#define MILLIMETERS_PER_SQUARE 32
 #define STEPS_PER_MILLIMETER 5
 #define HOME_CALIBRATION_OFFSET 100
 float stepsPerSpace;
