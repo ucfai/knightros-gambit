@@ -93,13 +93,8 @@ bool moveStraight(int motor[], float startCol, float startRow, float endCol, flo
   int i;
 
   // Makes sure all arugments produce a multiple of unitspaces
-  if (fmodf(startCol, 0.5) != 0)
-    return false;
-  else if (fmodf(startRow, 0.5) != 0)
-    return false;
-  else if (fmodf(endCol, 0.5) != 0)
-    return false;
-  else if (fmodf(endRow, 0.5) != 0)
+  if (fmodf(startCol, 0.5) != 0 || fmodf(startRow, 0.5) != 0 ||
+      fmodf(endCol, 0.5) != 0 || fmodf(endRow, 0.5) != 0)
     return false;
 
   // This could be two cases, x or y movement
@@ -159,13 +154,8 @@ bool moveDiagonal(float startCol, float startRow, float endCol, float endRow)
   int i;
 
   // Makes sure all arugments produce a multiple of unitspaces
-  if (fmodf(startCol, 0.5) != 0)
-    return false;
-  else if (fmodf(startRow, 0.5) != 0)
-    return false;
-  else if (fmodf(endCol, 0.5) != 0)
-    return false;
-  else if (fmodf(endRow, 0.5) != 0)
+  if (fmodf(startCol, 0.5) != 0 || fmodf(startRow, 0.5) != 0 ||
+      fmodf(endCol, 0.5) != 0 || fmodf(endRow, 0.5) != 0)
     return false;
 
   // Abs ensures that numStepsX and numStepsY will be positive
@@ -176,8 +166,8 @@ bool moveDiagonal(float startCol, float startRow, float endCol, float endRow)
   pieceSpacesY = fabs(endRow - startRow);
   dirY = (endRow > startRow) ? UP : DOWN;
 
-  numStepsX = 2 * (int)floor(pieceSpacesX) * stepsPerUnitSpace
-  numStepsY = 2 * (int)floor(pieceSpacesY) * stepsPerUnitSpace
+  numStepsX = 2 * (int)floor(pieceSpacesX) * stepsPerUnitSpace;
+  numStepsY = 2 * (int)floor(pieceSpacesY) * stepsPerUnitSpace;
 
   if (pieceSpacesX > floor(pieceSpacesX))
     numStepsX += stepsPerUnitSpace;
