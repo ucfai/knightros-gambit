@@ -24,6 +24,9 @@ class BoardCell:
         '''
         return (self.row, self.col)
 
+    def to_chess_sq(self):
+        return chr(self.col + ord('a')) + chr(self.row + ord('1'))
+
 def create_stockfish_wrapper():
     '''Create simple wrapper around stockfish python module depending on operating system type.
     '''
@@ -91,6 +94,27 @@ def init_capture_squares():
 
     return w_capture_sq, b_capture_sq
 
+def uci_move_from_boardcells(source, dest):
+    return source.to_chess_sq() + dest.to_chess_sq()
+
+def get_piece_info_from_square(square, grid):
+    '''Returns tuple of color and piece type from provided square.
+    '''
+    coords = get_chess_coords_from_square(square)
+    piece_w_color = grid[coords.row][coords.col]
+    if piece_w_color == '.':
+        return (None, None)
+    color = 'w' if piece_w_color.isupper() else 'b'
+    return (color, piece_w_color.lower())
+
+def get_chess_coords_from_square(square):
+    '''Converts chess square to a BoardCell.
+
+    Example: a1 <=> [0, 0], h8 <=> [7, 7], regardless of whether human plays white or black pieces.
+    '''
+    # Nums correspond to row (rank), letters correspond to col (files)
+    return BoardCell(ord(square[1]) - ord('1'), ord(square[0]) - ord('a'))
+
 def get_2d_board(fen, turn=None):
     '''Returns a 2d board from fen representation
 
@@ -116,3 +140,15 @@ def get_2d_board(fen, turn=None):
         else:
             board_state.insert(0, brow)
     return board
+
+def is_promotion(prev_board_fen, move):
+    # Note: This differs from boardinterface.Engine.is_promotion in that it checks for a promotion
+    # in the case that the UCI move is not yet known. It is less efficient as it creates a 2d grid
+    # to check for the piece previously at the square, corresponding to move[:2], and thus should
+    # only be used when boardinterface.Engine.is_promotion can not be used.
+
+    # If piece in prev_board_fen at square move[:2] is a pawn and move[3] is the final rank,
+    # this is a promotion. Note: Don't need to check color since white pawn can't move to row 1
+    # and vice versa for black
+    return (get_piece_info_from_square(move[:2], get_2d_board(prev_board_fen))[1] == 'p') and \
+           (move[3] in ('1', '8'))

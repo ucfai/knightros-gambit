@@ -73,20 +73,10 @@ class Engine:
         '''
         return self.chess_board.is_capture(self.chess_board.parse_uci(uci_move))
 
-    @staticmethod
-    def get_chess_coords_from_square(square):
-        '''Converts chess square to a BoardCell.
-
-        Example: a1 <=> [0, 0], h8 <=> [7, 7], regardless of whether human plays white or black
-        pieces.
-        '''
-        # Nums correspond to row (rank), letters correspond to col (files)
-        return util.BoardCell(ord(square[1]) - ord('1'), ord(square[0]) - ord('a'))
-
     def get_board_coords_from_square(self, square):
         '''Returns tuple of integers indicating grid coordinates from square
         '''
-        sq_to_xy = Engine.get_chess_coords_from_square(square)
+        sq_to_xy = util.get_chess_coords_from_square(square)
 
         # From top down perspective with human on "bottom", bottom left corner is (0, 0)
         # If human plays white pieces, then "a1" corresponds to BoardCell (2, 2) and "h8"
@@ -105,8 +95,8 @@ class Engine:
         '''
         # TODO: consider case of promotion. Maybe this should return three-tuple with optional
         # third value that is None when not a promotion.
-        return (Engine.get_chess_coords_from_square(uci_move[:2]),
-                Engine.get_chess_coords_from_square(uci_move[2:4]))
+        return (util.get_chess_coords_from_square(uci_move[:2]),
+                util.get_chess_coords_from_square(uci_move[2:4]))
 
     def get_board_coords_from_uci_move(self, uci_move):
         '''Returns tuple of BoardCells w.r.t. phyiscal board (including graveyard and edges).
@@ -121,13 +111,7 @@ class Engine:
     def get_piece_info_from_square(self, square):
         '''Returns tuple of color and piece type from provided square.
         '''
-        grid = util.get_2d_board(self.chess_board.fen())
-        coords = Engine.get_chess_coords_from_square(square)
-        piece_w_color = grid[coords.row][coords.col]
-        if piece_w_color == '.':
-            return (None, None)
-        color = 'w' if piece_w_color.isupper() else 'b'
-        return (color, piece_w_color.lower())
+        return util.get_piece_info_from_square(square, util.get_2d_board(self.fen()))
 
     def outcome(self):
         '''Returns None if game in progress, otherwise outcome of game.
@@ -260,7 +244,7 @@ class Board:
         '''Prints board as 2d grid.
         '''
         # (0, 0) corresponds to a1, want to print s.t. a1 is bottom left, so reverse rows
-        chess_grid = util.get_2d_board(self.engine.chess_board.fen())
+        chess_grid = util.get_2d_board(self.engine.fen())
         chess_grid.reverse()
         # 8 x 8 chess board
         for i in range(8):
@@ -340,7 +324,7 @@ class Board:
 
         source, dest = Engine.get_chess_coords_from_uci_move(uci_move)
 
-        board_2d = util.get_2d_board(self.engine.chess_board.fen())
+        board_2d = util.get_2d_board(self.engine.fen())
         # Cut number of cases from 8 to 4 by treating soure and dest interchangeably
         left, right = (source, dest) if source.col < dest.col else (dest, source)
         if left.col == right.col - 1:
