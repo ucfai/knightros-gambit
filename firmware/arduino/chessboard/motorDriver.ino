@@ -176,8 +176,8 @@ bool moveDiagonal(float startCol, float startRow, float endCol, float endRow)
   pieceSpacesY = fabs(endRow - startRow);
   dirY = (endRow > startRow) ? UP : DOWN;
 
-  numStepsX = 2 * (int)floor(pieceSpacesX) * stepsPerUnitSpace
-  numStepsY = 2 * (int)floor(pieceSpacesY) * stepsPerUnitSpace
+  numStepsX = 2 * (int)floor(pieceSpacesX) * stepsPerUnitSpace;
+  numStepsY = 2 * (int)floor(pieceSpacesY) * stepsPerUnitSpace;
 
   if (pieceSpacesX > floor(pieceSpacesX))
     numStepsX += stepsPerUnitSpace;
