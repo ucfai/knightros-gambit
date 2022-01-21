@@ -1,9 +1,9 @@
 import random
+import time
 
 import chess
 import torch
 import numpy as np
-import time
 from torch.utils.data import DataLoader, TensorDataset
 
 from mcts import Mcts
@@ -78,7 +78,9 @@ class MctsTrain:
                     # print(board)
 
                     # If the game is over, end the episode
-                    if board.is_game_over() or board.is_stalemate() or board.is_seventyfive_moves() or board.is_fivefold_repetition() or board.can_claim_draw():
+                    # TODO: Consider removing `board.can_claim_draw()` as it may be slow to check.
+                    # See https://python-chess.readthedocs.io/en/latest/core.html#chess.Board.can_claim_draw
+                    if board.is_game_over() or board.can_claim_draw():
                         self.mcts_evals = torch.zeros(len(self.mcts_probs))
                         self.assign_rewards(board)
                         break

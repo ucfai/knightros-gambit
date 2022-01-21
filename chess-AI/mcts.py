@@ -1,12 +1,11 @@
 from math import sqrt
-import numpy as np
-from output_representation import PlayNetworkPolicyConverter
 import random
-from state_representation import get_cnn_input
+
+import numpy as np
 import torch
 
-
-
+from output_representation import PlayNetworkPolicyConverter
+from state_representation import get_cnn_input
 
 
 class Mcts:

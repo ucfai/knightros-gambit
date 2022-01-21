@@ -3,7 +3,7 @@ import torch
 
 import chess
 
-# change input_states to include the past 8 moves and add 14 planes for each past move 
+# TODO: change input_states to include the past 8 moves and add 14 planes for each past move
 # (12 for pieces and 2 for repetition) to the cnn_input to make it 119 channels
 
 
