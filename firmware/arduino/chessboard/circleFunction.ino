@@ -14,23 +14,15 @@ void makeCircle(int circle, int firstQuarter, int lastQuarter)
 
         // Set Y-direction
         if (quarterCircle == 0 || quarterCircle == 2)
-        {
             digitalWrite(yMotor[DIR_PIN], DOWN);
-        }
         else
-        {
             digitalWrite(yMotor[DIR_PIN], UP);
-        }
 
         // Set X-direction
         if (quarterCircle == 0 || quarterCircle == 3)
-        {
             digitalWrite(xMotor[DIR_PIN], LEFT);
-        }
         else
-        {
             digitalWrite(xMotor[DIR_PIN], RIGHT);
-        }
 
         int slope;
         if (quarterCircle == 0 || quarterCircle == 2)
@@ -84,4 +76,106 @@ void makeCircle(int circle, int firstQuarter, int lastQuarter)
                 slope--;
         }
     }
+}
+
+void calculateStepsPerSlope(){
+
+    int outerRadius, deltaR;
+
+    // Calculate the radius of the largest circle in eighth steps
+    outerRadius = MILLIMETERS_PER_SQUARE * STEPS_PER_MILLIMETER * 2;
+
+    // Ensure that each radius is evenly spaced from the center
+    outerRadius = outerRadius - outerRadius % NUM_CIRCLES;
+
+    // Calculate the spacing between the circles
+    deltaR = outerRadius / NUM_CIRCLES;
+
+    // Loop over each circle
+    for (int circle = 0; circle < NUM_CIRCLES; circle++)
+    {
+        int radius, xStepsRemaining, yStepsRemaining;
+
+        radius = outerRadius - deltaR * circle;
+        xStepsRemaining = radius;
+        yStepsRemaining = radius;
+
+        // Horizontal steps
+        while(getSlope(radius, xStepsRemaining, yStepsRemaining) < 1.0/16.0)
+        {
+           stepsPerSlope[circle][0]++;
+           xStepsRemaining--;
+        }
+
+        // Eighth slope steps
+        while(getSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0/16.0 && xStepsRemaining >= 8)
+        {
+            stepsPerSlope[circle][1]++;
+            xStepsRemaining -= 8;
+            yStepsRemaining--;
+        }
+
+        // Quarter slope steps
+        while(getSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0/8.0 && xStepsRemaining >= 4)
+        {
+            stepsPerSlope[circle][2]++;
+            xStepsRemaining -= 4;
+            yStepsRemaining--;
+        }
+
+        // Half slope steps
+        while(getSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0/4.0 && xStepsRemaining >= 2)
+        {
+            stepsPerSlope[circle][3]++;
+            xStepsRemaining -= 2;
+            yStepsRemaining--;
+        }
+
+        // Slope=1 steps
+        while(getSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0/2.0)
+        {
+            stepsPerSlope[circle][4]++;
+            xStepsRemaining--;
+            yStepsRemaining--;
+        }
+
+        // Slope=2 steps
+        while(getSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0 && yStepsRemaining >= 2)
+        {
+            stepsPerSlope[circle][5]++;
+            xStepsRemaining--;
+            yStepsRemaining -= 2;
+        }
+
+        // Slope=4 steps
+        while(getSlope(radius, xStepsRemaining, yStepsRemaining) < 6.0 && yStepsRemaining >= 4)
+        {
+            stepsPerSlope[circle][6]++;
+            xStepsRemaining--;
+            yStepsRemaining -= 4;
+        }
+
+        // Slope=8 steps
+        while(getSlope(radius, xStepsRemaining, yStepsRemaining) < 12.0 && yStepsRemaining >= 8)
+        {
+            stepsPerSlope[circle][7]++;
+            xStepsRemaining--;
+            yStepsRemaining -= 8;
+        }
+
+        // Add any leftover x-steps to the beginning of the circle
+        stepsPerSlope[circle][0] += xStepsRemaining;
+
+        // Remaining y-steps are vertical moves at the end
+        stepsPerSlope[circle][8] += yStepsRemaining;
+    }
+}
+
+float getSlope(int radius, int xStepsRemaining, int yStepsRemaining)
+{
+    // Return extremely steep slope when yStepsRemaining == 0
+    if (yStepsRemaining == 0)
+        return 10000.0;
+    
+    return ((float) radius - xStepsRemaining) / yStepsRemaining;
 }
