@@ -95,8 +95,7 @@ class MctsTrain:
         with torch.no_grad():
             # Obtain data from games and separate into appropriate lists
             game_data = [self.training_game(nnet) for _ in range(games)]
-            # board_fens, state_values, mcts_probs = reduce(lambda g1, g2: (torch.cat(x,y) for x, y in zip(g1, g2)), game_data)
-            board_fens, state_values, mcts_probs = (x+y for x, y in zip(game_data[0], game_data[1]))
+            board_fens, state_values, mcts_probs = reduce(lambda g1, g2: (x+y for x, y in zip(g1, g2)), game_data)
 
             inputs = torch.stack([get_cnn_input(chess.Board(fen)) for fen in board_fens])
             mcts_probs = torch.tensor(np.array(mcts_probs)).float()
