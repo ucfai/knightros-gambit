@@ -1,10 +1,12 @@
 from math import sqrt
-# import pandas as pd
 import numpy as np
-from state_representation import get_cnn_input
 from output_representation import PlayNetworkPolicyConverter
-import torch
 import random
+from state_representation import get_cnn_input
+import torch
+
+
+
 
 
 class Mcts:
@@ -15,7 +17,8 @@ class Mcts:
         n_values: Dictionary storing the n values
         q_values: Dictionary storing the q values
         exploration: The exploration rate for the tree search
-        p_values: Dictionary storing the search probabilites"""
+        p_values: Dictionary storing the search probabilities
+        """
 
     def __init__(self, exploration):
         self.states_visited = []
@@ -42,16 +45,13 @@ class Mcts:
 
     def set_current_qn_value(self, fen_string, uci_move):
         """Returns q and n values if they exist, otherwise initializes them"""
-        if fen_string in self.state_values:
-            if uci_move in self.state_values[fen_string]:
-                return self.state_values[fen_string][uci_move]
-            else:
-                self.state_values[fen_string][uci_move] = [0, 0]
-                return 0, 0
-        else:
+        if fen_string not in self.state_values:
             self.state_values[fen_string] = {}
             self.state_values[fen_string][uci_move] = [0, 0]
-            return 0, 0
+        elif uci_move not in self.state_values[fen_string]:
+            self.state_values[fen_string][uci_move] = [0, 0]
+
+        return self.state_values[fen_string][uci_move]
 
     def find_tree_move(self, legal_moves, fen_string):
         """Finds and returns the best move for the tree search."""
@@ -78,9 +78,6 @@ class Mcts:
         """Update q and n values after an expansion"""
         n_value, q_value = self.state_values[fen_string][uci_move]
 
-        if not isinstance(value, int):
-            value = float(value.numpy())
-
         # Average new value into q_value and increment n_value for the new node visit
         self.state_values[fen_string][uci_move][1] = (n_value * q_value + value)/(n_value + 1)
         self.state_values[fen_string][uci_move][0] += 1
@@ -97,7 +94,7 @@ class Mcts:
         # Get flattened probability distribution
         n_values = torch.from_numpy(n_values)
         n_values = n_values ** (1 / temperature)
-        search_probs = torch.nn.functional.softmax(n_values.float())
+        search_probs = n_values/sum(n_values)
         move = random.choices(moves, search_probs)[0]
 
         # Return list of uci_moves and corresponding search probabilities
@@ -116,11 +113,11 @@ class Mcts:
             self.states_visited.append(fen_string)
 
             # Get predictions and value from the nnet at the current state
-            policy, value = nnet(get_cnn_input(board).float())
-            policy = self.policy_converter.find_value_of_all_legal_moves(policy, board)
+            policy, value = nnet(get_cnn_input(board))
+            policy_legal = self.policy_converter.find_value_of_all_legal_moves(policy, board)
 
             # Update P with network's policy output
-            self.p_values.update({fen_string: policy})
+            self.p_values.update({fen_string: policy_legal})
             return -value
 
         # Select move to descend with

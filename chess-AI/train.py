@@ -4,15 +4,13 @@ import chess
 import torch
 import numpy as np
 import time
-from torch.autograd import backward
-from torch.functional import Tensor
 from torch.utils.data import DataLoader, TensorDataset
 
 from mcts import Mcts
 from nn_layout import PlayNetwork
 from output_representation import PlayNetworkPolicyConverter
 from state_representation import get_cnn_input
-# from self_play_dataset import SelfPlayDataset
+
 
 class MctsTrain:
     """This class is used to run the monte carlo simulations and drive the model training.
@@ -32,7 +30,7 @@ class MctsTrain:
         self.mcts_evals = []
 
         # Stores board fen strings
-        self.boards = []
+        self.board_fens = []
 
         self.mcts = Mcts(exploration)
         self.policy_converter = PlayNetworkPolicyConverter()
@@ -45,7 +43,7 @@ class MctsTrain:
             # At each episode need to set the training example and network predictions to empty
             self.mcts_probs = []
             self.mcts_evals = []
-            self.boards = []
+            self.board_fens = []
 
             batch_size = 8
             num = 0
@@ -63,38 +61,38 @@ class MctsTrain:
 
                     # Gets the moves and policy from the mcts, as well as the individual move to take
                     # NOTE: moves[i] corresponds to search_probs[i]
-                    moves, search_probs, move = self.mcts.find_search_probs(fen_string, 5)
+                    moves, search_probs, move = self.mcts.find_search_probs(fen_string, temperature=5)
             
                     # Store board state (used in training loop)
-                    self.boards.append(fen_string)
+                    self.board_fens.append(fen_string)
 
                     # Converts mcts search probabilites to (8,8,73) vector
                     full_search_probs = self.policy_converter.compute_full_search_probs(moves, search_probs, board)
                     
                     # Adds entry to the training examples
                     self.mcts_probs.append(full_search_probs)
-                    self.mcts_evals.append(None)
 
                     # Makes the random action on the board, and gets fen string
                     move = chess.Move.from_uci(move)
                     board.push(move)
-                    print(board)
+                    # print(board)
 
                     # If the game is over, end the episode
                     if board.is_game_over() or board.is_stalemate() or board.is_seventyfive_moves() or board.is_fivefold_repetition() or board.can_claim_draw():
+                        self.mcts_evals = torch.zeros(len(self.mcts_probs))
                         self.assign_rewards(board)
                         break
 
                 self.mcts_probs = torch.tensor(np.array(self.mcts_probs)).float()
-                self.mcts_evals = torch.tensor(self.mcts_evals).float()
+                self.mcts_evals = self.mcts_evals.float()
 
                 # Create iterable dataset with mcts labels
                 dataset = TensorDataset(self.mcts_probs, self.mcts_evals)
                 train_dl = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=False)
 
                 # Define loss functions
-                loss_fn1 = torch.nn.CrossEntropyLoss()
-                loss_fn2 = torch.nn.MSELoss()
+                ce_loss_fn = torch.nn.CrossEntropyLoss()
+                mse_loss_fn = torch.nn.MSELoss()
 
                 # Create optimizer for updating parameters during training.
                 opt = torch.optim.SGD(nnet.parameters(), lr=self.lr, weight_decay=0.001, momentum=0.9)
@@ -112,7 +110,7 @@ class MctsTrain:
                             
                             # Store policies and values for entire batch
                             for i in range(batch_size):
-                                policy, value = nnet(get_cnn_input(chess.Board(self.boards[i + batch_index * 8])).float())
+                                policy, value = nnet(get_cnn_input(chess.Board(self.board_fens[i + batch_index * 8])))
                                 policy_batch.append(policy)
                                 value_batch.append(value)
 
@@ -121,7 +119,7 @@ class MctsTrain:
                             value_batch = torch.stack(value_batch).flatten().float()
 
                             # Find the loss and store it
-                            loss = loss_fn1(policy_batch, mcts_probs) + loss_fn2(value_batch, mcts_evals)
+                            loss = ce_loss_fn(policy_batch, mcts_probs) + mse_loss_fn(value_batch, mcts_evals)
                             losses.append(loss.item())
 
                             # Calculate Gradients
@@ -139,9 +137,8 @@ class MctsTrain:
         """Iterates through training examples and assigns rewards based on result of the game.
         """
         reward = 0
-        if not board.outcome() == None:
-            if not board.outcome().winner == None:
-                reward = -1
+        if (board.outcome() is not None) and (board.outcome().winner is not None):
+            reward = -1
         for move_num in range(len(self.mcts_evals) - 1, -1, -1):
             reward *= -1
             self.mcts_evals[move_num] = reward
@@ -151,13 +148,14 @@ class MctsTrain:
         print(self.mcts_evals)
         print(board.outcome())
 
+
 def main():
     # Gets the neural network, and performs and episode
     nnet = PlayNetwork()
-    train = MctsTrain(mcts_simulations=100, exploration=5, lr=0.2)
+    train = MctsTrain(mcts_simulations=5, exploration=5, lr=0.1)
 
     # TODO: Make training support epochs
-    for _ in range(5):
+    for _ in range(10):
         train.training_episode(nnet, 1)
 
 

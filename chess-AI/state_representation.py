@@ -1,5 +1,6 @@
-import torch
 import numpy as np
+import torch
+
 import chess
 
 # change input_states to include the past 8 moves and add 14 planes for each past move 
@@ -53,7 +54,7 @@ def get_cnn_input(board_state):
     cnn_input = torch.from_numpy(np.array([np.concatenate((get_piece_planes(board2d, turn), get_castle_planes(castling, turn),
                                                  get_turn_plane(turn), count_plane, pointless_count), axis=0)]))
 
-    return cnn_input
+    return cnn_input.float()
 
 
 def fen_to_board(fen, turn):
