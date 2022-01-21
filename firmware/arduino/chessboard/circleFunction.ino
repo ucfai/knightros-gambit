@@ -51,11 +51,11 @@ void makeCircle(int circle, int firstQuarter)
         while (slopeIndex >= SLOPE_HORIZONTAL  &&  slopeIndex <= SLOPE_VERTICAL)
         {
             // Y-scale
-            if (slopeIndex == 5)
+            if (slopeIndex == SLOPE_TWO)
                 setScale(yMotor, QUARTER_STEPS);    
-            else if (slopeIndex == 6)
+            else if (slopeIndex == SLOPE_FOUR)
                 setScale(yMotor, HALF_STEPS);    
-            else if (slopeIndex == 7)
+            else if (slopeIndex == SLOPE_EIGHT)
                 setScale(yMotor, WHOLE_STEPS);    
             else
                 setScale(yMotor, EIGHTH_STEPS);    
