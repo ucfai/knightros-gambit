@@ -213,6 +213,7 @@ void calculatePulsesPerSlope(){
 }
 
 // Returns the instantaneous slope of a circle at the current x and y coordinates
+// xStepsRemaining and yStepsRemaining must be less than or equal to the radius
 float getInstantaneousSlope(int radius, int xStepsRemaining, int yStepsRemaining)
 {
     // Return extremely steep slope when yStepsRemaining == 0
