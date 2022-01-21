@@ -1,8 +1,9 @@
-import torch
-import chess
 import numpy as np
+import torch
 
-# change input_states to include the past 8 moves and add 14 planes for each past move 
+import chess
+
+# TODO: change input_states to include the past 8 moves and add 14 planes for each past move
 # (12 for pieces and 2 for repetition) to the cnn_input to make it 119 channels
 
 
@@ -50,9 +51,10 @@ def get_cnn_input(board_state):
     count_plane = np.full((1, 8, 8), round((float(move_count) - 1) / 74, 3))
     pointless_count = np.full((1, 8, 8), (int(half_count) / 2))
 
-    cnn_input = torch.from_numpy(np.concatenate((get_piece_planes(board2d, turn), get_castle_planes(castling, turn),
-                                                 get_turn_plane(turn), count_plane, pointless_count), axis=0))
-    return cnn_input
+    cnn_input = torch.from_numpy(np.array([np.concatenate((get_piece_planes(board2d, turn), get_castle_planes(castling, turn),
+                                                 get_turn_plane(turn), count_plane, pointless_count), axis=0)]))
+
+    return cnn_input.float()
 
 
 def fen_to_board(fen, turn):
