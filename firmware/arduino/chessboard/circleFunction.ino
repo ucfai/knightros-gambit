@@ -15,7 +15,7 @@ enum SlopeToIndex
 
 
 // Makes a full circle of the given size (0=largest, NUM_CIRCLES-1=smallest) 
-// starting from the given quarter (0=top, 1=left, 2=bottom, 3=right).
+// starting from the given quadrant (0=top, 1=left, 2=bottom, 3=right).
 // calculatePulsesPerSlope() must be called before makeCircle()
 void makeCircle(int circle, int firstQuarter)
 {
@@ -25,24 +25,24 @@ void makeCircle(int circle, int firstQuarter)
     setScale(xMotor, EIGHTH_STEPS);
     digitalWrite(xMotor[STEP_PIN], LOW);
 
-    for (int quarterCircle = firstQuarter; quarterCircle != firstQuarter || firstPass; quarterCircle = (quarterCircle + 1) % 4)
+    for (int quarter = firstQuarter; quarter != firstQuarter || firstPass; quarter = (quarter + 1) % 4)
     {
         firstPass = false;
 
         // Set Y-direction
-        if (quarterCircle == 0 || quarterCircle == 1)
+        if (quarter == 0 || quarter == 1)
             digitalWrite(yMotor[DIR_PIN], DOWN);
         else
             digitalWrite(yMotor[DIR_PIN], UP);
 
         // Set X-direction
-        if (quarterCircle == 0 || quarterCircle == 3)
+        if (quarter == 0 || quarter == 3)
             digitalWrite(xMotor[DIR_PIN], LEFT);
         else
             digitalWrite(xMotor[DIR_PIN], RIGHT);
 
         // Set starting point for the while loop
-        if (quarterCircle == 0 || quarterCircle == 2)
+        if (quarter == 0 || quarter == 2)
             slopeIndex = SLOPE_HORIZONTAL;
         else
             slopeIndex = NUM_SLOPES_PER_QUARTER_CIRCLE - 1;
@@ -105,7 +105,7 @@ void makeCircle(int circle, int firstQuarter)
             }
 
             // Increment or Decrement slopeIndex
-            if (quarterCircle == 0 || quarterCircle == 2)
+            if (quarter == 0 || quarter == 2)
                 slopeIndex++;
             else
                 slopeIndex--;
@@ -114,7 +114,7 @@ void makeCircle(int circle, int firstQuarter)
 }
 
 // Calculates and stores the number of pulses that need to be made at each slope
-// Based on MILLIMETERS_PER_UNITSPACE, STEPS_PER_MILLIMETER, and NUM_CIRCLES 
+// Creates evenly spaced circles based on MILLIMETERS_PER_UNITSPACE, STEPS_PER_MILLIMETER, and NUM_CIRCLES 
 void calculatePulsesPerSlope(){
 
     int outerRadius, deltaR;
