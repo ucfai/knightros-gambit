@@ -83,26 +83,32 @@ void home()
 // Moves the magnet from the "start" point to the "end" point
 // This can only move in straight lines
 // Returns a boolean indicating success/error
-bool moveStraight(int motor[], int startCol, int startRow, int endCol, int endRow)
+bool moveStraight(int motor[], float startCol, float startRow, float endCol, float endRow)
 {
   // A specific motor is passed to this function since we are only moving one here
 
   // How many steps per space
-  int spaces, dir, numSteps;
+  float pieceSpaces;
+  int dir, numSteps;
   int i;
+
+  // Makes sure all arugments produce a multiple of unitspaces
+  if (fmodf(startCol, 0.5) != 0 || fmodf(startRow, 0.5) != 0 ||
+      fmodf(endCol, 0.5) != 0 || fmodf(endRow, 0.5) != 0)
+    return false;
 
   // This could be two cases, x or y movement
   if (endRow == startRow)
   {
     // X movement
-    spaces = abs(endCol - startCol);
+    pieceSpaces = fabs(endCol - startCol);
     dir = (endCol > startCol) ? RIGHT : LEFT;
     setScale(xMotor, WHOLE_STEPS);
   }
   else if (endCol == startCol)
   {
     // Y movement
-    spaces = abs(endRow - startRow);
+    pieceSpaces = fabs(endRow - startRow);
     dir = (endRow > startRow) ? UP : DOWN;
     setScale(yMotor, WHOLE_STEPS);
   }
@@ -111,7 +117,10 @@ bool moveStraight(int motor[], int startCol, int startRow, int endCol, int endRo
     return false;
   }
 
-  numSteps = spaces * stepsPerSpace;
+  numSteps = 2 * (int)floor(pieceSpaces) * stepsPerUnitSpace;
+
+  if (pieceSpaces > floor(pieceSpaces))
+    numSteps += stepsPerUnitSpace;
 
   // Enable motor driver inputs/output
   enableMotors();
@@ -137,22 +146,34 @@ bool moveStraight(int motor[], int startCol, int startRow, int endCol, int endRo
 // Moves the magnet from the "start" point to the "end" point
 // This can move in diagonal lines of slopes: 1, 2, and 1/2
 // Returns a boolean indicating success/error
-bool moveDiagonal(int startCol, int startRow, int endCol, int endRow)
+bool moveDiagonal(float startCol, float startRow, float endCol, float endRow)
 {
-  int dirX, dirY, spacesX, spacesY;
+  float pieceSpacesX, pieceSpacesY;
+  int dirX, dirY;
   int numStepsX, numStepsY;
   int i;
 
+  // Makes sure all arugments produce a multiple of unitspaces
+  if (fmodf(startCol, 0.5) != 0 || fmodf(startRow, 0.5) != 0 ||
+      fmodf(endCol, 0.5) != 0 || fmodf(endRow, 0.5) != 0)
+    return false;
+
   // Abs ensures that numStepsX and numStepsY will be positive
   // to ensure proper for loop execution
-  spacesX = abs(endCol - startCol);
+  pieceSpacesX = fabs(endCol - startCol);
   dirX = (endCol > startCol) ? RIGHT : LEFT;
 
-  spacesY = abs(endRow - startRow);
+  pieceSpacesY = fabs(endRow - startRow);
   dirY = (endRow > startRow) ? UP : DOWN;
 
-  numStepsX = spacesX * stepsPerSpace;
-  numStepsY = spacesY * stepsPerSpace;
+  numStepsX = 2 * (int)floor(pieceSpacesX) * stepsPerUnitSpace;
+  numStepsY = 2 * (int)floor(pieceSpacesY) * stepsPerUnitSpace;
+
+  if (pieceSpacesX > floor(pieceSpacesX))
+    numStepsX += stepsPerUnitSpace;
+ 
+  if (pieceSpacesY > floor(pieceSpacesY))
+    numStepsY += stepsPerUnitSpace;
 
   enableMotors();
 
