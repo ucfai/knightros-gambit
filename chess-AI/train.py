@@ -152,7 +152,7 @@ def main():
     train = MctsTrain(mcts_simulations=3, exploration=5, lr=0.1)
 
     for _ in range(10):
-        train.training_episode(nnet, 2, 2, 8)
+        train.training_episode(nnet, games=2, epochs=2, batch_size=8)
 
 
 if __name__ == "__main__":
