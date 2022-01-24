@@ -22,12 +22,20 @@ enum SlopeToIndex
     SLOPE_VERTICAL_SLOW = 15
 };
 
+enum Quarters{
+    QUARTER_TOP = 0,
+    QUARTER_LEFT = 1,
+    QUARTER_BOTTOM = 2,
+    QUARTER_RIGHT = 3
+};
 
 // Makes a full circle of the given size (0=largest, NUM_CIRCLES-1=smallest) 
 // starting from the given quadrant (0=top, 1=left, 2=bottom, 3=right).
 // calculatePulsesPerSlope() must be called before makeCircle()
 void makeCircle(int circle, int firstQuarter)
 {
+    // firstPass is used to make the loop run for the first quadrant
+    // despite the fact that quarter will be equal to first quarter.
     bool firstPass = true;
     int slopeIndex;
 
@@ -39,19 +47,19 @@ void makeCircle(int circle, int firstQuarter)
         firstPass = false;
 
         // Set Y-direction
-        if (quarter == 0 || quarter == 1)
+        if (quarter == QUARTER_TOP || quarter == QUARTER_LEFT)
             digitalWrite(yMotor[DIR_PIN], DOWN);
         else
             digitalWrite(yMotor[DIR_PIN], UP);
 
         // Set X-direction
-        if (quarter == 0 || quarter == 3)
+        if (quarter == QUARTER_TOP || quarter == QUARTER_RIGHT)
             digitalWrite(xMotor[DIR_PIN], LEFT);
         else
             digitalWrite(xMotor[DIR_PIN], RIGHT);
 
         // Set starting point for the while loop
-        if (quarter == 0 || quarter == 2)
+        if (quarter == QUARTER_TOP || quarter == QUARTER_BOTTOM)
             slopeIndex = SLOPE_HORIZONTAL_SLOW;
         else
             slopeIndex = NUM_SLOPES_PER_QUARTER_CIRCLE - 1;
@@ -115,8 +123,9 @@ void makeCircle(int circle, int firstQuarter)
                 }
             }
 
-            // Increment or Decrement slopeIndex
-            if (quarter == 0 || quarter == 2)
+            // If the quadrant starts at the top or bottom, the slope becomes increasingly vertical
+            // If the quadrant starts at the left or right, the slope becomes horizontal
+            if (quarter == QUARTER_TOP || quarter == QUARTER_BOTTOM)
                 slopeIndex++;
             else
                 slopeIndex--;
