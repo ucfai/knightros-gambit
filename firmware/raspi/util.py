@@ -62,6 +62,7 @@ def init_dead_piece_counts():
 
     return dead_piece_counts
 
+# TODO: Update all BoardCells to use 2D resolution
 def init_dead_piece_graveyards():
     '''Creates and returns a dictionary of BoardCell for each dead piece type.
     '''
@@ -86,6 +87,7 @@ def init_dead_piece_graveyards():
 
     return dead_piece_graveyards
 
+# TODO: Update all BoardCells to use 2D resolution
 def init_capture_squares():
     '''Creates and returns two BoardCell objects corresponding to capture squares.
     '''
