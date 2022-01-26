@@ -32,6 +32,12 @@ class ArduinoStatus:
             return "ERROR"
         return ""
 
+    def is_valid_code(self, code):
+        return code in (ArduinoStatus.IDLE,
+                    ArduinoStatus.EXECUTING_MOVE,
+                    ArduinoStatus.END_TURN_BUTTON_PRESSED
+                    ArduinoStatus.ERROR)   
+
 class Status:
     '''Helper class that stores current status of game, along with related metadata.
     '''
