@@ -127,8 +127,20 @@ class Engine:
         return self.chess_board.is_game_over()
 
     def get_safe_corner(self, uci_move):
-        # TODO: Get unsafe corner(s) (adjacent to the moving piece) and return one of the others
-        pass
+        # Determine unsafe corner(s) (adjacent to the moving piece) and return one of the others
+        source, dest = self.get_board_coords_from_uci_move(uci_move)
+        if source.row >= dest.row:  # Can't use top two corners
+            if source.col >= dest.col:  # Can't use bottom right corner
+                # Use bottom left corner of dest to cache captured piece 
+                return util.BoardCell(dest.row - 1, dest.col - 1)
+            # Use bottom right corner of dest to cache captured piece 
+            return util.BoardCell(dest.row - 1, dest.col + 1)
+        # Source row < dest row, so we can't use bottom two corners
+        if source.col >= dest.col:  # Can't use top right corner
+            # Use top left corner of dest to cache captured piece 
+            return util.BoardCell(dest.row + 1, dest.col - 1)
+        # Use top right corner of dest to cache captured piece 
+        return util.BoardCell(dest.row + 1, dest.col + 1)
 
     def is_en_passant(self, uci_move):
         return self.chess_board.is_en_passant(self.chess_board.parse_uci(uci_move))
@@ -172,8 +184,6 @@ class Board:
         Returns true if the uci_move was successfully sent to Arduino
         '''
         try:
-            # If uci_move is not a capture, cache_info will be None. Else, `cache_info` stores a
-            # tuple of `(piece_color, piece_type, cache_loc)`.
             # `cache_info` is used at end of the move sequence to move the captured piece from the
             # cached location (a safe corner not in the way of the capturing piece) to the
             # graveyard. This is done rather than moving the captured piece to the graveyard
@@ -299,16 +309,33 @@ class Board:
         self.retrieve_from_graveyard(color, piece_type, square)
 
     def cache_captured_piece(self, uci_move):
-        '''Returns location of cached piece as a BoardCell, if applicable.
+        '''If uci_move is a capture, cache the captured piece on a safe space.
+
+        If move is an en passant, the cache location is simply the original square. If it is any
+        other type of capture, the cache location is one of the corners of the destination square
+        that is not in the way of the capturing piece.
+
+        If uci_move is not a capture, return value will be None. Else, return value is a tuple of
+        `(piece_color, piece_type, cache_loc)`.
+
+        Returns a tuple of  location of cached piece as a BoardCell, if applicable.
         '''
         if not self.engine.is_capture(uci_move):
             return None
 
+        # Note: en passant square given by dest.col (uci_move[2]) + source.row (uci_move[1])
         if self.engine.is_en_passant(uci_move):
-            # En passant square given by dest col + source row
-            return self.engine.get_board_coords_from_square(uci_move[2] + uci_move[1])
+            sq = uci_move[2] + uci_move[1]
+            cache_loc = self.engine.get_board_coords_from_square(uci_move[2] + uci_move[1])
+        else:
+            sq = uci_move[2:4]
+            cache_loc = self.engine.get_safe_corner(uci_move)
+            # Move the piece at uci_move[2:4] to cache_loc
+            self.add_move_to_queue(self.engine.get_board_coords_from_square(uci_move[2:4]),
+                                   cache_loc, OpCode.MOVE_PIECE_IN_STRAIGHT_LINE)
         
-        return self.engine.get_safe_corner(uci_move)
+        # `get_piece_info_from_square()` returns a tuple, + operator concatenates before returning
+        return self.engine.get_piece_info_from_square(sq) + (cache_loc,)
 
     def send_to_graveyard(self, color, piece_type, origin=None):
         '''Send piece to graveyard and increment dead piece count.
@@ -317,12 +344,11 @@ class Board:
         graveyard[piece types][k + 1]. Note that the piece at index k is the k + 1th piece.
         '''
         self.graveyard.update_dead_piece_count(color, piece_type, delta=1)  # increment
-        piece_counts, piece_locs = self.graveyard.get_graveyard_info_for_piece_type(color,
-                                                                                    piece_type)
-        count = piece_counts[color + piece_type]
+        count, piece_locs = self.graveyard.get_graveyard_info_for_piece_type(color, piece_type)
+
         if not origin:
             origin = self.graveyard.w_capture_sq if color == 'w' else self.graveyard.b_capture_sq
-        dest = piece_locs[color + piece_type][count]
+        dest = piece_locs[count]
 
         self.add_move_to_queue(origin, dest, OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
 
@@ -333,16 +359,15 @@ class Board:
         sends graveyard piece at graveyard[piece types][k - 1] to `destination`. Note that the
         piece at index k - 1 is the kth piece.
         '''
-        piece_counts, piece_locs = self.graveyard.get_graveyard_info_for_piece_type(color,
-                                                                                    piece_type)
-        count = piece_counts[color + piece_type]
+        count, piece_locs = self.graveyard.get_graveyard_info_for_piece_type(color, piece_type)
+
         # Can only retrieve piece from graveyard if there is at least one piece of specified type
         if count == 0:
             raise ValueError(f"There are not enough pieces in the graveyard to support promotion "
                              "to piece of type {piece_type}.")
         self.graveyard.update_dead_piece_count(color, piece_type, delta=-1)  # decrement
 
-        self.add_move_to_queue(piece_locs[color + piece_type][count-1], destination,
+        self.add_move_to_queue(piece_locs[count-1], destination,
                                OpCode.MOVE_PIECE_ALONG_SQUARE_EDGES)
 
     def is_knight_move_w_neighbors(self, uci_move):
