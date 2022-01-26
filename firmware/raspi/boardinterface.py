@@ -73,6 +73,7 @@ class Engine:
         '''
         return self.chess_board.is_capture(self.chess_board.parse_uci(uci_move))
 
+    # TODO: Update this function to use 2D resolution
     def get_board_coords_from_square(self, square):
         '''Returns tuple of integers indicating grid coordinates from square
         '''
@@ -123,6 +124,13 @@ class Engine:
         '''
         return self.chess_board.is_game_over()
 
+    def get_safe_corner(self, uci_move):
+        # TODO: Get unsafe corner(s) (adjacent to the moving piece) and return one of the others
+        pass
+
+    def is_en_passant(self, uci_move):
+        return self.chess_board.is_en_passant(self.chess_board.parse_uci(uci_move))
+
 class Board:
     '''Main class that serves as glue between software and hardware.
 
@@ -162,18 +170,20 @@ class Board:
         Returns true if the uci_move was successfully sent to Arduino
         '''
         try:
-            # Send captured piece to graveyard first, then do all the other ops
-            if self.engine.is_capture(uci_move):
-                self.send_to_graveyard(*self.engine.get_piece_info_from_square(uci_move[2:4]))
-            # If move is promotion, send pawn to graveyard, then send promotion piece to board
+            # If uci_move is not a capture, cache_info will be None. Else, `cache_info` stores a
+            # tuple of `(piece_color, piece_type, cache_loc)`.
+            # `cache_info` is used at end of the move sequence to move the captured piece from the
+            # cached location (a safe corner not in the way of the capturing piece) to the
+            # graveyard. This is done rather than moving the captured piece to the graveyard
+            # before moving the capturing piece in order to minimize the total amount of actuation.
+            cache_info = self.cache_captured_piece(uci_move)
+            # Handle promotion moves that are not captures
             if Engine.is_promotion(uci_move):
                 # TODO: Add error handling here if the piece we wish to promote to is not
                 # available (e.g., all queens have been used already).
-                self.handle_promotion(self.engine.get_board_coords_from_square(uci_move[2:4]),
-                                      self.engine.get_piece_info_from_square(uci_move[2:4])[0],
-                                      uci_move[4])
+                self.handle_promotion(uci_move)
             # If castle, decompose move into king move, then rook move
-            if self.engine.is_castle(uci_move):
+            elif self.engine.is_castle(uci_move):
                 # King move
                 self.add_move_to_queue(
                     *self.engine.get_board_coords_from_uci_move(uci_move),
@@ -190,6 +200,8 @@ class Board:
                 else:
                     self.add_move_to_queue(*self.engine.get_board_coords_from_uci_move(uci_move),
                                            OpCode.MOVE_PIECE_IN_STRAIGHT_LINE)
+            if cache_info:
+                self.send_to_graveyard(*cache_info)
         except ArduinoException as a_e:
             print(f"Unable to send move to Arduino: {a_e.__str__()}")
             return False
@@ -266,11 +278,15 @@ class Board:
     #     '''
     #     print("Need to discuss how board is setup in team meeting")
 
-    def handle_promotion(self, square, color, piece_type):
+    def handle_promotion(self, uci_move):
         '''Assumes that handling captures during promotion done outside this function.
 
-        Backfills promotion area from graveyard if possible.
+        Sends pawn to graveyard, then sends promotion piece to board.
         '''
+        square = self.engine.get_board_coords_from_square(uci_move[2:4])
+        color = self.engine.get_piece_info_from_square(uci_move[2:4])[0]
+        piece_type = uci_move[4]
+
         if self.graveyard.dead_piece_counts[color + piece_type] == 0:
             raise ValueError(f"All pieces of type {color}{piece_type} have been used!")
 
@@ -279,6 +295,18 @@ class Board:
 
         # Put the to-be-promoted piece (from "back" of graveyard) on the appropriate square.
         self.retrieve_from_graveyard(color, piece_type, square)
+
+    def cache_captured_piece(self, uci_move):
+        '''Returns location of cached piece as a BoardCell, if applicable.
+        '''
+        if not self.engine.is_capture(uci_move):
+            return None
+
+        if self.engine.is_en_passant(uci_move):
+            # En passant square given by dest col + source row
+            return self.engine.get_board_coords_from_square(uci_move[2] + uci_move[1])
+        
+        return self.engine.get_safe_corner(uci_move)
 
     def send_to_graveyard(self, color, piece_type, origin=None):
         '''Send piece to graveyard and increment dead piece count.
