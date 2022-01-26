@@ -73,20 +73,22 @@ class Engine:
         '''
         return self.chess_board.is_capture(self.chess_board.parse_uci(uci_move))
 
-    # TODO: Update this function to use 2D resolution
     def get_board_coords_from_square(self, square):
         '''Returns tuple of integers indicating grid coordinates from square
         '''
         sq_to_xy = util.get_chess_coords_from_square(square)
 
         # From top down perspective with human on "bottom", bottom left corner is (0, 0)
-        # If human plays white pieces, then "a1" corresponds to BoardCell (2, 2) and "h8"
-        # corresponds to BoardCell (9, 9). Vice versa for black pieces. Below logic converts
-        # chess coordinates to board coordinates.
+        # Each cell (which is the size of one chess square) is split into two unit spaces. This
+        # allows accessing the corners and edges of squares. This scheme is needed in order to
+        # implement the cache_captured_piece function.
+        # If human plays white pieces, then the middle of square "a1" corresponds to BoardCell
+        # (5, 5) and the middle of "h8" corresponds to BoardCell (19, 19). Vice versa for black 
+        # pieces. Below logic converts chess coordinates to board coordinates.
         if self.human_plays_white_pieces:
-            return util.BoardCell(sq_to_xy.row + 2, sq_to_xy.col + 2)
+            return util.BoardCell((sq_to_xy.row * 2) + 5, (sq_to_xy.col * 2) + 5)
 
-        return util.BoardCell(9 - sq_to_xy.row, 9 - sq_to_xy.col)
+        return util.BoardCell(19 - (sq_to_xy.row * 2), 19 - (sq_to_xy.col * 2))
 
     @staticmethod
     def get_chess_coords_from_uci_move(uci_move):
