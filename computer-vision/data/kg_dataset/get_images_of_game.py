@@ -5,6 +5,8 @@ as specified by a PGN that gives the sequence of moves played. The output of thi
 named folder (name provided by user) of images, one per move of the game. A corresponding PGN with
 should be placed in this folder after collecting the images. The images and PGN can then be used
 with the `extract_labels_from_game.py` script, also in this directory.
+
+Note: Images should be captured s.t. `a1` corresponds to bottom left corner of board in image.
 '''
 
 import os
