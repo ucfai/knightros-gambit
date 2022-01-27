@@ -10,9 +10,9 @@ class BoardCell:
     def __init__(self, row=None, col=None):
         '''Point, if no args passed, initialized to (0,0), bottom left corner of entire board.
 
-        Board representation uses two unit spaces for each cell. So center of bottom left cell is 
-        at (1, 1). Similarly, Center of bottom left cell of chessboard (either a1 or h8 depending 
-        on whether human plays white or black) is (5, 5). The bottom left corner of the playing 
+        Board representation uses two unit spaces for each cell. So center of bottom left cell is
+        at (1, 1). Similarly, Center of bottom left cell of chessboard (either a1 or h8 depending
+        on whether human plays white or black) is (5, 5). The bottom left corner of the playing
         area of the chessboard is (4, 4). The top right corner of the entire board is at (24, 24).
         '''
         self.row = row if row else 0
@@ -28,6 +28,10 @@ class BoardCell:
         return (self.row, self.col)
 
     def to_chess_sq(self):
+        '''Returns string representation of BoardCell.
+
+        Assumes BoardCell(0, 0) <=> 'a1' and BoardCell(7, 7) <=> 'h8'.
+        '''
         return chr(self.col + ord('a')) + chr(self.row + ord('1'))
 
 def create_stockfish_wrapper():
@@ -98,6 +102,8 @@ def init_capture_squares():
     return w_capture_sq, b_capture_sq
 
 def uci_move_from_boardcells(source, dest):
+    '''Returns uci move (as string) from two BoardCells.
+    '''
     return source.to_chess_sq() + dest.to_chess_sq()
 
 def get_piece_info_from_square(square, grid):
@@ -139,19 +145,21 @@ def get_2d_board(fen, turn=None):
     # flips perspective to current player
     if turn:
         if turn == 'w':
-            board_state.append(brow)
+            board.append(brow)
         else:
-            board_state.insert(0, brow)
+            board.insert(0, brow)
     return board
 
 def is_promotion(prev_board_fen, move):
-    # Note: This differs from boardinterface.Engine.is_promotion in that it checks for a promotion
-    # in the case that the UCI move is not yet known. It is less efficient as it creates a 2d grid
-    # to check for the piece previously at the square, corresponding to move[:2], and thus should
-    # only be used when boardinterface.Engine.is_promotion can not be used.
+    '''Returns True if move is a promotional move.
 
+    Note: This differs from boardinterface.Engine.is_promotion in that it checks for a promotion
+    in the case that the UCI move is not yet known. It is less efficient as it creates a 2d grid
+    to check for the piece previously at the square, corresponding to move[:2], and thus should
+    only be used when boardinterface.Engine.is_promotion can not be used.
+    '''
     # If piece in prev_board_fen at square move[:2] is a pawn and move[3] is the final rank,
     # this is a promotion. Note: Don't need to check color since white pawn can't move to row 1
-    # and vice versa for black
+    # and vice versa for black.
     return (get_piece_info_from_square(move[:2], get_2d_board(prev_board_fen))[1] == 'p') and \
            (move[3] in ('1', '8'))
