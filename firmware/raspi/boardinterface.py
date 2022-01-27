@@ -83,7 +83,7 @@ class Engine:
         # allows accessing the corners and edges of squares. This scheme is needed in order to
         # implement the cache_captured_piece function.
         # If human plays white pieces, then the middle of square "a1" corresponds to BoardCell
-        # (5, 5) and the middle of "h8" corresponds to BoardCell (19, 19). Vice versa for black 
+        # (5, 5) and the middle of "h8" corresponds to BoardCell (19, 19). Vice versa for black
         # pieces. Below logic converts chess coordinates to board coordinates.
         if self.human_plays_white_pieces:
             return util.BoardCell((sq_to_xy.row * 2) + 5, (sq_to_xy.col * 2) + 5)
@@ -102,7 +102,7 @@ class Engine:
                 util.get_chess_coords_from_square(uci_move[2:4]))
 
     def get_board_coords_from_uci_move(self, uci_move):
-        '''Returns tuple of BoardCells w.r.t. phyiscal board (including graveyard and edges).
+        '''Returns tuple of BoardCells w.r.t. physical board (including graveyard and edges).
 
         BoardCells specifying start and end points from provided uci_move.
         '''
@@ -127,22 +127,29 @@ class Engine:
         return self.chess_board.is_game_over()
 
     def get_safe_corner(self, uci_move):
-        # Determine unsafe corner(s) (adjacent to the moving piece) and return one of the others
+        '''Returns a "safe" corner on which to cache a captured piece before sending to graveyard.
+
+        A "safe" corner is one that is not in the way of the capturing piece's path to the capture
+        square. This function determines unsafe corner(s) (adjacent to the moving piece) and
+        returns one of the other corners.
+        '''
         source, dest = self.get_board_coords_from_uci_move(uci_move)
         if source.row >= dest.row:  # Can't use top two corners
             if source.col >= dest.col:  # Can't use bottom right corner
-                # Use bottom left corner of dest to cache captured piece 
+                # Use bottom left corner of dest to cache captured piece
                 return util.BoardCell(dest.row - 1, dest.col - 1)
-            # Use bottom right corner of dest to cache captured piece 
+            # Use bottom right corner of dest to cache captured piece
             return util.BoardCell(dest.row - 1, dest.col + 1)
         # Source row < dest row, so we can't use bottom two corners
         if source.col >= dest.col:  # Can't use top right corner
-            # Use top left corner of dest to cache captured piece 
+            # Use top left corner of dest to cache captured piece
             return util.BoardCell(dest.row + 1, dest.col - 1)
-        # Use top right corner of dest to cache captured piece 
+        # Use top right corner of dest to cache captured piece
         return util.BoardCell(dest.row + 1, dest.col + 1)
 
     def is_en_passant(self, uci_move):
+        '''Return true if the given uci_move is an en passant.
+        '''
         return self.chess_board.is_en_passant(self.chess_board.parse_uci(uci_move))
 
 class Board:
@@ -325,17 +332,17 @@ class Board:
 
         # Note: en passant square given by dest.col (uci_move[2]) + source.row (uci_move[1])
         if self.engine.is_en_passant(uci_move):
-            sq = uci_move[2] + uci_move[1]
+            square = uci_move[2] + uci_move[1]
             cache_loc = self.engine.get_board_coords_from_square(uci_move[2] + uci_move[1])
         else:
-            sq = uci_move[2:4]
+            square = uci_move[2:4]
             cache_loc = self.engine.get_safe_corner(uci_move)
             # Move the piece at uci_move[2:4] to cache_loc
             self.add_move_to_queue(self.engine.get_board_coords_from_square(uci_move[2:4]),
                                    cache_loc, OpCode.MOVE_PIECE_IN_STRAIGHT_LINE)
-        
+
         # `get_piece_info_from_square()` returns a tuple, + operator concatenates before returning
-        return self.engine.get_piece_info_from_square(sq) + (cache_loc,)
+        return self.engine.get_piece_info_from_square(square) + (cache_loc,)
 
     def send_to_graveyard(self, color, piece_type, origin=None):
         '''Send piece to graveyard and increment dead piece count.
