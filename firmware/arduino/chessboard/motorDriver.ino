@@ -82,16 +82,16 @@ void home()
 
 // Moves the magnet from the "start" point to the "end" point
 // This can only move in straight lines
+// A specific motor is passed to this function since we are only moving one here
 // Returns a boolean indicating success/error
 bool moveStraight(int motor[], int startCol, int startRow, int endCol, int endRow)
 {
-  // A specific motor is passed to this function since we are only moving one here
-
   // How many steps per space
   int dir, numSteps, unitSpaces;
   int i;
 
   // This could be two cases, x or y movement
+  // Abs ensures that numSteps will be positive
   if (endRow == startRow)
   {
     // X movement
