@@ -1,10 +1,13 @@
 # KG Dataset creation
+## Requirements
+- Install [`pgn-extract`](https://www.howtoinstall.me/ubuntu/18-04/pgn-extract/) command line tool
+
 ## Procedure to get labeled data from game i (`game_i`)
 - Play through `game_i` on lichess
 - Save pgn from the game to the `game_i` subdirectory
 - Create a `full_game` subdirectory (`game_i/full_game`)
-- Use [`pgn-extract`](https://www.howtoinstall.me/ubuntu/18-04/pgn-extract/) command line tool to extract one fen for each PGN into the `full_game` subdirectory
-	- Label these fens `j.fen` where `j` corresponds to the move number of `game_i` when this fen is the board state (Note: `j` starts at 0)
+- Use `pgn-extract` to extract one fen for each PGN into the `full_game` subdirectory
+	- Label these fens `j.fen` where `j` corresponds to the move number of `game_i` when this fen is the board state (Note: `j` starts at 0, and `move_j` is just the starting board state)
 - Play through `game_i` on physical chessboard and take pictures after each move using script `get_images_of_game.py` (each image is labeled `j.png` as above and saved to the `full_game` subdirectory)
 - Use `extract_labels_from_game.py` with input parameter `"game_i"` which
 	1. Creates a subdirectory `game_i/j` for each move
