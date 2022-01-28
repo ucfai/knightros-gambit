@@ -63,12 +63,6 @@ int currentX, currentY;
 #define MS2_PIN 3
 #define ENDSTOP_PIN 4
 
-// Return definitions
-#define SUCCESS 0
-#define HIT_X_ENDSTOP 1
-#define HIT_Y_ENDSTOP 2
-#define INVALID_ARGS 3
-
 // Button debounce time (in milliseconds)
 #define DEBOUNCE_TIME 100 
 
@@ -77,6 +71,15 @@ int currentX, currentY;
 
 // Number of different slope settings for each quarter circle
 #define NUM_SLOPES_PER_QUARTER_CIRCLE 9
+
+// Movement function status codes
+enum MovementStatus
+{
+  SUCCESS = '0',
+  HIT_X_ENDSTOP = '1',
+  HIT_Y_ENDSTOP = '2',
+  INVALID_ARGS = '3'
+};
 
 void setup()
 {

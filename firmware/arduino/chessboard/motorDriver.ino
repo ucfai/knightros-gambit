@@ -83,7 +83,8 @@ void home()
 // Moves the magnet from the "start" point to the "end" point
 // This can only move in straight lines
 // A specific motor is passed to this function since we are only moving one here
-// Returns a code indicating error or success circumstances
+// Returns a 'MovementStatus' code, '0' if successful, varying nonzero values for various error codes
+// For all status codes, check 'MovementStatus in chessboard.ino
 uint8_t moveStraight(int motor[], int startCol, int startRow, int endCol, int endRow)
 {
   // How many steps per space
@@ -124,7 +125,8 @@ uint8_t moveStraight(int motor[], int startCol, int startRow, int endCol, int en
   {
     if (digitalRead(X_AXIS_ENDSTOP_SWITCH) == HIGH)
       return HIT_X_ENDSTOP;  
-    else if (digitalRead(Y_AXIS_ENDSTOP_SWITCH) == HIGH)
+    
+    if (digitalRead(Y_AXIS_ENDSTOP_SWITCH) == HIGH)
       return HIT_Y_ENDSTOP;
     
     digitalWrite(motor[STEP_PIN], LOW);
@@ -137,7 +139,8 @@ uint8_t moveStraight(int motor[], int startCol, int startRow, int endCol, int en
 
 // Moves the magnet from the "start" point to the "end" point
 // This can move in diagonal lines of slopes: 1, 2, and 1/2
-// Returns a code indicating error and success circumstances
+// Returns a 'MovementStatus' code, '0' if successful, varying nonzero values for various error codes
+// For all status codes, check 'MovementStatus in chessboard.ino
 uint8_t moveDiagonal(int startCol, int startRow, int endCol, int endRow)
 {
   int unitSpacesX, unitSpacesY;
@@ -185,7 +188,8 @@ uint8_t moveDiagonal(int startCol, int startRow, int endCol, int endRow)
   {
     if (digitalRead(X_AXIS_ENDSTOP_SWITCH) == HIGH)
       return HIT_X_ENDSTOP; 
-    else if (digitalRead(Y_AXIS_ENDSTOP_SWITCH) == HIGH)
+
+    if (digitalRead(Y_AXIS_ENDSTOP_SWITCH) == HIGH)
       return HIT_Y_ENDSTOP;
 
     digitalWrite(xMotor[STEP_PIN], LOW);
