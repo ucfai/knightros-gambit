@@ -83,8 +83,8 @@ void home()
 // Moves the magnet from the "start" point to the "end" point
 // This can only move in straight lines
 // A specific motor is passed to this function since we are only moving one here
-// Returns a boolean indicating success/error
-bool moveStraight(int motor[], int startCol, int startRow, int endCol, int endRow)
+// Returns a code indicating error or success circumstances
+uint8_t moveStraight(int motor[], int startCol, int startRow, int endCol, int endRow)
 {
   // How many steps per space
   int dir, numSteps, unitSpaces;
@@ -108,7 +108,7 @@ bool moveStraight(int motor[], int startCol, int startRow, int endCol, int endRo
   }
   else
   {
-    return false;
+    return INVALID_ARGS;
   }
 
   numSteps = unitSpaces * stepsPerUnitSpace;
@@ -122,22 +122,23 @@ bool moveStraight(int motor[], int startCol, int startRow, int endCol, int endRo
   // Rotate motor some number of steps
   for (i = 0; i < numSteps; i++) 
   {
-    if (digitalRead(X_AXIS_ENDSTOP_SWITCH) == HIGH  ||  
-        digitalRead(Y_AXIS_ENDSTOP_SWITCH) == HIGH)
-      return false;
+    if (digitalRead(X_AXIS_ENDSTOP_SWITCH) == HIGH)
+      return HIT_X_ENDSTOP;  
+    else if (digitalRead(Y_AXIS_ENDSTOP_SWITCH) == HIGH)
+      return HIT_Y_ENDSTOP;
     
     digitalWrite(motor[STEP_PIN], LOW);
     delay(1);  // 1 milliSecond
     digitalWrite(motor[STEP_PIN], HIGH);
   }
 
-  return true;
+  return SUCCESS;
 }
 
 // Moves the magnet from the "start" point to the "end" point
 // This can move in diagonal lines of slopes: 1, 2, and 1/2
-// Returns a boolean indicating success/error
-bool moveDiagonal(int startCol, int startRow, int endCol, int endRow)
+// Returns a code indicating error and success circumstances
+uint8_t moveDiagonal(int startCol, int startRow, int endCol, int endRow)
 {
   int unitSpacesX, unitSpacesY;
   int dirX, dirY;
@@ -177,14 +178,15 @@ bool moveDiagonal(int startCol, int startRow, int endCol, int endRow)
   }
   else
   {
-    return false;
+    return INVALID_ARGS;
   }
 
   for (i = 0; i < numStepsX; i++)
   {
-    if (digitalRead(X_AXIS_ENDSTOP_SWITCH) == HIGH  ||  
-        digitalRead(Y_AXIS_ENDSTOP_SWITCH) == HIGH)
-      return false;
+    if (digitalRead(X_AXIS_ENDSTOP_SWITCH) == HIGH)
+      return HIT_X_ENDSTOP; 
+    else if (digitalRead(Y_AXIS_ENDSTOP_SWITCH) == HIGH)
+      return HIT_Y_ENDSTOP;
 
     digitalWrite(xMotor[STEP_PIN], LOW);
     digitalWrite(yMotor[STEP_PIN], LOW);
@@ -193,5 +195,5 @@ bool moveDiagonal(int startCol, int startRow, int endCol, int endRow)
     digitalWrite(yMotor[STEP_PIN], HIGH);
   }
 
-  return true;
+  return SUCCESS;
 }
