@@ -42,6 +42,14 @@ class Mcts:
 
         return best_move
 
+    def get_tree_results(self, mcts_simulations, nnet, board, temperature):
+        for _ in range(mcts_simulations):
+            self.search(board, nnet)
+
+        return self.find_search_probs(board.fen(), temperature)
+
+
+
     def set_current_qn_value(self, fen_string, uci_move):
         """Returns q and n values if they exist, otherwise initializes them"""
         if fen_string not in self.state_values:
