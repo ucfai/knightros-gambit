@@ -1,3 +1,12 @@
+// Movement function status codes
+enum MovementStatus
+{
+  SUCCESS = 0,
+  HIT_X_ENDSTOP = 1,
+  HIT_Y_ENDSTOP = 2,
+  INVALID_ARGS = 3
+};
+
 // Sets the scale of the motor driver corresponding to "motor"
 void setScale(int motor[], int scale) 
 {
@@ -79,15 +88,6 @@ void home()
   homeAxis(xMotor);
   homeAxis(yMotor);
 }
-
-// Movement function status codes
-enum MovementStatus
-{
-  SUCCESS = 0,
-  HIT_X_ENDSTOP = 1,
-  HIT_Y_ENDSTOP = 2,
-  INVALID_ARGS = 3
-};
 
 // Moves the magnet from the "start" point to the "end" point
 // This can only move in straight lines
