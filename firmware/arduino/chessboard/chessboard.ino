@@ -72,15 +72,6 @@ int currentX, currentY;
 // Number of different slope settings for each quarter circle
 #define NUM_SLOPES_PER_QUARTER_CIRCLE 9
 
-// Movement function status codes
-enum MovementStatus
-{
-  SUCCESS = '0',
-  HIT_X_ENDSTOP = '1',
-  HIT_Y_ENDSTOP = '2',
-  INVALID_ARGS = '3'
-};
-
 void setup()
 {
   // Define our pinModes

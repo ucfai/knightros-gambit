@@ -80,11 +80,20 @@ void home()
   homeAxis(yMotor);
 }
 
+// Movement function status codes
+enum MovementStatus
+{
+  SUCCESS = 0,
+  HIT_X_ENDSTOP = 1,
+  HIT_Y_ENDSTOP = 2,
+  INVALID_ARGS = 3
+};
+
 // Moves the magnet from the "start" point to the "end" point
 // This can only move in straight lines
 // A specific motor is passed to this function since we are only moving one here
 // Returns a 'MovementStatus' code, '0' if successful, varying nonzero values for various error codes
-// For all status codes, check 'MovementStatus in chessboard.ino
+// For all status codes, check 'MovementStatus' in chessboard.ino
 uint8_t moveStraight(int motor[], int startCol, int startRow, int endCol, int endRow)
 {
   // How many steps per space
@@ -140,7 +149,7 @@ uint8_t moveStraight(int motor[], int startCol, int startRow, int endCol, int en
 // Moves the magnet from the "start" point to the "end" point
 // This can move in diagonal lines of slopes: 1, 2, and 1/2
 // Returns a 'MovementStatus' code, '0' if successful, varying nonzero values for various error codes
-// For all status codes, check 'MovementStatus in chessboard.ino
+// For all status codes, check 'MovementStatus' in chessboard.ino
 uint8_t moveDiagonal(int startCol, int startRow, int endCol, int endRow)
 {
   int unitSpacesX, unitSpacesY;
