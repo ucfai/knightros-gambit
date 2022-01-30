@@ -43,6 +43,7 @@ void makeCircle(int circle)
     int slopeIndex;
 
     // Circle 0 starts at the top, circle 1 at the left, circle 2 at the bottom, continuing in a counterclockwise fashion
+    // The % 4 is used in case there are more than four circles. Circle 4 should start at the top, 5 at the left, etc
     int firstQuarter = circle % 4;
 
     setScale(xMotor, EIGHTH_STEPS);
@@ -289,6 +290,7 @@ void moveToFirstCircle()
 void moveToNextCircle(int currentCircle)
 {
     // Circle 0 starts at the top, circle 1 at the left, circle 2 at the bottom, continuing in a counterclockwise fashion
+    // The % 4 is used in case there are more than four circles. Circle 4 should start at the top, 5 at the left, etc
     int quarter = currentCircle % 4;
 
     // Both motors move in whole steps
@@ -307,7 +309,14 @@ void moveToNextCircle(int currentCircle)
     else
         digitalWrite(xMotor[DIR_PIN], RIGHT);
 
-    // Step in both directions
+    
+    // Switching circles is decomposed into 2 movements.
+    // 1: A move with a slope of 1 or -1 that aligns the electromagnet with one of the
+    //    left/right/top/bottom of the next circle depending on the starting quarter
+    // 2: A move on either the x or y axis that has a magnitude of the difference between
+    //    the two radii. This moves the electromagnet onto the next circle
+
+    // 1: Step in both directions to align with part of the next circle
     for (int i = 0; i < circleRadius[currentCircle+1]; i++)
     {
         // X-Step
@@ -319,7 +328,7 @@ void moveToNextCircle(int currentCircle)
         digitalWrite(yMotor[STEP_PIN], HIGH);
     }
 
-    // Step down/up for the difference between circle radii
+    // 2: Step down/up of left/right for the difference between circle radii to reach the next circle
     if (quarter == QUARTER_TOP || quarter == QUARTER_BOTTOM)
     {
         for (int i = 0; i < circleRadius[currentCircle+1]; i++)
@@ -329,7 +338,6 @@ void moveToNextCircle(int currentCircle)
             digitalWrite(yMotor[STEP_PIN], HIGH);
         }
     }
-    // Step left/right for the difference between circle radii
     else
     {
         for (int i = 0; i < circleRadius[currentCircle+1]; i++)
