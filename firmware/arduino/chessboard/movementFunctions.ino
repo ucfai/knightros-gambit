@@ -28,5 +28,5 @@ void centerPiece()
     }
 
     // Turn electromagnet off
-    analogWrite(ELECTROMAGNET, 0);
+    digitalWrite(ELECTROMAGNET, LOW);
 }
