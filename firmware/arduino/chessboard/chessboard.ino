@@ -98,6 +98,9 @@ void setup()
 
   stepsPerUnitSpace = MILLIMETERS_PER_UNITSPACE * STEPS_PER_MILLIMETER;
 
+  // Calculates the pulses needed to make circles for centerPiece()
+  calculatePulsesPerSlope();
+
   Serial2.begin(115200, SERIAL_8N1, RX2, TX2);
   
   attachInterrupt(digitalPinToInterrupt(CHESS_TIMER_BUTTON), chessTimerISR, RISING);
