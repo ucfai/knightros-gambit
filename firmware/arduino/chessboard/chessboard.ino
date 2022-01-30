@@ -8,6 +8,7 @@
 
 // Electromagnet
 #define ELECTROMAGNET 23
+#define PWM_SCALE 127 // 127 is for 50% duty cycle, 255 is for 100% duty cycle
 
 // Switches and buttons
 #define X_AXIS_ENDSTOP_SWITCH 18
