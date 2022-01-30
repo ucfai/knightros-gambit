@@ -1,6 +1,7 @@
 // There are 9 different slope settings per circle, 1/8 and 8 have only one setting,
 // the other seven all have small and large step settings
 int pulsesPerSlope[NUM_CIRCLES][NUM_SLOPES_PER_QUARTER_CIRCLE * 2 - 2];
+int largestRadius, radiusDifference;
 
 enum SlopeToIndex
 {
@@ -142,11 +143,15 @@ void calculatePulsesPerSlope(){
     // Calculate the radius of the largest circle in eighth steps
     outerRadius = MILLIMETERS_PER_UNITSPACE * STEPS_PER_MILLIMETER * 8;
 
-    // Ensure that each radius is evenly spaced from the center
-    outerRadius = outerRadius - outerRadius % NUM_CIRCLES;
+    // Ensure that each radius is evenly spaced from the center and the difference is in full steps
+    outerRadius = outerRadius - outerRadius % (NUM_CIRCLES*8);
 
     // Calculate the spacing between the circles
     deltaR = outerRadius / NUM_CIRCLES;
+
+    // Store the outer radius and radius difference in terms of full steps
+    largestRadius = outerRadius / 8;
+    radiusDifference = deltaR / 8;
 
     // Loop over each circle
     for (int circle = 0; circle < NUM_CIRCLES; circle++)
@@ -258,4 +263,17 @@ float getInstantaneousSlope(int radius, int xStepsRemaining, int yStepsRemaining
         return 10000.0;
     
     return ((float) radius - xStepsRemaining) / yStepsRemaining;
+}
+
+// Moves upwards to the largest radius in full steps
+void moveToFirstRadius()
+{
+    setScale(yMotor, WHOLE_STEPS);  
+    digitalWrite(yMotor[DIR_PIN], UP);  
+    for (int i = 0; i < largestRadius; i++)
+    {
+        // Y-Step
+        digitalWrite(yMotor[STEP_PIN], LOW);
+        digitalWrite(yMotor[STEP_PIN], HIGH);
+    }
 }
