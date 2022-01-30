@@ -1,7 +1,9 @@
 // There are 9 different slope settings per circle, 1/8 and 8 have only one setting,
 // the other seven all have small and large step settings
 int pulsesPerSlope[NUM_CIRCLES][NUM_SLOPES_PER_QUARTER_CIRCLE * 2 - 2];
-int largestRadius, radiusDifference;
+
+// Holds each circle radius to reduce calculations when drawing the circle
+int circleRadius[NUM_CIRCLES+1];
 
 enum SlopeToIndex
 {
@@ -149,9 +151,9 @@ void calculatePulsesPerSlope(){
     // Calculate the spacing between the circles
     deltaR = outerRadius / NUM_CIRCLES;
 
-    // Store the outer radius and radius difference in terms of full steps
-    largestRadius = outerRadius / 8;
-    radiusDifference = deltaR / 8;
+    // Allows the centerPiece() function to move back to the center of the square
+    // using the standard moveToNextCircle() function
+    circleRadius[NUM_CIRCLES] = 0;
 
     // Loop over each circle
     for (int circle = 0; circle < NUM_CIRCLES; circle++)
@@ -160,6 +162,9 @@ void calculatePulsesPerSlope(){
 
         // Radius of the current circle
         radius = outerRadius - deltaR * circle;
+
+        // Store circle radius in full steps
+        circleRadius[circle] = radius / 8;
 
         // StepsRemaining records the number of steps that need to be taken to reach the leftmost point on the circle
         // Initialize to the total number of steps per quarter circle. The starting point is the topmost point
@@ -270,10 +275,66 @@ void moveToFirstRadius()
 {
     setScale(yMotor, WHOLE_STEPS);  
     digitalWrite(yMotor[DIR_PIN], UP);  
-    for (int i = 0; i < largestRadius; i++)
+    for (int i = 0; i < circleRadius[0]; i++)
     {
         // Y-Step
         digitalWrite(yMotor[STEP_PIN], LOW);
         digitalWrite(yMotor[STEP_PIN], HIGH);
     }
+}
+
+void moveToNextCircle(int currentCircle)
+{
+    // Circle 0 starts at the top, circle 1 at the left, circle 2 at the bottom, continuing in a counterclockwise fashion
+    int quarter = currentCircle % 4;
+
+    // Both motors move in whole steps
+    setScale(xMotor, WHOLE_STEPS);  
+    setScale(yMotor, WHOLE_STEPS);
+
+    // Set Y-direction
+    if (quarter == QUARTER_TOP || quarter == QUARTER_LEFT)
+        digitalWrite(yMotor[DIR_PIN], DOWN);
+    else
+        digitalWrite(yMotor[DIR_PIN], UP);
+
+    // Set X-direction
+    if (quarter == QUARTER_TOP || quarter == QUARTER_RIGHT)
+        digitalWrite(xMotor[DIR_PIN], LEFT);
+    else
+        digitalWrite(xMotor[DIR_PIN], RIGHT);
+
+    // Step in both directions
+    for (int i = 0; i < circleRadius[currentCircle+1]; i++)
+    {
+        // X-Step
+        digitalWrite(xMotor[STEP_PIN], LOW);
+        digitalWrite(xMotor[STEP_PIN], HIGH);
+
+        // Y-Step
+        digitalWrite(yMotor[STEP_PIN], LOW);
+        digitalWrite(yMotor[STEP_PIN], HIGH);
+    }
+
+    // Step down/up for the difference between circle radii
+    if (quarter == QUARTER_TOP || quarter == QUARTER_BOTTOM)
+    {
+        for (int i = 0; i < circleRadius[currentCircle+1]; i++)
+        {
+            // Y-Step
+            digitalWrite(yMotor[STEP_PIN], LOW);
+            digitalWrite(yMotor[STEP_PIN], HIGH);
+        }
+    }
+    // Step left/right for the difference between circle radii
+    else
+    {
+        for (int i = 0; i < circleRadius[currentCircle+1]; i++)
+        {
+            // X-Step
+            digitalWrite(xMotor[STEP_PIN], LOW);
+            digitalWrite(xMotor[STEP_PIN], HIGH);
+        }
+    }
+
 }
