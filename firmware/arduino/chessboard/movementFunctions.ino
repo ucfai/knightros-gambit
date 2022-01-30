@@ -13,3 +13,20 @@ bool alignPiece(int col, int row)
     return true;
 }
 
+// Assumes that the starting position is the center of the square the piece is on
+void centerPiece()
+{
+    moveToFirstCircle();
+
+    // Enable electromagnet
+    analogWrite(ELECTROMAGNET, PWM_SCALE);
+
+    for (int i = 0; i < NUM_CIRCLES; i++)
+    {
+        makeCircle(i);
+        moveToNextCircle(i);
+    }
+
+    // Turn electromagnet off
+    analogWrite(ELECTROMAGNET, 0);
+}
