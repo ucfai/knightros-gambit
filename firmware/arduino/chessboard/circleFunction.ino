@@ -35,12 +35,15 @@ enum Quarters{
 // Makes a full circle of the given size (0=largest, NUM_CIRCLES-1=smallest) 
 // starting from the given quadrant (0=top, 1=left, 2=bottom, 3=right).
 // calculatePulsesPerSlope() must be called before makeCircle()
-void makeCircle(int circle, int firstQuarter)
+void makeCircle(int circle)
 {
     // firstPass is used to make the loop run for the first quadrant
     // despite the fact that quarter will be equal to first quarter.
     bool firstPass = true;
     int slopeIndex;
+
+    // Circle 0 starts at the top, circle 1 at the left, circle 2 at the bottom, continuing in a counterclockwise fashion
+    int firstQuarter = circle % 4;
 
     setScale(xMotor, EIGHTH_STEPS);
     digitalWrite(xMotor[STEP_PIN], LOW);
@@ -271,7 +274,7 @@ float getInstantaneousSlope(int radius, int xStepsRemaining, int yStepsRemaining
 }
 
 // Moves upwards to the largest radius in full steps
-void moveToFirstRadius()
+void moveToFirstCircle()
 {
     setScale(yMotor, WHOLE_STEPS);  
     digitalWrite(yMotor[DIR_PIN], UP);  
