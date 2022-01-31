@@ -1,6 +1,4 @@
 from functools import reduce
-import random
-import time
 
 import chess
 import torch
@@ -8,6 +6,7 @@ import numpy as np
 from torch.utils.data import DataLoader, TensorDataset
 
 from mcts import Mcts
+from checkpointing import save_model, load_model
 from nn_layout import PlayNetwork
 from output_representation import PlayNetworkPolicyConverter
 from state_representation import get_cnn_input
@@ -63,7 +62,7 @@ class MctsTrain:
             # If the game is over, end the episode
             # TODO: Consider removing `board.can_claim_draw()` as it may be slow to check.
             # See https://python-chess.readthedocs.io/en/latest/core.html#chess.Board.can_claim_draw
-            if board.is_game_over() or board.can_claim_draw():
+            if board.is_game_over() or board.can_claim_fifty_moves() or board.can_claim_threefold_repetition() or board.is_seventyfive_moves():
                 break
 
         state_values = self.assign_rewards(board, len(mcts_probs))
@@ -142,17 +141,19 @@ class MctsTrain:
 
                         # Reset gradients
                         opt.zero_grad()
-
                 print(losses)
+            save_model(nnet)
+
 
 
 def main():
     # Gets the neural network, and performs episodes
     nnet = PlayNetwork()
-    train = MctsTrain(mcts_simulations=3, exploration=5, lr=0.1)
+    train = MctsTrain(mcts_simulations=5, exploration=5, lr=0.2)
+    nnet.train()
+    nnet = load_model(nnet)
 
-    for _ in range(10):
-        train.training_episode(nnet, games=2, epochs=2, batch_size=8)
+    train.training_episode(nnet, games=5, epochs=5, batch_size=100)
 
 
 if __name__ == "__main__":
