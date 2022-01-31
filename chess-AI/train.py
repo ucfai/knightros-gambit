@@ -73,7 +73,7 @@ class Train:
             # If the game is over, end the episode
             # TODO: Consider removing `board.can_claim_draw()` as it may be slow to check.
             # See https://python-chess.readthedocs.io/en/latest/core.html#chess.Board.can_claim_draw
-            if board.is_game_over() or board.can_claim_fifty_moves() or board.can_claim_threefold_repetition() or board.is_seventyfive_moves():
+            if board.is_game_over() or board.can_claim_draw():
                 break
 
         if self.val_approximator is None:
