@@ -36,6 +36,9 @@ class Train:
         self.val_approximator = val_approximator
 
     def training_game(self):
+        """Runs a full game and returns policy and value output from approximators
+        """
+
         # Stores probability distributions and values from the approximators
         all_move_probs = []
         state_values = []
@@ -152,12 +155,11 @@ class Train:
 
 
 def main():
-    # Gets the neural network, and performs episodes
     mcts_simulations = 3
     mcts = Mcts(exploration=5)
     nnet = PlayNetwork()
 
-    # def mcts_moves(board): mcts.get_tree_results(mcts_simulations, nnet, board, temperature=5)
+    # Partially applies parameters to mcts function
     mcts_moves = lambda board: mcts.get_tree_results(mcts_simulations, nnet, board, temperature=5)
 
     train = Train(lr=0.1, move_approximator=mcts_moves)
