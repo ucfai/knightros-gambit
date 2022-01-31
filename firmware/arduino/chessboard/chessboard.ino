@@ -8,7 +8,7 @@
 
 // Electromagnet
 #define ELECTROMAGNET 23
-#define PWM_SCALE 127 // 127 is for 50% duty cycle, 255 is for 100% duty cycle
+#define PWM_HALF_SCALE 127 // 127 is for 50% duty cycle, 255 is for 100% duty cycle
 
 // Switches and buttons
 #define X_AXIS_ENDSTOP_SWITCH 18
@@ -98,7 +98,8 @@ void setup()
 
   stepsPerUnitSpace = MILLIMETERS_PER_UNITSPACE * STEPS_PER_MILLIMETER;
 
-  // Calculates the pulses needed to make circles for centerPiece()
+  // Initializes global 2d array `pulsesPerSlope` which is used to define circle paths
+  // that are used in the `makeCircle()` function in circleFunction.ino
   calculatePulsesPerSlope();
 
   Serial2.begin(115200, SERIAL_8N1, RX2, TX2);
