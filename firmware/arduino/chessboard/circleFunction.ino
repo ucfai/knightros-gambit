@@ -37,10 +37,12 @@ enum Quarters{
 // calculatePulsesPerSlope() must be called before makeCircle()
 void makeCircle(int circle)
 {
+    // Loop counters
+    int slopeIndex, quarter, i;
+
     // firstPass is used to make the loop run for the first quadrant
     // despite the fact that quarter will be equal to first quarter.
     bool firstPass = true;
-    int slopeIndex;
 
     // Circle 0 starts at the top, circle 1 at the left, circle 2 at the bottom, continuing in a counterclockwise fashion
     // The % 4 is used in case there are more than four circles. Circle 4 should start at the top, 5 at the left, etc
@@ -49,7 +51,7 @@ void makeCircle(int circle)
     setScale(xMotor, EIGHTH_STEPS);
     digitalWrite(xMotor[STEP_PIN], LOW);
 
-    for (int quarter = firstQuarter; quarter != firstQuarter || firstPass; quarter = (quarter + 1) % 4)
+    for (slopeIndex = firstQuarter; quarter != firstQuarter || firstPass; quarter = (quarter + 1) % 4)
     {
         firstPass = false;
 
@@ -109,7 +111,7 @@ void makeCircle(int circle)
             }
             else if (slopeIndex == SLOPE_HORIZONTAL_SLOW || slopeIndex == SLOPE_HORIZONTAL_FAST)
             {
-                for (int i = 0; i < pulsesPerSlope[circle][slopeIndex]; i++)
+                for (i = 0; i < pulsesPerSlope[circle][slopeIndex]; i++)
                 {
                     // X-Step
                     digitalWrite(xMotor[STEP_PIN], LOW);
@@ -118,7 +120,7 @@ void makeCircle(int circle)
             }
             else
             {
-                for (int i = 0; i < pulsesPerSlope[circle][slopeIndex]; i++)
+                for (i = 0; i < pulsesPerSlope[circle][slopeIndex]; i++)
                 {
                     // X-Step
                     digitalWrite(xMotor[STEP_PIN], LOW);
@@ -144,6 +146,9 @@ void makeCircle(int circle)
 // Creates evenly spaced circles based on MILLIMETERS_PER_UNITSPACE, STEPS_PER_MILLIMETER, and NUM_CIRCLES 
 void calculatePulsesPerSlope(){
 
+    // Loop counter
+    int circle;
+
     int outerRadius, deltaR;
 
     // Calculate the radius of the largest circle in eighth steps
@@ -160,7 +165,7 @@ void calculatePulsesPerSlope(){
     circleRadius[NUM_CIRCLES] = 0;
 
     // Loop over each circle
-    for (int circle = 0; circle < NUM_CIRCLES; circle++)
+    for (circle = 0; circle < NUM_CIRCLES; circle++)
     {
         int radius, xStepsRemaining, yStepsRemaining;
 
@@ -277,9 +282,12 @@ float getInstantaneousSlope(int radius, int xStepsRemaining, int yStepsRemaining
 // Moves upwards to the largest radius in full steps
 void moveToFirstCircle()
 {
+    // Loop counter
+    int i;
+
     setScale(yMotor, WHOLE_STEPS);  
     digitalWrite(yMotor[DIR_PIN], UP);  
-    for (int i = 0; i < circleRadius[0]; i++)
+    for (i = 0; i < circleRadius[0]; i++)
     {
         // Y-Step
         digitalWrite(yMotor[STEP_PIN], LOW);
@@ -289,6 +297,9 @@ void moveToFirstCircle()
 
 void moveToNextCircle(int currentCircle)
 {
+    // Loop counter
+    int i;
+
     // Circle 0 starts at the top, circle 1 at the left, circle 2 at the bottom, continuing in a counterclockwise fashion
     // The % 4 is used in case there are more than four circles. Circle 4 should start at the top, 5 at the left, etc
     int quarter = currentCircle % 4;
@@ -317,7 +328,7 @@ void moveToNextCircle(int currentCircle)
     //    the two radii. This moves the electromagnet onto the next circle
 
     // 1: Step in both directions to align with part of the next circle
-    for (int i = 0; i < circleRadius[currentCircle+1]; i++)
+    for (i = 0; i < circleRadius[currentCircle+1]; i++)
     {
         // X-Step
         digitalWrite(xMotor[STEP_PIN], LOW);
@@ -331,7 +342,7 @@ void moveToNextCircle(int currentCircle)
     // 2: Step down/up of left/right for the difference between circle radii to reach the next circle
     if (quarter == QUARTER_TOP || quarter == QUARTER_BOTTOM)
     {
-        for (int i = 0; i < circleRadius[currentCircle+1]; i++)
+        for (i = 0; i < circleRadius[currentCircle+1]; i++)
         {
             // Y-Step
             digitalWrite(yMotor[STEP_PIN], LOW);
@@ -340,7 +351,7 @@ void moveToNextCircle(int currentCircle)
     }
     else
     {
-        for (int i = 0; i < circleRadius[currentCircle+1]; i++)
+        for (i = 0; i < circleRadius[currentCircle+1]; i++)
         {
             // X-Step
             digitalWrite(xMotor[STEP_PIN], LOW);
