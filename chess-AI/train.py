@@ -36,7 +36,12 @@ class Train:
         self.val_approximator = val_approximator
 
     def training_game(self):
-        """Runs a full game and returns policy and value output from approximators
+        """Run a full game, storing states, state values and policies for each state.
+
+        Returns a tuple of 3 lists where the ith element in each list corresponds to the same board state:
+            1) fen strings representing board state
+            2) state value predictions
+            3) policy values for all legal moves
         """
 
         # Stores probability distributions and values from the approximators
