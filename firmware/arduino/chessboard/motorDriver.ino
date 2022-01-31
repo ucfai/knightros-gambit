@@ -1,3 +1,12 @@
+// Movement function status codes
+enum MovementStatus
+{
+  SUCCESS = 0,
+  HIT_X_ENDSTOP = 1,
+  HIT_Y_ENDSTOP = 2,
+  INVALID_ARGS = 3
+};
+
 // Sets the scale of the motor driver corresponding to "motor"
 void setScale(int motor[], int scale) 
 {
@@ -82,45 +91,37 @@ void home()
 
 // Moves the magnet from the "start" point to the "end" point
 // This can only move in straight lines
-// Returns a boolean indicating success/error
-bool moveStraight(int motor[], float startCol, float startRow, float endCol, float endRow)
+// A specific motor is passed to this function since we are only moving one here
+// Returns a 'MovementStatus' code, '0' if successful, varying nonzero values for various error codes
+// For all status codes, check 'MovementStatus' in chessboard.ino
+uint8_t moveStraight(int motor[], int startCol, int startRow, int endCol, int endRow)
 {
-  // A specific motor is passed to this function since we are only moving one here
-
   // How many steps per space
-  float pieceSpaces;
-  int dir, numSteps;
+  int dir, numSteps, unitSpaces;
   int i;
 
-  // Makes sure all arugments produce a multiple of unitspaces
-  if (fmodf(startCol, 0.5) != 0 || fmodf(startRow, 0.5) != 0 ||
-      fmodf(endCol, 0.5) != 0 || fmodf(endRow, 0.5) != 0)
-    return false;
-
   // This could be two cases, x or y movement
+  // Abs ensures that numSteps will be positive
   if (endRow == startRow)
   {
     // X movement
-    pieceSpaces = fabs(endCol - startCol);
+    unitSpaces = abs(endCol - startCol);
     dir = (endCol > startCol) ? RIGHT : LEFT;
     setScale(xMotor, WHOLE_STEPS);
   }
   else if (endCol == startCol)
   {
     // Y movement
-    pieceSpaces = fabs(endRow - startRow);
+    unitSpaces = abs(endRow - startRow);
     dir = (endRow > startRow) ? UP : DOWN;
     setScale(yMotor, WHOLE_STEPS);
   }
   else
   {
-    return false;
+    return INVALID_ARGS;
   }
 
-  numSteps = 2 * (int)floor(pieceSpaces) * stepsPerUnitSpace;
-
-  if (pieceSpaces > floor(pieceSpaces))
-    numSteps += stepsPerUnitSpace;
+  numSteps = unitSpaces * stepsPerUnitSpace;
 
   // Enable motor driver inputs/output
   enableMotors();
@@ -131,49 +132,41 @@ bool moveStraight(int motor[], float startCol, float startRow, float endCol, flo
   // Rotate motor some number of steps
   for (i = 0; i < numSteps; i++) 
   {
-    if (digitalRead(X_AXIS_ENDSTOP_SWITCH) == HIGH  ||  
-        digitalRead(Y_AXIS_ENDSTOP_SWITCH) == HIGH)
-      return false;
+    if (digitalRead(X_AXIS_ENDSTOP_SWITCH) == HIGH)
+      return HIT_X_ENDSTOP;  
+    
+    if (digitalRead(Y_AXIS_ENDSTOP_SWITCH) == HIGH)
+      return HIT_Y_ENDSTOP;
     
     digitalWrite(motor[STEP_PIN], LOW);
     delay(1);  // 1 milliSecond
     digitalWrite(motor[STEP_PIN], HIGH);
   }
 
-  return true;
+  return SUCCESS;
 }
 
 // Moves the magnet from the "start" point to the "end" point
 // This can move in diagonal lines of slopes: 1, 2, and 1/2
-// Returns a boolean indicating success/error
-bool moveDiagonal(float startCol, float startRow, float endCol, float endRow)
+// Returns a 'MovementStatus' code, '0' if successful, varying nonzero values for various error codes
+// For all status codes, check 'MovementStatus' in chessboard.ino
+uint8_t moveDiagonal(int startCol, int startRow, int endCol, int endRow)
 {
-  float pieceSpacesX, pieceSpacesY;
+  int unitSpacesX, unitSpacesY;
   int dirX, dirY;
   int numStepsX, numStepsY;
   int i;
 
-  // Makes sure all arugments produce a multiple of unitspaces
-  if (fmodf(startCol, 0.5) != 0 || fmodf(startRow, 0.5) != 0 ||
-      fmodf(endCol, 0.5) != 0 || fmodf(endRow, 0.5) != 0)
-    return false;
-
   // Abs ensures that numStepsX and numStepsY will be positive
   // to ensure proper for loop execution
-  pieceSpacesX = fabs(endCol - startCol);
+  unitSpacesX = abs(endCol - startCol);
   dirX = (endCol > startCol) ? RIGHT : LEFT;
 
-  pieceSpacesY = fabs(endRow - startRow);
+  unitSpacesY = abs(endRow - startRow);
   dirY = (endRow > startRow) ? UP : DOWN;
 
-  numStepsX = 2 * (int)floor(pieceSpacesX) * stepsPerUnitSpace;
-  numStepsY = 2 * (int)floor(pieceSpacesY) * stepsPerUnitSpace;
-
-  if (pieceSpacesX > floor(pieceSpacesX))
-    numStepsX += stepsPerUnitSpace;
- 
-  if (pieceSpacesY > floor(pieceSpacesY))
-    numStepsY += stepsPerUnitSpace;
+  numStepsX = unitSpacesX * stepsPerUnitSpace;
+  numStepsY = unitSpacesY * stepsPerUnitSpace;
 
   enableMotors();
 
@@ -197,14 +190,16 @@ bool moveDiagonal(float startCol, float startRow, float endCol, float endRow)
   }
   else
   {
-    return false;
+    return INVALID_ARGS;
   }
 
   for (i = 0; i < numStepsX; i++)
   {
-    if (digitalRead(X_AXIS_ENDSTOP_SWITCH) == HIGH  ||  
-        digitalRead(Y_AXIS_ENDSTOP_SWITCH) == HIGH)
-      return false;
+    if (digitalRead(X_AXIS_ENDSTOP_SWITCH) == HIGH)
+      return HIT_X_ENDSTOP; 
+
+    if (digitalRead(Y_AXIS_ENDSTOP_SWITCH) == HIGH)
+      return HIT_Y_ENDSTOP;
 
     digitalWrite(xMotor[STEP_PIN], LOW);
     digitalWrite(yMotor[STEP_PIN], LOW);
@@ -213,5 +208,5 @@ bool moveDiagonal(float startCol, float startRow, float endCol, float endRow)
     digitalWrite(yMotor[STEP_PIN], HIGH);
   }
 
-  return true;
+  return SUCCESS;
 }

@@ -12,7 +12,7 @@ from output_representation import PlayNetworkPolicyConverter
 from state_representation import get_cnn_input
 
 
-class MctsTrain:
+class Train:
     """This class is used to run the monte carlo simulations and drive the model training.
 
     Attributes:
@@ -21,19 +21,31 @@ class MctsTrain:
         mcts: References the MCTS class
         policy_converter: References the PlayNetworkPolicyConverter class
     """
-    def __init__(self, mcts_simulations, exploration, lr):
-        # Set the number of Monte Carlo Simulations
-        self.mcts_simulations = mcts_simulations
-        self.mcts = Mcts(exploration)
-
+    def __init__(self, lr, move_approximator, val_approximator=None):
         self.policy_converter = PlayNetworkPolicyConverter()
 
         # Learning rate
         self.lr = lr
 
-    def training_game(self, nnet):
-        # Stores final probability distribution from MCTS
-        mcts_probs = []
+        # board -> move_list, move_probabilities, move_to_take
+        self.move_approximator = move_approximator
+
+        # board -> state_value
+        # if None, values will be based on the game outcome
+        self.val_approximator = val_approximator
+
+    def training_game(self):
+        """Run a full game, storing states, state values and policies for each state.
+
+        Returns a tuple of 3 lists where the ith element in each list corresponds to the same board state:
+            1) fen strings representing board state
+            2) state value predictions
+            3) policy values for all legal moves
+        """
+
+        # Stores probability distributions and values from the approximators
+        all_move_probs = []
+        state_values = []
 
         # Store fen_strings for board states
         board_fens = []
@@ -43,17 +55,16 @@ class MctsTrain:
             fen_string = board.fen()
             board_fens.append(fen_string)
 
-            # Perform mcts simulations
-            for _ in range(self.mcts_simulations):
-                self.mcts.search(board, nnet)
-
-            # Gets the moves and policy from the mcts, as well as the individual move to take
+            # Gets the moves and policy from the approximator, as well as the individual move to take
             # NOTE: moves[i] corresponds to search_probs[i]
-            moves, search_probs, move = self.mcts.find_search_probs(fen_string, temperature=5)
+            moves, move_probs, move = self.move_approximator(board)
 
             # Converts mcts search probabilites to (8,8,73) vector
-            full_search_probs = self.policy_converter.compute_full_search_probs(moves, search_probs, board)
-            mcts_probs.append(full_search_probs)
+            move_probs_vector = self.policy_converter.compute_full_search_probs(moves, move_probs, board)
+            all_move_probs.append(move_probs_vector)
+
+            if self.val_approximator is not None:
+                state_values.append(self.val_approximator(board))
 
             # Makes the random action on the board, and gets fen string
             move = chess.Move.from_uci(move)
@@ -65,8 +76,10 @@ class MctsTrain:
             if board.is_game_over() or board.can_claim_fifty_moves() or board.can_claim_threefold_repetition() or board.is_seventyfive_moves():
                 break
 
-        state_values = self.assign_rewards(board, len(mcts_probs))
-        return board_fens, state_values, mcts_probs
+        if self.val_approximator is None:
+            state_values = self.assign_rewards(board, len(all_move_probs))
+
+        return board_fens, state_values, all_move_probs
 
     def assign_rewards(self, board, length):
         """Iterates through training examples and assigns rewards based on result of the game.
@@ -93,15 +106,15 @@ class MctsTrain:
 
         with torch.no_grad():
             # Obtain data from games and separate into appropriate lists
-            game_data = [self.training_game(nnet) for _ in range(games)]
-            board_fens, state_values, mcts_probs = reduce(lambda g1, g2: (x+y for x, y in zip(g1, g2)), game_data)
+            game_data = [self.training_game() for _ in range(games)]
+            board_fens, state_values, move_probs = reduce(lambda g1, g2: (x+y for x, y in zip(g1, g2)), game_data)
 
             inputs = torch.stack([get_cnn_input(chess.Board(fen)) for fen in board_fens])
-            mcts_probs = torch.tensor(np.array(mcts_probs)).float()
+            move_probs = torch.tensor(np.array(move_probs)).float()
             state_values = torch.tensor(np.array(state_values)).float()
 
-            # Create iterable dataset with mcts labels
-            dataset = TensorDataset(inputs, state_values, mcts_probs)
+            # Create iterable dataset from game data
+            dataset = TensorDataset(inputs, state_values, move_probs)
             train_dl = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=False)
 
             # Define loss functions
@@ -114,7 +127,7 @@ class MctsTrain:
             # Training Loop
             for _ in range(epochs):
                 losses = []
-                for (inputs, state_values, mcts_probs) in train_dl:
+                for (inputs, state_values, move_probs) in train_dl:
                     with torch.enable_grad():
                         policy_batch = []
                         value_batch = []
@@ -130,7 +143,7 @@ class MctsTrain:
                         value_batch = torch.stack(value_batch).flatten().float()
 
                         # Find the loss and store it
-                        loss = ce_loss_fn(policy_batch, mcts_probs) + mse_loss_fn(value_batch, state_values)
+                        loss = ce_loss_fn(policy_batch, move_probs) + mse_loss_fn(value_batch, state_values)
                         losses.append(loss.item())
 
                         # Calculate Gradients
@@ -147,13 +160,18 @@ class MctsTrain:
 
 
 def main():
-    # Gets the neural network, and performs episodes
+    mcts_simulations = 5
+    mcts = Mcts(exploration=5)
     nnet = PlayNetwork()
-    train = MctsTrain(mcts_simulations=5, exploration=5, lr=0.2)
     nnet.train()
     nnet = load_model(nnet)
 
-    train.training_episode(nnet, games=5, epochs=5, batch_size=100)
+    # Partially applies parameters to mcts function
+    mcts_moves = lambda board: mcts.get_tree_results(mcts_simulations, nnet, board, temperature=5)
+
+    train = Train(lr=0.1, move_approximator=mcts_moves)
+
+    train.training_episode(nnet, games=10, epochs=5, batch_size=250)
 
 
 if __name__ == "__main__":
