@@ -22,12 +22,16 @@ void centerPiece()
     moveToFirstCircle();
 
     // Enable electromagnet
-    analogWrite(ELECTROMAGNET, PWM_SCALE);
+    analogWrite(ELECTROMAGNET, PWM_HALF_SCALE);
 
     for (i = 0; i < NUM_CIRCLES; i++)
     {
-        makeCircle(i);
-        moveToNextCircle(i);
+        // Both functions are called with currentCircle, quarter
+        // Circle 0 starts at the top, circle 1 at the left, circle 2 at the bottom, 
+        // continuing in a counterclockwise fashion. i % 4 is used in case there
+        // are more than four circles. Circle 4 should start at the top, 5 at the left, etc
+        makeCircle(i, i % 4);
+        moveToNextCircle(i, i % 4);
     }
 
     // Turn electromagnet off
