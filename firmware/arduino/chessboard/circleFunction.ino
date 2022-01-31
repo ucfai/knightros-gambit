@@ -3,6 +3,8 @@
 int pulsesPerSlope[NUM_CIRCLES][NUM_SLOPES_PER_QUARTER_CIRCLE * 2 - 2];
 
 // Holds each circle radius to reduce calculations when drawing the circle
+// The extra element allows the centerPiece() function to move back to the
+// center of the square using the standard moveToNextCircle() function
 int circleRadius[NUM_CIRCLES+1];
 
 enum SlopeToIndex
@@ -33,9 +35,9 @@ enum Quarters{
 };
 
 // Makes a full circle of the given size (0=largest, NUM_CIRCLES-1=smallest) 
-// starting from the given quadrant (0=top, 1=left, 2=bottom, 3=right).
+// starting from the given quadrant (0=top, 1=left, 2=bottom, 3=right, other values are invalid).
 // calculatePulsesPerSlope() must be called before makeCircle()
-void makeCircle(int circle)
+void makeCircle(int circle, int firstQuarter)
 {
     // Loop counters
     int slopeIndex, quarter, i;
@@ -44,14 +46,10 @@ void makeCircle(int circle)
     // despite the fact that quarter will be equal to first quarter.
     bool firstPass = true;
 
-    // Circle 0 starts at the top, circle 1 at the left, circle 2 at the bottom, continuing in a counterclockwise fashion
-    // The % 4 is used in case there are more than four circles. Circle 4 should start at the top, 5 at the left, etc
-    int firstQuarter = circle % 4;
-
     setScale(xMotor, EIGHTH_STEPS);
     digitalWrite(xMotor[STEP_PIN], LOW);
 
-    for (slopeIndex = firstQuarter; quarter != firstQuarter || firstPass; quarter = (quarter + 1) % 4)
+    for (quarter = firstQuarter; quarter != firstQuarter || firstPass; quarter = (quarter + 1) % 4)
     {
         firstPass = false;
 
@@ -144,8 +142,8 @@ void makeCircle(int circle)
 
 // Calculates and stores the number of pulses that need to be made at each slope
 // Creates evenly spaced circles based on MILLIMETERS_PER_UNITSPACE, STEPS_PER_MILLIMETER, and NUM_CIRCLES 
-void calculatePulsesPerSlope(){
-
+void calculatePulsesPerSlope()
+{
     // Loop counter
     int circle;
 
@@ -155,7 +153,7 @@ void calculatePulsesPerSlope(){
     outerRadius = MILLIMETERS_PER_UNITSPACE * STEPS_PER_MILLIMETER * 8;
 
     // Ensure that each radius is evenly spaced from the center and the difference is in full steps
-    outerRadius = outerRadius - outerRadius % (NUM_CIRCLES*8);
+    outerRadius = outerRadius - outerRadius % (NUM_CIRCLES * 8);
 
     // Calculate the spacing between the circles
     deltaR = outerRadius / NUM_CIRCLES;
@@ -279,7 +277,8 @@ float getInstantaneousSlope(int radius, int xStepsRemaining, int yStepsRemaining
     return ((float) radius - xStepsRemaining) / yStepsRemaining;
 }
 
-// Moves upwards to the largest radius in full steps
+// Moves electromagnet upwards from the center of the current square to the largest radius 
+// using the largest step size
 void moveToFirstCircle()
 {
     // Loop counter
@@ -295,14 +294,14 @@ void moveToFirstCircle()
     }
 }
 
-void moveToNextCircle(int currentCircle)
+// After each circle is made, the magnet moves counter-clockwise to the next quadrant and inward
+// one radius to the next circle. 
+// 0 <= currentCircle < NUM_CIRCLES
+// quarter must be one of the following values: 0=top, 1=left, 2=bottom, 3=right
+void moveToNextCircle(int currentCircle, int quarter)
 {
     // Loop counter
     int i;
-
-    // Circle 0 starts at the top, circle 1 at the left, circle 2 at the bottom, continuing in a counterclockwise fashion
-    // The % 4 is used in case there are more than four circles. Circle 4 should start at the top, 5 at the left, etc
-    int quarter = currentCircle % 4;
 
     // Both motors move in whole steps
     setScale(xMotor, WHOLE_STEPS);  
@@ -358,5 +357,4 @@ void moveToNextCircle(int currentCircle)
             digitalWrite(xMotor[STEP_PIN], HIGH);
         }
     }
-
 }
