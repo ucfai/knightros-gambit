@@ -22,7 +22,7 @@ class Train:
         mcts: References the MCTS class
         policy_converter: References the PlayNetworkPolicyConverter class
     """
-    def __init__(self, lr, move_approximator, val_approximator=None):
+    def __init__(self, lr, move_approximator, save_path, val_approximator=None):
         self.policy_converter = PlayNetworkPolicyConverter()
 
         # Learning rate
@@ -34,6 +34,9 @@ class Train:
         # board -> state_value
         # if None, values will be based on the game outcome
         self.val_approximator = val_approximator
+
+        # Specify where to save model and what model to load.
+        self.save_path = save_path
 
 
     def training_game(self):
@@ -157,36 +160,45 @@ class Train:
                         # Reset gradients
                         opt.zero_grad()
                 print(losses)
-            for i in range(num_saved_models):
-                if not(os.path.isfile(f'chess-AI/models-{i+1}.pt')):
-                    if overwrite_save and i != 0:
-                        save_model(nnet, f'chess-AI/models-{i}.pt')
+            # Saves model to specified file, or a new file if not specified.
+            if self.save_path != None:
+                save_model(nnet, self.save_path)
+            else:
+                for i in range(num_saved_models):
+                    if not(os.path.isfile(f'chess-AI/models-{i+1}.pt')):
+                        if overwrite_save and i != 0:
+                            save_model(nnet, f'chess-AI/models-{i}.pt')
+                            break
+                        save_model(nnet, f'chess-AI/models-{i+1}.pt')
                         break
-                    save_model(nnet, f'chess-AI/models-{i+1}.pt')
-                    break
-                if i == num_saved_models - 1:
-                    save_model(nnet, f'chess-AI/models-{num_saved_models}.pt')
+                    if i == num_saved_models - 1:
+                        save_model(nnet, f'chess-AI/models-{num_saved_models}.pt')
 
 
 
 def main():
     mcts_simulations = 3
     num_saved_models = 5
+    load_path = None
     overwrite_save = True
     mcts = Mcts(exploration=5)
     nnet = PlayNetwork()
     nnet.train()
 
-    for i in range(num_saved_models):
-        if not(os.path.isfile(f'chess-AI/models-{i+2}.pt')):
-            if i != 0:
-                nnet = load_model(nnet, f'chess-AI/models-{i+1}.pt')
-            break
+    if load_path != None:
+        nnet = load_model(nnet, load_path)
+    else:
+        for i in range(num_saved_models):
+            if not(os.path.isfile(f'chess-AI/models-{i+2}.pt')):
+                if i != 0:
+                    nnet = load_model(nnet, f'chess-AI/models-{i+1}.pt')
+                break
+        
 
     # Partially applies parameters to mcts function
     mcts_moves = lambda board: mcts.get_tree_results(mcts_simulations, nnet, board, temperature=5)
 
-    train = Train(lr=0.2, move_approximator=mcts_moves)
+    train = Train(lr=0.2, move_approximator=mcts_moves, save_path=None)
 
     train.training_episode(nnet, games=3, epochs=3, batch_size=10, num_saved_models=num_saved_models, overwrite_save=overwrite_save)
 
