@@ -3,7 +3,7 @@
 - Install [`pgn-extract`](https://www.howtoinstall.me/ubuntu/18-04/pgn-extract/) command line tool
 
 ## Procedure to get labeled data from game i (`game_i`)
-- Play through `game_i` on lichess
+- Play through `game_i` on [pgn-editor](http://www.caissa.com/chess-tools/pgn-editor.php)
 - Save pgn from the game to the `game_i` subdirectory
 - Create a `full_game` subdirectory (`game_i/full_game`)
 - Use `pgn-extract` to extract one fen for each PGN into the `full_game` subdirectory
