@@ -2,6 +2,11 @@
 // the other seven all have small and large step settings
 int pulsesPerSlope[NUM_CIRCLES][NUM_SLOPES_PER_QUARTER_CIRCLE * 2 - 2];
 
+// Holds each circle radius to reduce calculations when drawing the circle
+// The extra element allows the centerPiece() function to move back to the
+// center of the square using the standard moveToNextCircle() function
+int circleRadius[NUM_CIRCLES+1];
+
 enum SlopeToIndex
 {
     SLOPE_HORIZONTAL_FAST = 0,
@@ -30,19 +35,21 @@ enum Quarters{
 };
 
 // Makes a full circle of the given size (0=largest, NUM_CIRCLES-1=smallest) 
-// starting from the given quadrant (0=top, 1=left, 2=bottom, 3=right).
+// starting from the given quadrant (0=top, 1=left, 2=bottom, 3=right, other values are invalid).
 // calculatePulsesPerSlope() must be called before makeCircle()
 void makeCircle(int circle, int firstQuarter)
 {
+    // Loop counters
+    int slopeIndex, quarter, i;
+
     // firstPass is used to make the loop run for the first quadrant
     // despite the fact that quarter will be equal to first quarter.
     bool firstPass = true;
-    int slopeIndex;
 
     setScale(xMotor, EIGHTH_STEPS);
     digitalWrite(xMotor[STEP_PIN], LOW);
 
-    for (int quarter = firstQuarter; quarter != firstQuarter || firstPass; quarter = (quarter + 1) % 4)
+    for (quarter = firstQuarter; quarter != firstQuarter || firstPass; quarter = (quarter + 1) % 4)
     {
         firstPass = false;
 
@@ -97,28 +104,32 @@ void makeCircle(int circle, int firstQuarter)
                 {
                     // Y-Step
                     digitalWrite(yMotor[STEP_PIN], LOW);
+                    delay(1);
                     digitalWrite(yMotor[STEP_PIN], HIGH);
                 }
             }
             else if (slopeIndex == SLOPE_HORIZONTAL_SLOW || slopeIndex == SLOPE_HORIZONTAL_FAST)
             {
-                for (int i = 0; i < pulsesPerSlope[circle][slopeIndex]; i++)
+                for (i = 0; i < pulsesPerSlope[circle][slopeIndex]; i++)
                 {
                     // X-Step
                     digitalWrite(xMotor[STEP_PIN], LOW);
+                    delay(1);
                     digitalWrite(xMotor[STEP_PIN], HIGH);
                 }
             }
             else
             {
-                for (int i = 0; i < pulsesPerSlope[circle][slopeIndex]; i++)
+                for (i = 0; i < pulsesPerSlope[circle][slopeIndex]; i++)
                 {
                     // X-Step
                     digitalWrite(xMotor[STEP_PIN], LOW);
+                    delay(1);
                     digitalWrite(xMotor[STEP_PIN], HIGH);
 
                     // Y-Step
                     digitalWrite(yMotor[STEP_PIN], LOW);
+                    delay(1);
                     digitalWrite(yMotor[STEP_PIN], HIGH);
                 }
             }
@@ -135,26 +146,36 @@ void makeCircle(int circle, int firstQuarter)
 
 // Calculates and stores the number of pulses that need to be made at each slope
 // Creates evenly spaced circles based on MILLIMETERS_PER_UNITSPACE, STEPS_PER_MILLIMETER, and NUM_CIRCLES 
-void calculatePulsesPerSlope(){
+void calculatePulsesPerSlope()
+{
+    // Loop counter
+    int circle;
 
     int outerRadius, deltaR;
 
     // Calculate the radius of the largest circle in eighth steps
     outerRadius = MILLIMETERS_PER_UNITSPACE * STEPS_PER_MILLIMETER * 8;
 
-    // Ensure that each radius is evenly spaced from the center
-    outerRadius = outerRadius - outerRadius % NUM_CIRCLES;
+    // Ensure that each radius is evenly spaced from the center and the difference is in full steps
+    outerRadius = outerRadius - outerRadius % (NUM_CIRCLES * 8);
 
     // Calculate the spacing between the circles
     deltaR = outerRadius / NUM_CIRCLES;
 
+    // Allows the centerPiece() function to move back to the center of the square
+    // using the standard moveToNextCircle() function
+    circleRadius[NUM_CIRCLES] = 0;
+
     // Loop over each circle
-    for (int circle = 0; circle < NUM_CIRCLES; circle++)
+    for (circle = 0; circle < NUM_CIRCLES; circle++)
     {
         int radius, xStepsRemaining, yStepsRemaining;
 
         // Radius of the current circle
         radius = outerRadius - deltaR * circle;
+
+        // Store circle radius in full steps
+        circleRadius[circle] = radius / 8;
 
         // StepsRemaining records the number of steps that need to be taken to reach the leftmost point on the circle
         // Initialize to the total number of steps per quarter circle. The starting point is the topmost point
@@ -258,4 +279,91 @@ float getInstantaneousSlope(int radius, int xStepsRemaining, int yStepsRemaining
         return 10000.0;
     
     return ((float) radius - xStepsRemaining) / yStepsRemaining;
+}
+
+// Moves electromagnet upwards from the center of the current square to the largest radius 
+// using the largest step size
+void moveToFirstCircle()
+{
+    // Loop counter
+    int i;
+
+    setScale(yMotor, WHOLE_STEPS);  
+    digitalWrite(yMotor[DIR_PIN], UP);  
+    for (i = 0; i < circleRadius[0]; i++)
+    {
+        // Y-Step
+        digitalWrite(yMotor[STEP_PIN], LOW);
+        delay(1);
+        digitalWrite(yMotor[STEP_PIN], HIGH);
+    }
+}
+
+// After each circle is made, the magnet moves counter-clockwise to the next quadrant and inward
+// one radius to the next circle. 
+// 0 <= currentCircle < NUM_CIRCLES
+// quarter must be one of the following values: 0=top, 1=left, 2=bottom, 3=right
+void moveToNextCircle(int currentCircle, int quarter)
+{
+    // Loop counter
+    int i;
+
+    // Both motors move in whole steps
+    setScale(xMotor, WHOLE_STEPS);  
+    setScale(yMotor, WHOLE_STEPS);
+
+    // Set Y-direction
+    if (quarter == QUARTER_TOP || quarter == QUARTER_LEFT)
+        digitalWrite(yMotor[DIR_PIN], DOWN);
+    else
+        digitalWrite(yMotor[DIR_PIN], UP);
+
+    // Set X-direction
+    if (quarter == QUARTER_TOP || quarter == QUARTER_RIGHT)
+        digitalWrite(xMotor[DIR_PIN], LEFT);
+    else
+        digitalWrite(xMotor[DIR_PIN], RIGHT);
+
+    
+    // Switching circles is decomposed into 2 movements.
+    // 1: A move with a slope of 1 or -1 that aligns the electromagnet with one of the
+    //    left/right/top/bottom of the next circle depending on the starting quarter
+    // 2: A move on either the x or y axis that has a magnitude of the difference between
+    //    the two radii. This moves the electromagnet onto the next circle
+
+    // 1: Step in both directions to align with part of the next circle
+    for (i = 0; i < circleRadius[currentCircle+1]; i++)
+    {
+        // X-Step
+        digitalWrite(xMotor[STEP_PIN], LOW);
+        delay(1);
+        digitalWrite(xMotor[STEP_PIN], HIGH);
+
+        // Y-Step
+        digitalWrite(yMotor[STEP_PIN], LOW);
+        delay(1);
+        digitalWrite(yMotor[STEP_PIN], HIGH);
+    }
+
+    // 2: Step down/up of left/right for the difference between circle radii to reach the next circle
+    if (quarter == QUARTER_TOP || quarter == QUARTER_BOTTOM)
+    {
+        for (i = 0; i < circleRadius[currentCircle+1]; i++)
+        {
+            // Y-Step
+            digitalWrite(yMotor[STEP_PIN], LOW);
+            delay(1);
+            digitalWrite(yMotor[STEP_PIN], HIGH);
+        }
+    }
+    else
+    {
+        for (i = 0; i < circleRadius[currentCircle+1]; i++)
+        {
+            // X-Step
+            digitalWrite(xMotor[STEP_PIN], LOW);
+            delay(1);
+            digitalWrite(xMotor[STEP_PIN], HIGH);
+        }
+    }
 }
