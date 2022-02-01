@@ -7,7 +7,7 @@ import numpy as np
 from torch.utils.data import DataLoader, TensorDataset
 
 from mcts import Mcts
-from checkpointing import save_model, load_model
+from ai_io import save_model, load_model
 from nn_layout import PlayNetwork
 from output_representation import PlayNetworkPolicyConverter
 from state_representation import get_cnn_input
@@ -37,7 +37,6 @@ class Train:
 
         # Specify where to save model and what model to load.
         self.save_path = save_path
-
 
     def training_game(self):
         """Run a full game, storing states, state values and policies for each state.
@@ -173,8 +172,6 @@ class Train:
                         break
                     if i == num_saved_models - 1:
                         save_model(nnet, f'chess-AI/models-{num_saved_models}.pt')
-
-
 
 def main():
     mcts_simulations = 3
