@@ -104,6 +104,7 @@ void makeCircle(int circle, int firstQuarter)
                 {
                     // Y-Step
                     digitalWrite(yMotor[STEP_PIN], LOW);
+                    delay(1);
                     digitalWrite(yMotor[STEP_PIN], HIGH);
                 }
             }
@@ -113,6 +114,7 @@ void makeCircle(int circle, int firstQuarter)
                 {
                     // X-Step
                     digitalWrite(xMotor[STEP_PIN], LOW);
+                    delay(1);
                     digitalWrite(xMotor[STEP_PIN], HIGH);
                 }
             }
@@ -122,10 +124,12 @@ void makeCircle(int circle, int firstQuarter)
                 {
                     // X-Step
                     digitalWrite(xMotor[STEP_PIN], LOW);
+                    delay(1);
                     digitalWrite(xMotor[STEP_PIN], HIGH);
 
                     // Y-Step
                     digitalWrite(yMotor[STEP_PIN], LOW);
+                    delay(1);
                     digitalWrite(yMotor[STEP_PIN], HIGH);
                 }
             }
@@ -290,6 +294,7 @@ void moveToFirstCircle()
     {
         // Y-Step
         digitalWrite(yMotor[STEP_PIN], LOW);
+        delay(1);
         digitalWrite(yMotor[STEP_PIN], HIGH);
     }
 }
@@ -331,10 +336,12 @@ void moveToNextCircle(int currentCircle, int quarter)
     {
         // X-Step
         digitalWrite(xMotor[STEP_PIN], LOW);
+        delay(1);
         digitalWrite(xMotor[STEP_PIN], HIGH);
 
         // Y-Step
         digitalWrite(yMotor[STEP_PIN], LOW);
+        delay(1);
         digitalWrite(yMotor[STEP_PIN], HIGH);
     }
 
@@ -345,6 +352,7 @@ void moveToNextCircle(int currentCircle, int quarter)
         {
             // Y-Step
             digitalWrite(yMotor[STEP_PIN], LOW);
+            delay(1);
             digitalWrite(yMotor[STEP_PIN], HIGH);
         }
     }
@@ -354,6 +362,7 @@ void moveToNextCircle(int currentCircle, int quarter)
         {
             // X-Step
             digitalWrite(xMotor[STEP_PIN], LOW);
+            delay(1);
             digitalWrite(xMotor[STEP_PIN], HIGH);
         }
     }
