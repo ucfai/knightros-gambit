@@ -80,6 +80,9 @@ void homeAxis(int motor[])
     delay(1);
     digitalWrite(motor[STEP_PIN], HIGH);
   }
+
+  currentX = 0;
+  currentY = 0;
 }
 
 // Homes both axis
@@ -99,6 +102,7 @@ uint8_t moveStraight(int motor[], int startCol, int startRow, int endCol, int en
   // How many steps per space
   int dir, numSteps, unitSpaces;
   int i;
+  int numEighthStepsX, numEighthStepsY;
 
   // This could be two cases, x or y movement
   // Abs ensures that numSteps will be positive
@@ -123,6 +127,11 @@ uint8_t moveStraight(int motor[], int startCol, int startRow, int endCol, int en
 
   numSteps = unitSpaces * stepsPerUnitSpace;
 
+  numEighthStepsX = 8;
+  numEighthStepsY = 8;
+  numEighthStepsX *= (dir == RIGHT) ? 1 : -1;
+  numEighthStepsY *= (dir == UP) ? 1 : -1;
+
   // Enable motor driver inputs/output
   enableMotors();
 
@@ -141,6 +150,9 @@ uint8_t moveStraight(int motor[], int startCol, int startRow, int endCol, int en
     digitalWrite(motor[STEP_PIN], LOW);
     delay(1);  // 1 milliSecond
     digitalWrite(motor[STEP_PIN], HIGH);
+
+    currentX += numEighthStepsX;
+    currentY += numEighthStepsY;
   }
 
   return SUCCESS;
@@ -155,6 +167,7 @@ uint8_t moveDiagonal(int startCol, int startRow, int endCol, int endRow)
   int unitSpacesX, unitSpacesY;
   int dirX, dirY;
   int numStepsX, numStepsY;
+  int numEighthStepsX, numEighthStepsY;
   int i;
 
   // Abs ensures that numStepsX and numStepsY will be positive
@@ -177,21 +190,30 @@ uint8_t moveDiagonal(int startCol, int startRow, int endCol, int endRow)
   {
     setScale(xMotor, WHOLE_STEPS);
     setScale(yMotor, WHOLE_STEPS);
+    numEighthStepsX = 8;
+    numEighthStepsY = 8;
   }
   else if (numStepsY > numStepsX && (numStepsY / numStepsX) == 2)
   {
     setScale(xMotor, HALF_STEPS);
     setScale(yMotor, WHOLE_STEPS);
+    numEighthStepsX = 4;
+    numEighthStepsY = 8;
   }
   else if (numStepsY < numStepsX && (numStepsX / numStepsY) == 2)
   {
     setScale(xMotor, WHOLE_STEPS);
     setScale(yMotor, HALF_STEPS);
+    numEighthStepsX = 8;
+    numEighthStepsY = 4;
   }
   else
   {
     return INVALID_ARGS;
   }
+
+  numEighthStepsX *= (dirX == RIGHT) ? 1 : -1;
+  numEighthStepsY *= (dirY == UP) ? 1 : -1;
 
   for (i = 0; i < numStepsX; i++)
   {
@@ -206,6 +228,9 @@ uint8_t moveDiagonal(int startCol, int startRow, int endCol, int endRow)
     delay(1);
     digitalWrite(xMotor[STEP_PIN], HIGH);
     digitalWrite(yMotor[STEP_PIN], HIGH);
+
+    currentX += numEighthStepsX;
+    currentY += numEighthStepsY;
   }
 
   return SUCCESS;
