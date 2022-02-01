@@ -14,6 +14,8 @@ import os
 import cv2
 
 def main():
+    '''Main loop to capture images from user keyboard input.
+    '''
     game_name = None
     # Prompt user for game name until they provide a dir name that does not already exist.
     while not game_name:
@@ -24,11 +26,16 @@ def main():
             print(f"The directory {game_name} already exists, please try again.")
             game_name = None
 
-    cam = cv2.VideoCapture(0)
+    # TODO: update this to use correct camera index on raspi
+    camera_idx = 0
+
+    # Set up camera
+    cam = cv2.VideoCapture(camera_idx)
     window_name = "KG Data Collection"
     cv2.namedWindow(window_name)
     move_counter = 0
 
+    # Main loop, captures images when SPACE pressed
     while True:
         ret, frame = cam.read()
 
@@ -43,7 +50,7 @@ def main():
             # ESC pressed
             print("Escape hit, ending data collection...")
             break
-        elif key % 256 == 32:
+        if key % 256 == 32:
             # SPACE pressed
             img_name = f"{game_name}/move_{move_counter}.png"
             cv2.imwrite(img_name, frame)
