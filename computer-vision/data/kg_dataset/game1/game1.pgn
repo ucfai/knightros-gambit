@@ -1,0 +1,12 @@
+[Event "KG Testing"]
+[Site "virtual"]
+[Date "2022.2.1"]
+[Round "Final"]
+[White "Nash"]
+[Black "Nash"]
+[Result "1-0"]
+[WhiteELO "bad"]
+[BlackELO "bad"]
+
+%Created by Caissa's Web PGN Editor
+1. e4 e5 2. Bc4 Nf6 3. Qh5 Nxe4 4. Qxf7# 1-0
