@@ -154,8 +154,8 @@ def train_on_dataset(dataset, nnet, options, show_dash=False):
     for epoch in range(options.epochs):
 
         # Variables used solely for monitoring training, not used for actually updating the model
-        value_losses = []
-        policy_losses = []
+        accuracy_pol = 0
+        accuracy_val = 0
         losses = []
         num_moves = 0
 
@@ -181,14 +181,15 @@ def train_on_dataset(dataset, nnet, options, show_dash=False):
             move_probs = move_probs.to(device=options.device)
             state_values = state_values.to(device=options.device)
 
+            accuracy_pol += torch.abs(torch.sum(move_probs - policy_batch, dim=0) / torch.numel(move_probs))
+            accuracy_val += torch.abs(torch.sum(state_values - value_batch, dim=0) / len(state_values))
+            
             # Compute policy loss and value loss using loss functions
             pol_loss = ce_loss_fn(policy_batch, move_probs)
             val_loss = mse_loss_fn(value_batch, state_values)
             loss = pol_loss + val_loss
 
-            # Add to list for graphing purposes
-            policy_losses.append(pol_loss)
-            value_losses.append(val_loss)
+    
             losses.append(loss.item())
 
             # Calculate gradients, update parameters, and reset gradients
@@ -196,11 +197,11 @@ def train_on_dataset(dataset, nnet, options, show_dash=False):
             opt.step()
             opt.zero_grad()
 
-        # Calculate and store the average losses
-        policy_loss = sum(policy_losses) / len(policy_losses)
-        value_loss = sum(value_losses) / len(value_losses)
-        average_pol_loss.append(policy_loss.cpu().detach().numpy())
-        average_val_loss.append(value_loss.cpu().detach().numpy())
+        accuracy_pol = torch.sigmoid(0 - torch.sum(accuracy_pol) / len(accuracy_pol))
+        accuracy_val = torch.sigmoid(0 - accuracy_val)
+        print(f"Pol Acc: {accuracy_pol}   Val Acc: {accuracy_val}")
+        #print(f"Batch Loss: {losses}")
+
 
         if show_dash:
             # Keep track of when each epoch is over
