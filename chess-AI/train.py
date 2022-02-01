@@ -1,6 +1,7 @@
 from functools import reduce
 
 import chess
+import os
 import torch
 import numpy as np
 from torch.utils.data import DataLoader, TensorDataset
@@ -33,6 +34,7 @@ class Train:
         # board -> state_value
         # if None, values will be based on the game outcome
         self.val_approximator = val_approximator
+
 
     def training_game(self):
         """Run a full game, storing states, state values and policies for each state.
@@ -99,7 +101,7 @@ class Train:
         print(board.outcome())
         return values
 
-    def training_episode(self, nnet, games, epochs, batch_size):
+    def training_episode(self, nnet, games, epochs, batch_size, num_saved_models, overwrite_save):
         """Builds dataset from given number of training games and current network,
         then trains the network on the MCTS output and game outcomes.
         """
@@ -155,23 +157,38 @@ class Train:
                         # Reset gradients
                         opt.zero_grad()
                 print(losses)
-            save_model(nnet)
+            for i in range(num_saved_models):
+                if not(os.path.isfile(f'chess-AI/models-{i+1}.pt')):
+                    if overwrite_save and i != 0:
+                        save_model(nnet, f'chess-AI/models-{i}.pt')
+                        break
+                    save_model(nnet, f'chess-AI/models-{i+1}.pt')
+                    break
+                if i == num_saved_models - 1:
+                    save_model(nnet, f'chess-AI/models-{num_saved_models}.pt')
 
 
 
 def main():
-    mcts_simulations = 5
+    mcts_simulations = 3
+    num_saved_models = 5
+    overwrite_save = True
     mcts = Mcts(exploration=5)
     nnet = PlayNetwork()
     nnet.train()
-    nnet = load_model(nnet)
+
+    for i in range(num_saved_models):
+        if not(os.path.isfile(f'chess-AI/models-{i+2}.pt')):
+            if i != 0:
+                nnet = load_model(nnet, f'chess-AI/models-{i+1}.pt')
+            break
 
     # Partially applies parameters to mcts function
     mcts_moves = lambda board: mcts.get_tree_results(mcts_simulations, nnet, board, temperature=5)
 
-    train = Train(lr=0.1, move_approximator=mcts_moves)
+    train = Train(lr=0.2, move_approximator=mcts_moves)
 
-    train.training_episode(nnet, games=10, epochs=5, batch_size=250)
+    train.training_episode(nnet, games=3, epochs=3, batch_size=10, num_saved_models=num_saved_models, overwrite_save=overwrite_save)
 
 
 if __name__ == "__main__":
