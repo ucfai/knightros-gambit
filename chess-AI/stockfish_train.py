@@ -1,8 +1,7 @@
 # User defined classes
 from output_representation import PlayNetworkPolicyConverter
 #from streamlit_dashboard import StreamlitDashboard
-from model import PlayNetwork
-from model_test import ModelTest
+from nn_layout import PlayNetwork
 
 # Pychess and Stockfish engines
 from stockfish import Stockfish
@@ -10,6 +9,7 @@ import chess
 
 # Utilities 
 import numpy as np
+import pandas as pd
 import time
 import random
 import streamlit as st
@@ -21,10 +21,10 @@ class StockfishTrain:
     Class for training our model utilizing stockfish
     '''
 
-    def __init__(self):
-        self.stockfish = Stockfish("/usr/local/bin/stockfish")
+    def __init__(self,path):
+        self.stockfish = Stockfish(path)
         self.policy_converter = PlayNetworkPolicyConverter()
-        self.dashboard = StreamlitDashboard()
+        # self.dashboard = StreamlitDashboard()
 
 
     def set_stockfish_params(self):
@@ -32,7 +32,11 @@ class StockfishTrain:
         self.stockfish.set_elo_rating(elo)
         self.stockfish.set_depth(depth)
 
+
     def sig(self,value):
+        '''
+        Sigmoid function
+        '''
         return 1 / (1 + np.exp(value))
 
     def choose_move(self,moves):
@@ -42,6 +46,7 @@ class StockfishTrain:
         Dependent on epsilon , it will either pick the top moe or 
         a random move
         '''
+
         epsilon = 0.3 
         e = np.random.rand() 
 
@@ -69,6 +74,8 @@ class StockfishTrain:
         dataset_stats["game_moves"].append(move_count)
         return dataset_stats
 
+
+
  
     def build_dataset(self,num_moves):
 
@@ -92,8 +99,10 @@ class StockfishTrain:
 
         move_count = 0
 
-        fen_string = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-        board = chess.Board(fen_string)
+        # fen_string = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+
+
+        board = chess.Board()
         player = 1
 
         start = time.time()
@@ -103,8 +112,9 @@ class StockfishTrain:
             if board.is_game_over():
                 self.update_dataset_stats(dataset_stats,board,player,move_count)
                 #Reset board
-                fen_string = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-                board = chess.Board(fen_string)
+                #fen_string = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+
+                board = chess.Board()
                 player = 1
                 continue
 
@@ -120,24 +130,45 @@ class StockfishTrain:
         end = time.time()
 
         dataset_stats["time"] = end - start
-        self.dashboard.visualize_dataset(num_moves,dataset_stats)
-        return fen_strings,move_probs,move_values
+        #self.dashboard.visualize_dataset(num_moves,dataset_stats)
+
+        # Code to write save dataset as a CSV
+        d = {
+            "fen_strings": fen_strings,
+            "state_values": move_values,
+            "move_probs": move_probs
+            
+        }
+        df = pd.DataFrame(data = d)
+        df.to_csv(index=False)
+
+        #return fen_strings,move_probs,move_values
 
 
-    def simulate_move(self,board,fen_strings,mcts_probs,mcts_evals,fen_string,player):
+    def value_approximator(self,board):
+          
+        player = board.turn
 
-        '''
-        This will build a dataset to be trained on
-        '''
+        if(player == chess.WHITE):
+            player =1 
+        else:
+            player = -1
+
+        stockfish_value = self.stockfish.get_evaluation()["value"] * player 
+        stockfish_value = 1 - 2 * self.sig(stockfish_value)
+
+        return stockfish_value
+
+
+    def get_move_probs(self,board):
+
+        fen_string = board.fen()
 
         self.stockfish.set_fen_position(fen_string)          
 
         # Stockfish always evaluates from whites perspective, this will also consider black
-        stockfish_value = self.stockfish.get_evaluation()["value"] * player 
-
 
         # Will calculate the sigmoid and adjust from [-1 -> 1]
-        stockfish_value = 1 - 2 * self.sig(stockfish_value)
 
         # Will get the top moves
         stockfish_topmoves = self.stockfish.get_top_moves(len(list(board.legal_moves)))
@@ -154,7 +185,6 @@ class StockfishTrain:
             curr_move = move["Move"]
             moves.append(curr_move)
 
-
             # Want to set the search prob of the best move equal to 1 and the others equal to 0
             if (bestmove == False):
                 search_probs.append(1)
@@ -168,8 +198,11 @@ class StockfishTrain:
                                                         )
 
         # Appends the necessary values to the lists to be used for training
-        fen_strings.append(fen_string)
-        mcts_probs.append(full_search_probs)
-        mcts_evals.append(stockfish_value)
+        #fen_strings.append(fen_string)
+        #mcts_probs.append(full_search_probs)
+        #mcts_evals.append(stockfish_value)
 
-        return self.choose_move(moves)
+
+        return moves,full_search_probs,move
+
+        #return self.choose_move(moves)

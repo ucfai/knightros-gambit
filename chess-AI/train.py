@@ -179,6 +179,7 @@ def main():
     load_path = None
     overwrite_save = True
     mcts = Mcts(exploration=5)
+    stockfish = StockfishTrain()
     nnet = PlayNetwork()
     nnet.train()
 
@@ -193,11 +194,18 @@ def main():
         
 
     # Partially applies parameters to mcts function
-    mcts_moves = lambda board: mcts.get_tree_results(mcts_simulations, nnet, board, temperature=5)
+    
+    for _ in range(stocktrain_amt):
+        mcts_moves = lambda board: mcts.get_tree_results(mcts_simulations, nnet, board, temperature=5)
+        train = Train(lr=0.2, move_approximator=mcts_moves, save_path=None)
+        train.training_episode(nnet, games=3, epochs=3, batch_size=10, num_saved_models=num_saved_models, overwrite_save=overwrite_save)
 
-    train = Train(lr=0.2, move_approximator=mcts_moves, save_path=None)
-
-    train.training_episode(nnet, games=3, epochs=3, batch_size=10, num_saved_models=num_saved_models, overwrite_save=overwrite_save)
+    
+    for _ in range(mcts_amt):
+        value_approximator = stockfish.value_approximator()
+        mcts_moves = lambda board: stockfish.get_move_probs(board)
+        train = Train(lr=0.2, move_approximator=mcts_moves,val_approximator=value_approximator, save_path=None)
+        train.training_episode(nnet, games=3, epochs=3, batch_size=10, num_saved_models=num_saved_models, overwrite_save=overwrite_save)
 
 
 if __name__ == "__main__":
