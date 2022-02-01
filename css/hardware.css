@@ -59,7 +59,6 @@ body {
   font-family: 'Roboto';
   color: rgb(172, 172, 172); 
   line-height: 20px; 
-  display: flex;
   align-items: center;
   justify-content: center;
 }
@@ -120,6 +119,23 @@ body {
   border-style: inset;
   border-width: 1px;
   border-color: rgb(182, 153, 97);
+}
+/* link formatting and colors*/
+a:link {
+  color: rgb(182, 153, 97);
+  text-decoration: none;
+}
+a:visited {
+  color: rgb(182, 153, 97);
+  text-decoration: none;
+}
+a:hover {
+  color: rgb(124, 124, 124);
+  text-decoration: none;
+}
+a:active {
+  color: rgb(228, 222, 197);
+  text-decoration: none;
 }
 /* The sidebar menu */
 .sidebar {
