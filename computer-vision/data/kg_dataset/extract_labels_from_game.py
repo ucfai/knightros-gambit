@@ -1,16 +1,16 @@
 ''' This script generates labeled data for developing classifiers for piece color and piece type.
 
-NOTE: This script requires the CLI tool `pgn-extract` be installed.
+Note: This script requires the CLI tool `pgn-extract` be installed.
 
-The script does the following for each image/move in the user-specified <game_name> folder:
-    1) Create a subdirectory `<game_name>/j`.
-    2) Use the PGN to generate a fen string for move j and save it to `game_name/j/board.fen`.
+The script does the following for each image/move in the user-specified `game_name` folder:
+    1) Create a subdirectory `game_name/j`, where `j` represents the current move (0-indexed).
+    2) Use the PGN to generate a fen string for move `j` and save it to `game_name/j/board.fen`.
     3) Use fen to create 2D grid of board state (where each cell consists of color and piece type
-    if it is occupied, else None).
+    if it is occupied, else '.').
     4) Align and segment (into 64 images, one per board square) the image corresponding to move j.
-    5) Save each square as a single image with path `<game_name>/j/<square>.png` where `square` is
-    the cell on the chessboard for that piece (e.g. `e4`).
-    6) Generate two labels for each `square`, saving these in `<game_name>/j/labels.csv` (i.e.
+    5) Save each square as a single image with path `game_name/j/square.png` where `square` is the
+    cell on the chessboard for that piece (e.g. `e4`).
+    6) Generate two labels for each `square`, saving these in `game_name/j/labels.csv` (i.e.
     each row is of the form `square, color_label, type_label`)
         a) COLOR: 0, 1, 2; these correspond to '.', 'w', 'b') and are used for developing square
         occupancy detection using color.
