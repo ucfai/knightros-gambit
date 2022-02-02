@@ -49,42 +49,55 @@ void disableMotors()
 // Drives the motor corresponding to "motor" to it's home position (position 0)
 void homeAxis(int motor[])
 {
+  int * currentMotorPos;
+  int currentMotorDir, currentMotorNumEighthSteps;
   int i;
+
+  currentMotorPos = (motor == xMotor) ? &currentX : &currentY;
 
   // Loop until endstop collision, then fine tune it
   // LEFT and DOWN have same value, as do RIGHT and UP. Use LEFT
   // and RIGHT arbitrarily while tuning end stop for both x and y axes.
 
+  // Sets scale and direction for motor and current position
   digitalWrite(motor[DIR_PIN], LEFT);
   setScale(motor, WHOLE_STEPS);
+  currentMotorNumEighthSteps = 8;
+  currentMotorNumEighthSteps *= -1;
   while (digitalRead(motor[ENDSTOP_PIN]) == LOW)
   {
     digitalWrite(motor[STEP_PIN], LOW);
     delay(1);
     digitalWrite(motor[STEP_PIN], HIGH);
+
+    // Motor is moved above, current position for whatever motor updated here
+    *currentMotorPos += currentMotorNumEighthSteps;
   }
 
   digitalWrite(motor[DIR_PIN], RIGHT);
+  currentMotorNumEighthSteps *= -1;
   for (i = 0; i < HOME_CALIBRATION_OFFSET; i++)
   {
     digitalWrite(motor[STEP_PIN], LOW);
     delay(1);
     digitalWrite(motor[STEP_PIN], HIGH);
+   *currentMotorPos += currentMotorNumEighthSteps;
   }
 
   digitalWrite(motor[DIR_PIN], LEFT);
   setScale(motor, EIGHTH_STEPS);
+  currentMotorNumEighthSteps = 1;
+  currentMotorNumEighthSteps *= -1;
   while (digitalRead(motor[ENDSTOP_PIN]) == LOW)
   {
     digitalWrite(motor[STEP_PIN], LOW);
     delay(1);
     digitalWrite(motor[STEP_PIN], HIGH);
+    *currentMotorPos += currentMotorNumEighthSteps;
   }
 
-  // Initializing current position to 0 after homing function for safety,
-  // as all moves after will be based on the position given here
-  currentX = 0;
-  currentY = 0;
+  // Set the motor position to "home" position
+  *currentMotorPos = 0;
 }
 
 // Homes both axis
@@ -175,7 +188,7 @@ uint8_t moveDiagonal(int startCol, int startRow, int endCol, int endRow)
   int numEighthStepsX, numEighthStepsY;
   int i;
 
-  // In following initializations and if statements, numEigthSteps direction and scale is set as well
+  // In following initializations and if statements, numEigthSteps scale is set
   // Abs ensures that numStepsX and numStepsY will be positive
   // to ensure proper for loop execution
   unitSpacesX = abs(endCol - startCol);
