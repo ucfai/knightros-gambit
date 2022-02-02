@@ -77,7 +77,7 @@ void homeAxis(int motor[])
     *currentMotorPos += currentMotorNumEighthSteps;
   }
 
-  // Moving motor away from home to prepare for fine-tuning
+  // Flipping direction again to move motor away from home to prepare for fine-tuning
   digitalWrite(motor[DIR_PIN], RIGHT);
   currentMotorNumEighthSteps *= -1;
   for (i = 0; i < HOME_CALIBRATION_OFFSET; i++)
@@ -147,7 +147,7 @@ uint8_t moveStraight(int motor[], int startCol, int startRow, int endCol, int en
 
   numSteps = unitSpaces * stepsPerUnitSpace;
 
-  // Setting numEightSteps to 8 because function only moves in whole steps
+  // Setting numEighthSteps to 8 because function only moves in whole steps
   // Sign is set based off of direction of each motor
   numEighthStepsX = 8;
   numEighthStepsY = 8;
