@@ -81,6 +81,8 @@ void homeAxis(int motor[])
     digitalWrite(motor[STEP_PIN], HIGH);
   }
 
+  // Initializing current position to 0 after homing function for safety,
+  // as all moves after will be based on the position given here
   currentX = 0;
   currentY = 0;
 }
@@ -127,6 +129,8 @@ uint8_t moveStraight(int motor[], int startCol, int startRow, int endCol, int en
 
   numSteps = unitSpaces * stepsPerUnitSpace;
 
+  // Setting munEightSteps moved at a time to 8 because function only moves in whole steps
+  // Sign is set based off of direction of each motor
   numEighthStepsX = 8;
   numEighthStepsY = 8;
   numEighthStepsX *= (dir == RIGHT) ? 1 : -1;
@@ -151,6 +155,7 @@ uint8_t moveStraight(int motor[], int startCol, int startRow, int endCol, int en
     delay(1);  // 1 milliSecond
     digitalWrite(motor[STEP_PIN], HIGH);
 
+    // Updating current position per step for accuracy
     currentX += numEighthStepsX;
     currentY += numEighthStepsY;
   }
@@ -170,6 +175,7 @@ uint8_t moveDiagonal(int startCol, int startRow, int endCol, int endRow)
   int numEighthStepsX, numEighthStepsY;
   int i;
 
+  // In following initializations and if statements, numEigthSteps direction and scale is set as well
   // Abs ensures that numStepsX and numStepsY will be positive
   // to ensure proper for loop execution
   unitSpacesX = abs(endCol - startCol);
@@ -212,6 +218,7 @@ uint8_t moveDiagonal(int startCol, int startRow, int endCol, int endRow)
     return INVALID_ARGS;
   }
 
+  // Sign is set based off of direction of each motor
   numEighthStepsX *= (dirX == RIGHT) ? 1 : -1;
   numEighthStepsY *= (dirY == UP) ? 1 : -1;
 
@@ -229,6 +236,7 @@ uint8_t moveDiagonal(int startCol, int startRow, int endCol, int endRow)
     digitalWrite(xMotor[STEP_PIN], HIGH);
     digitalWrite(yMotor[STEP_PIN], HIGH);
 
+    // Updating current position per step for accuracy
     currentX += numEighthStepsX;
     currentY += numEighthStepsY;
   }
