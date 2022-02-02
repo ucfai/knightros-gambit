@@ -24,11 +24,11 @@ class StockfishTrain:
     def __init__(self,path):
         self.stockfish = Stockfish(path)
         self.policy_converter = PlayNetworkPolicyConverter()
-        # self.dashboard = StreamlitDashboard()
+        #self.dashboard = StreamlitDashboard()
 
-
-    def set_stockfish_params(self):
-        elo,depth = self.dashboard.configure_stockfish()
+    def set_params(self):
+        #elo,depth = self.dashboard.configure_stockfish()
+        elo,depth = 1000,5
         self.stockfish.set_elo_rating(elo)
         self.stockfish.set_depth(depth)
 
@@ -75,14 +75,12 @@ class StockfishTrain:
         return dataset_stats
 
 
-
- 
+    '''
     def build_dataset(self,num_moves):
 
-        '''
+     
         Will build the data set of with a 
         size of num_moves
-        '''
 
         move_probs = []
         move_values = []
@@ -143,14 +141,14 @@ class StockfishTrain:
         df.to_csv(index=False)
 
         #return fen_strings,move_probs,move_values
+    '''
 
-
-    def value_approximator(self,board):
+    def get_value(self,board):
           
         player = board.turn
 
         if(player == chess.WHITE):
-            player =1 
+            player = 1 
         else:
             player = -1
 
@@ -159,24 +157,17 @@ class StockfishTrain:
 
         return stockfish_value
 
-
     def get_move_probs(self,board):
 
         fen_string = board.fen()
 
         self.stockfish.set_fen_position(fen_string)          
 
-        # Stockfish always evaluates from whites perspective, this will also consider black
-
-        # Will calculate the sigmoid and adjust from [-1 -> 1]
-
-        # Will get the top moves
         stockfish_topmoves = self.stockfish.get_top_moves(len(list(board.legal_moves)))
     
         moves = []
         search_probs = []
 
-        # Flag for determining if best move has been found
         bestmove = False
 
         for move in stockfish_topmoves:
@@ -197,12 +188,8 @@ class StockfishTrain:
                                                         board
                                                         )
 
-        # Appends the necessary values to the lists to be used for training
-        #fen_strings.append(fen_string)
-        #mcts_probs.append(full_search_probs)
-        #mcts_evals.append(stockfish_value)
 
+        move = self.choose_move(moves)
 
-        return moves,full_search_probs,move
+        return moves,search_probs,move
 
-        #return self.choose_move(moves)

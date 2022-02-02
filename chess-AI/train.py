@@ -11,6 +11,7 @@ from ai_io import save_model, load_model
 from nn_layout import PlayNetwork
 from output_representation import PlayNetworkPolicyConverter
 from state_representation import get_cnn_input
+from stockfish_train import StockfishTrain
 
 
 class Train:
@@ -174,14 +175,26 @@ class Train:
                         save_model(nnet, f'chess-AI/models-{num_saved_models}.pt')
 
 def main():
+
     mcts_simulations = 3
+    mcts_amt = 100
+    exploration = 5
     num_saved_models = 5
+    mcts = Mcts(exploration)
+
+
+
+    stocktrain_amt = 100
+    stockfish_path = "/usr/local/bin/stockfish"
+    stockfish = StockfishTrain(stockfish_path)
+    stockfish.set_params()
+
+   
+
     load_path = None
     overwrite_save = True
-    mcts = Mcts(exploration=5)
-    stockfish = StockfishTrain()
     nnet = PlayNetwork()
-    nnet.train()
+
 
     if load_path != None:
         nnet = load_model(nnet, load_path)
@@ -190,24 +203,21 @@ def main():
             if not(os.path.isfile(f'chess-AI/models-{i+2}.pt')):
                 if i != 0:
                     nnet = load_model(nnet, f'chess-AI/models-{i+1}.pt')
-                break
-        
+                break     
 
-    # Partially applies parameters to mcts function
-    
     for _ in range(stocktrain_amt):
+        value_approximator = lambda board: stockfish.get_value(board)
+        stocktrain_moves = lambda board: stockfish.get_move_probs(board)
+        train = Train(lr=0.2, move_approximator=stocktrain_moves,val_approximator=value_approximator, save_path=None)
+        train.training_episode(nnet, games=3, epochs=3, batch_size=10, num_saved_models=num_saved_models, overwrite_save=overwrite_save)
+    
+    
+    for _ in range(mcts_amt):
         mcts_moves = lambda board: mcts.get_tree_results(mcts_simulations, nnet, board, temperature=5)
         train = Train(lr=0.2, move_approximator=mcts_moves, save_path=None)
         train.training_episode(nnet, games=3, epochs=3, batch_size=10, num_saved_models=num_saved_models, overwrite_save=overwrite_save)
 
     
-    for _ in range(mcts_amt):
-        value_approximator = stockfish.value_approximator()
-        mcts_moves = lambda board: stockfish.get_move_probs(board)
-        train = Train(lr=0.2, move_approximator=mcts_moves,val_approximator=value_approximator, save_path=None)
-        train.training_episode(nnet, games=3, epochs=3, batch_size=10, num_saved_models=num_saved_models, overwrite_save=overwrite_save)
-
-
 if __name__ == "__main__":
     main()
  
