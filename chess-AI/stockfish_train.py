@@ -14,7 +14,6 @@ import time
 import random
 import streamlit as st
 
-
 class StockfishTrain:
 
     '''
@@ -24,11 +23,10 @@ class StockfishTrain:
     def __init__(self,path):
         self.stockfish = Stockfish(path)
         self.policy_converter = PlayNetworkPolicyConverter()
-        #self.dashboard = StreamlitDashboard()
 
-    def set_params(self):
-        #elo,depth = self.dashboard.configure_stockfish()
-        elo,depth = 1000,5
+
+    def set_params(self,dashboard):
+        elo,depth = dashboard.configure_stockfish()
         self.stockfish.set_elo_rating(elo)
         self.stockfish.set_depth(depth)
 
@@ -74,75 +72,6 @@ class StockfishTrain:
         dataset_stats["game_moves"].append(move_count)
         return dataset_stats
 
-
-    '''
-    def build_dataset(self,num_moves):
-
-     
-        Will build the data set of with a 
-        size of num_moves
-
-        move_probs = []
-        move_values = []
-        fen_strings = []
-
-        # Dictionary to hold all the stats about the dataset
-        dataset_stats = {
-            "stalemates":0,
-            "black_wins":0,
-            "white_wins":0,
-            "game_moves":[],
-            "completed_games":0
-        }
-
-        move_count = 0
-
-        # fen_string = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-
-
-        board = chess.Board()
-        player = 1
-
-        start = time.time()
-
-        for _ in range(int(num_moves)):
-            # If the game is over then restart from the beginning, to build more examples
-            if board.is_game_over():
-                self.update_dataset_stats(dataset_stats,board,player,move_count)
-                #Reset board
-                #fen_string = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-
-                board = chess.Board()
-                player = 1
-                continue
-
-            move = self.simulate_move(board,fen_strings,move_probs,move_values,fen_string,player)
-            move = chess.Move.from_uci(move) 
-            move_count += 1
-            board.push(move)
-
-            # Alternate between white and black 1 = white, -1 = black
-            player = player * -1
-            fen_string = board.fen()
-              
-        end = time.time()
-
-        dataset_stats["time"] = end - start
-        #self.dashboard.visualize_dataset(num_moves,dataset_stats)
-
-        # Code to write save dataset as a CSV
-        d = {
-            "fen_strings": fen_strings,
-            "state_values": move_values,
-            "move_probs": move_probs
-            
-        }
-        df = pd.DataFrame(data = d)
-        df.to_csv(index=False)
-
-        #return fen_strings,move_probs,move_values
-    '''
-
     def get_value(self,board):
           
         player = board.turn
@@ -182,12 +111,6 @@ class StockfishTrain:
                 bestmove = True
             else:
                 search_probs.append(0)
-        
-        full_search_probs = self.policy_converter.compute_full_search_probs(moves,
-                                                        search_probs,
-                                                        board
-                                                        )
-
 
         move = self.choose_move(moves)
 

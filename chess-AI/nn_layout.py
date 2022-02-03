@@ -28,6 +28,10 @@ class PlayNetwork(nn.Module):
         self.num_res_blocks = 2
         self.num_filters = 32
 
+        self.device = torch.device('cpu')
+        if torch.cuda.is_available():
+            self.device = torch.device('cuda:0')
+
         # Takes 119 channels of input comprised of 7 previous states' piece and repetition
         # planes plus the current state input of 21 channels.
         self.conv_layer = nn.Sequential(nn.Conv2d(in_channels=19,
@@ -52,7 +56,7 @@ class PlayNetwork(nn.Module):
                                                    kernel_size=3,
                                                    padding=1,
                                                    bias=False),
-                                         nn.BatchNorm2d(self.num_filters)) for _ in range(self.num_res_blocks)]
+                                         nn.BatchNorm2d(self.num_filters)).to(device=self.device) for _ in range(self.num_res_blocks)]
 
         # Use 2 1x1 filters to convolve input channels to 2 output channels, one
         # representing piece to move, and the other representing move to take out 
