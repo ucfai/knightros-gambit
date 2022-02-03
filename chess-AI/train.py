@@ -132,7 +132,7 @@ class Train:
 
         return dataset
 
-    def trainon_dataset(self, dataset, dashboard, nnet, epochs, batch_size, num_saved_models, overwrite_save):
+    def train_on_dataset(self, dataset, dashboard, nnet, epochs, batch_size, num_saved_models, overwrite_save):
         """Function to train the model given a dataset
 
         Parameters:
@@ -173,6 +173,7 @@ class Train:
                 value_batch = []
 
                 # Store policies and values for entire batch
+                # TODO: Loop might be replaceable with one nnet call on inputs followed by zip to separate lists
                 for state in inputs:
                     policy, value = nnet(state.to(device=self.device))
                     policy_batch.append(policy)
@@ -191,16 +192,11 @@ class Train:
                 value_losses.append(val_loss)
 
                 loss = pol_loss + val_loss
-
                 losses.append(loss.item())
 
-                # Calculate Gradients
+                # Calculate gradients, update parameters, and reset gradients
                 loss.backward()
-
-                # Update parameters
                 opt.step()
-
-                # Reset gradients
                 opt.zero_grad()
 
             end = time.time()
@@ -244,32 +240,28 @@ def main():
     # NOTE: In official training we will not need the dashboard, just an easy way to test parameters
     dashboard = StreamlitDashboard()
 
-    stockfish_path = dashboard.set_stockfish_path()
+    stocktrain_games, stocktrain_epochs, mcts_games, mcts_epochs = dashboard.set_training_data()
+    batch_size, learning_rate = dashboard.set_nnet_hyperparamters()
 
     # Gets stockfish training object, and sets parameters (elo,depth)
+    stockfish_path = dashboard.set_stockfish_path()
     stockfish = StockfishTrain(stockfish_path)
     stockfish.set_params(dashboard)
 
-    stocktrain_games, stocktrain_epochs, mcts_games, mcts_epochs = dashboard.set_training_data()
-
+    # Get MCTS object and parameters
     # TODO: Figure out how many times to perform self play (and better name for this variable)
     mcts_amt = 5
     mcts_simulations, exploration = dashboard.set_mcts_params()
-
-    # Gets mcts object
     mcts = Mcts(exploration)
 
-    batch_size, learning_rate = dashboard.set_nnet_hyperparamters()
-
-    # Ways to choose a model or a dataset to use
-    model_path = dashboard.load_path()
-    dataset_path = dashboard.load_dataset()
+    nnet = PlayNetwork().to(device=device)
 
     # TODO: Allow user choice for these values
     num_saved_models = 5
     overwrite_save = True
 
-    nnet = PlayNetwork().to(device=device)
+    model_path = dashboard.load_path()
+    dataset_path = dashboard.load_dataset()
 
     # Load in a model
     if model_path is not None:
@@ -284,8 +276,8 @@ def main():
     if dashboard.train_button():
 
         # Value and move approximators from stockfish
-        value_approximator = lambda board: stockfish.get_value(board)
-        stocktrain_moves = lambda board: stockfish.get_move_probs(board)
+        value_approximator = stockfish.get_value
+        stocktrain_moves = stockfish.get_move_probs
 
         # Training object instantiated using stockfish data
         train = Train(learning_rate=learning_rate, move_approximator=stocktrain_moves, save_path=None, device=device,
@@ -296,23 +288,21 @@ def main():
             dataset = torch.load(dataset_path)
         else:
             dataset = train.create_dataset(stocktrain_games)
-
             # NOTE: Dataset should be given a more descriptive name, this is just temporary
             torch.save(dataset, 'datasets/stockfish_data.pt')
 
-        # Train using the stockfish datset
-        train.trainon_dataset(dataset, dashboard, nnet, epochs=stocktrain_epochs, batch_size=batch_size,
-                              num_saved_models=num_saved_models, overwrite_save=overwrite_save)
+        # Train using the stockfish dataset
+        train.train_on_dataset(dataset, dashboard, nnet, epochs=stocktrain_epochs, batch_size=batch_size,
+                               num_saved_models=num_saved_models, overwrite_save=overwrite_save)
 
-        # Will iterate through the number of self play simulations (again need to come up wih a name for this)
+        # Will iterate through the number of training episodes
         for _ in range(mcts_amt):
-            # Move prob approximator for MCTS
             mcts_moves = lambda board: mcts.get_tree_results(mcts_simulations, nnet, board, temperature=5)
             train = Train(learning_rate=learning_rate, move_approximator=mcts_moves, save_path=None, device=device,
                           val_approximator=None)
             dataset = train.create_dataset(mcts_games)
-            train.trainon_dataset(dataset, dashboard, nnet, epochs=mcts_epochs, batch_size=batch_size,
-                                  num_saved_models=num_saved_models, overwrite_save=overwrite_save)
+            train.train_on_dataset(dataset, dashboard, nnet, epochs=mcts_epochs, batch_size=batch_size,
+                                   num_saved_models=num_saved_models, overwrite_save=overwrite_save)
 
 
 if __name__ == "__main__":
