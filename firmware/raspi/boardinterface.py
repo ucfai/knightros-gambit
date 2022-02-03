@@ -27,6 +27,10 @@ class Engine:
         self.king_to_rook_moves['e8g8'] = 'h8f8'
         self.king_to_rook_moves['e8c8'] = 'a8d8'
 
+        # board_fens[0] is the initial fen, board_fens[i] is the board fen after ith move.
+        self.board_fens = [self.fen()]
+        self.board_grids = [util.get_2d_board(self.fen())]
+
     def valid_moves_from_position(self):
         '''Returns list of all valid moves (in uci format) from the current board position.
         '''
@@ -49,6 +53,12 @@ class Engine:
         Assumes that provided uci_move is valid.
         '''
         self.chess_board.push_uci(uci_move)
+        self.board_fens.append(self.fen())
+        self.board_grids.append(util.get_2d_board(self.fen()))
+
+    def get_past_n_states(self, n):
+        '''Returns past n board states if at least n available, else all past board states.'''
+        return self.board_fens[-n:]
 
     def fen(self):
         '''Return fen string representation of current board state.
@@ -111,7 +121,7 @@ class Engine:
     def get_piece_info_from_square(self, square):
         '''Returns tuple of color and piece type from provided square.
         '''
-        return util.get_piece_info_from_square(square, util.get_2d_board(self.fen()))
+        return util.get_piece_info_from_square(square, self.board_grids[-1])
 
     def outcome(self):
         '''Returns None if game in progress, otherwise outcome of game.
@@ -244,7 +254,7 @@ class Board:
         '''Prints board as 2d grid.
         '''
         # (0, 0) corresponds to a1, want to print s.t. a1 is bottom left, so reverse rows
-        chess_grid = util.get_2d_board(self.engine.fen())
+        chess_grid = self.engine.board_grids[-1]
         chess_grid.reverse()
         # 8 x 8 chess board
         for i in range(8):
@@ -324,7 +334,7 @@ class Board:
 
         source, dest = Engine.get_chess_coords_from_uci_move(uci_move)
 
-        board_2d = util.get_2d_board(self.engine.fen())
+        board_2d = self.board_grids[-1]
         # Cut number of cases from 8 to 4 by treating soure and dest interchangeably
         left, right = (source, dest) if source.col < dest.col else (dest, source)
         if left.col == right.col - 1:
