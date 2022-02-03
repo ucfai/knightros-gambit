@@ -89,7 +89,6 @@ class Train:
         if self.val_approximator is None:
             state_values = self.assign_rewards(board, len(all_move_probs))
 
-        print("Game Over")
         return board_fens, state_values, all_move_probs
 
     def assign_rewards(self, board, length):
@@ -127,6 +126,8 @@ class Train:
 
     def trainon_dataset(self,dataset,dashboard, nnet, epochs, batch_size, num_saved_models, overwrite_save):
         with torch.no_grad():
+
+            # Holds the average losses for graphing purposes
             average_pol_loss = []
             average_val_loss = []
 
@@ -187,12 +188,14 @@ class Train:
 
                 end = time.time()
 
+                # Calculate average losses and add it to the list
                 policy_loss = sum(policy_losses)/len(policy_losses)
                 value_loss =  sum(value_losses)/len(value_losses)
                 average_pol_loss.append(policy_loss.cpu())
                 average_val_loss.append(value_loss.cpu())
 
-        dashboard.visualize_epochs(policy_loss,value_loss,end,start,num_moves,e)
+            dashboard.visualize_epochs(policy_loss,value_loss,end,start,num_moves,e)
+
         dashboard.visualize_training_stats(average_pol_loss,average_val_loss)
 
         # Saves model to specified file, or a new file if not specified.
@@ -200,16 +203,17 @@ class Train:
             save_model(nnet, self.save_path)
         else:
             for i in range(num_saved_models):
-                if not(os.path.isfile(f'models-{i+1}.pt')):
+                if not(os.path.isfile(f'models/models-{i+1}.pt')):
                     if overwrite_save and i != 0:
-                        save_model(nnet, f'models-{i}.pt')
+                        save_model(nnet, f'models/models-{i}.pt')
                         break
-                    save_model(nnet, f'models-{i+1}.pt')
+                    save_model(nnet, f'models/models-{i+1}.pt')
                     break
                 if i == num_saved_models - 1:
-                    save_model(nnet, f'models-{num_saved_models}.pt')
+                    save_model(nnet, f'models/models-{num_saved_models}.pt')
 def main():
 
+    # Detect device to train on
     device = torch.device('cpu')
     if torch.cuda.is_available():
         device = torch.device('cuda:0')
@@ -221,12 +225,14 @@ def main():
     stockfish.set_params(dashboard)
 
     stocktrain_games,stocktrain_epochs,mcts_games,mcts_epochs = dashboard.set_training_data()
+
+    #TODO: Figure out how many times to perform self play
+    mcts_amt = 5
     mcts_simulations,exploration = dashboard.set_mcts_params()
 
     mcts = Mcts(exploration)
 
     batch_size,lr = dashboard.set_nnet_hyperparamters()
-
     model_path = dashboard.load_path()
     dataset_path = dashboard.load_dataset()
 
@@ -250,15 +256,17 @@ def main():
         stocktrain_moves = lambda board: stockfish.get_move_probs(board)
         train = Train(lr=lr, move_approximator=stocktrain_moves, save_path=None, device=device, val_approximator=value_approximator)
 
+        # Dataset needs to be either created or loaded
         if dataset_path:
             dataset = torch.load(dataset_path)
         else:
             dataset = train.create_dataset(stocktrain_games)
-            torch.save(dataset,'stockfish_data.pt')
+            torch.save(dataset,'datasets/stockfish_data.pt')
 
+        # Train using the stockfish datset
         train.trainon_dataset(dataset,dashboard,nnet,epochs=stocktrain_epochs, batch_size=batch_size, num_saved_models=num_saved_models, overwrite_save=overwrite_save)
 
-        for _ in range(5):
+        for _ in range(mcts_amt):
             mcts_moves = lambda board: mcts.get_tree_results(mcts_simulations, nnet, board, temperature=5)
             train = Train(lr=lr, move_approximator=mcts_moves, save_path=None, device=device, val_approximator=None)
             dataset = train.create_dataset(mcts_games)

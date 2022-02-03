@@ -1,6 +1,5 @@
 # User defined classes
 from output_representation import PlayNetworkPolicyConverter
-#from streamlit_dashboard import StreamlitDashboard
 from nn_layout import PlayNetwork
 
 # Pychess and Stockfish engines
@@ -9,10 +8,9 @@ import chess
 
 # Utilities 
 import numpy as np
-import pandas as pd
-import time
+
 import random
-import streamlit as st
+
 
 class StockfishTrain:
 
