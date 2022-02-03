@@ -112,28 +112,21 @@ class Train:
 
         return values
 
-    def create_dataset(self,games):
-        """ Will build a dataset
-
-        Parameters:
-        games: The number of games in the dataset
+    def create_dataset(self, games):
+        """Builds dataset from given number of training games
         """
-
         with torch.no_grad():
             # Obtain data from games and separate into appropriate lists
             game_data = [self.training_game() for _ in range(games)]
 
-
-            # TODO: Fix this logic
-            inputs = torch.stack([get_cnn_input(chess.Board(game[0])) for game in game_data])
-            state_values = torch.tensor([game[1] for game in game_data])
-            move_probs = torch.tensor([game[2] for game in game_data])
+            inputs = torch.stack([get_cnn_input(chess.Board(state)) for game in game_data for state in game[0]])
+            state_values = torch.tensor(state_val for game in game_data for state_val in game[1])
+            move_probs = torch.tensor([move_prob for game in game_data for move_prob in game[2]])
 
             # Create iterable dataset from game data
             dataset = TensorDataset(inputs, state_values, move_probs)
 
         return dataset
-            # Builds the dataset
 
     def trainon_dataset(self,dataset,dashboard, nnet, epochs, batch_size, num_saved_models, overwrite_save):
         with torch.no_grad():
