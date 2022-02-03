@@ -6,6 +6,7 @@ import torch
 import time
 import numpy as np
 from torch.utils.data import DataLoader, TensorDataset
+from zmq import device
 
 from mcts import Mcts
 from ai_io import save_model, load_model
@@ -153,13 +154,16 @@ class Train:
 
                         # Store policies and values for entire batch
                         for state in inputs:
-                            policy, value = nnet(state)
+                            policy, value = nnet(state.to(device=self.device))
                             policy_batch.append(policy)
                             value_batch.append(value)
 
                         # Convert the list of tensors to a single tensor for policy and value.
                         policy_batch = torch.stack(policy_batch).float().to(self.device)
                         value_batch = torch.stack(value_batch).flatten().float().to(self.device)
+
+                        move_probs = move_probs.to(device=self.device)
+                        state_values = state_values.to(device=self.device)
 
                         # Find the loss and store it
 
@@ -185,8 +189,8 @@ class Train:
 
                 policy_loss = sum(policy_losses)/len(policy_losses)
                 value_loss =  sum(value_losses)/len(value_losses)
-                average_pol_loss.append(policy_loss)
-                average_val_loss.append(value_loss)
+                average_pol_loss.append(policy_loss.cpu())
+                average_val_loss.append(value_loss.cpu())
 
         dashboard.visualize_epochs(policy_loss,value_loss,end,start,num_moves,e)
         dashboard.visualize_training_stats(average_pol_loss,average_val_loss)
