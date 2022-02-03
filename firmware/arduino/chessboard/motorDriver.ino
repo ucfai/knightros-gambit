@@ -50,7 +50,7 @@ void disableMotors()
 void homeAxis(int motor[])
 {
   int * currentMotorPos;
-  int currentMotorDir, currentMotorNumEighthSteps;
+  int currentMotorNumEighthSteps;
   int i;
 
   //  Stores corresponding motor position based off of which motor is being homed,
@@ -122,7 +122,12 @@ uint8_t moveStraight(int motor[], int startCol, int startRow, int endCol, int en
   // How many steps per space
   int dir, numSteps, unitSpaces;
   int i;
-  int numEighthStepsX, numEighthStepsY;
+  int * currentMotorPos;
+  int currentMotorNumEighthSteps;
+
+  // Same as homeAxis(), sets the loop to only update a cingle motors position at a time
+  // Direction is still determined seperately by if statements
+  currentMotorPos = (motor == xMotor) ? &currentX : &currentY;
 
   // This could be two cases, x or y movement
   // Abs ensures that numSteps will be positive
@@ -132,6 +137,8 @@ uint8_t moveStraight(int motor[], int startCol, int startRow, int endCol, int en
     unitSpaces = abs(endCol - startCol);
     dir = (endCol > startCol) ? RIGHT : LEFT;
     setScale(xMotor, WHOLE_STEPS);
+    // Sets motor and direction if X movement
+    currentMotorNumEighthSteps = (dir == RIGHT) ? 8 : -8;
   }
   else if (endCol == startCol)
   {
@@ -139,6 +146,8 @@ uint8_t moveStraight(int motor[], int startCol, int startRow, int endCol, int en
     unitSpaces = abs(endRow - startRow);
     dir = (endRow > startRow) ? UP : DOWN;
     setScale(yMotor, WHOLE_STEPS);
+    //Sets motor and direction if Y movement
+    currentMotorNumEighthSteps = (dir == UP) ? 8 : -8;
   }
   else
   {
@@ -146,13 +155,6 @@ uint8_t moveStraight(int motor[], int startCol, int startRow, int endCol, int en
   }
 
   numSteps = unitSpaces * stepsPerUnitSpace;
-
-  // Setting numEighthSteps to 8 because function only moves in whole steps
-  // Sign is set based off of direction of each motor
-  numEighthStepsX = 8;
-  numEighthStepsY = 8;
-  numEighthStepsX *= (dir == RIGHT) ? 1 : -1;
-  numEighthStepsY *= (dir == UP) ? 1 : -1;
 
   // Enable motor driver inputs/output
   enableMotors();
@@ -174,8 +176,7 @@ uint8_t moveStraight(int motor[], int startCol, int startRow, int endCol, int en
     digitalWrite(motor[STEP_PIN], HIGH);
 
     // Updating current position per step
-    currentX += numEighthStepsX;
-    currentY += numEighthStepsY;
+    *currentMotorPos += currentMotorNumEighthSteps;
   }
 
   return SUCCESS;
