@@ -4,7 +4,6 @@ import platform
 class StreamlitDashboard:
 
     def train_button(self):
-
         return st.sidebar.button("Begin Training")
 
     def load_path(self):
@@ -33,17 +32,18 @@ class StreamlitDashboard:
     def set_stockfish_path(self):
 
         operating_system = platform.system().lower()
+
         if operating_system == "darwin":
             stockfish_path = "/usr/local/bin/stockfish"
         else:
-            stockfish_path = st.text_input("Enter path where stockfish is located")
+            stockfish_path = st.text_input("Enter Stockfish Path")
 
         return stockfish_path
 
     def set_mcts_params(self):
 
-        st.sidebar.title("MCTS Params")
-        mcts_simulations = st.sidebar.number_input("Number of MCTS simulations",value = 5)
+        st.sidebar.title("Parameters for MCTS")
+        mcts_simulations = st.sidebar.number_input("MCTS Simulations",value = 5)
         exploration = st.sidebar.number_input("Exploration rate ",value = 5)
         return mcts_simulations,exploration
 
@@ -68,8 +68,10 @@ class StreamlitDashboard:
         return elo,depth
   
     def configure_dataset(self):
+
         st.sidebar.title("Dataset Size")
         num_moves = st.sidebar.number_input("Number of moves",value = 1000)
+
         return num_moves
 
     def set_nnet_hyperparamters(self):
@@ -80,35 +82,6 @@ class StreamlitDashboard:
         lr = st.sidebar.number_input("Learning Rate",value = 0.1)
 
         return batch_size,lr
-
-    def configure_nnet_structure(self):
-
-        st.sidebar.title("Tweak Neural Network")
-
-        res_blocks = st.sidebar.number_input("Residual Blocks",value = 40)
-        filters = st.sidebar.number_input("Filters",value = 32)
-
-        return res_blocks,filters
-
-    def test_stockfish(self):
-
-        st.sidebar.title("Test Against Stockfish")
-
-        test_elo = st.sidebar.number_input("Test Elo",value = 1000)
-        test_depth = st.sidebar.number_input("Test Depth",value = 5)
-        mcts_simulations = st.sidebar.number_input("Mcts simulations",value = 100)
-        num_games = st.sidebar.number_input("Number of games",value = 5)
-        mcts_exploration = st.sidebar.number_input("Exploration for monte carlo",value = 0.1)
-
-    def visualize_dataset(self,num_moves,dataset_stats):
-
-        st.title("Dataset Stats")
-        st.write("%d Training Examples generated in %f seconds!" % (num_moves, dataset_stats["time"]))
-        st.write("Completed Games ", dataset_stats["completed_games"])
-        st.write("Moves per game", dataset_stats["game_moves"])
-        st.write("Stalemates ", dataset_stats["stalemates"])
-        st.write("White Wins ", dataset_stats["white_wins"])
-        st.write("Black Wins ", dataset_stats["black_wins"])
       
 
     def visualize_epochs(self,policy_loss,value_loss,end,start,num_moves,e):
@@ -131,11 +104,3 @@ class StreamlitDashboard:
         st.line_chart(data = average_pol_losses)
         st.title("Value Losses")
         st.line_chart(data = average_val_losses )
-
-
-    def visualize_test_stats(self):
-
-            st.title("Testing against Stockfish")
-            st.write("Total AI Wins", ai_wins)
-            st.write("Total Stockfish Wins", stockfish_wins)
-            st.write("Total Stalemates", stalemates) 
