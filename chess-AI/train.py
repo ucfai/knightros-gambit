@@ -3,6 +3,7 @@ from functools import reduce
 import chess
 import os
 import torch
+import time
 import numpy as np
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -12,6 +13,7 @@ from nn_layout import PlayNetwork
 from output_representation import PlayNetworkPolicyConverter
 from state_representation import get_cnn_input
 from stockfish_train import StockfishTrain
+from streamlit_dashboard import StreamlitDashboard
 
 
 class Train:
@@ -23,7 +25,7 @@ class Train:
         mcts: References the MCTS class
         policy_converter: References the PlayNetworkPolicyConverter class
     """
-    def __init__(self, lr, move_approximator, save_path, val_approximator=None):
+    def __init__(self, lr, move_approximator, save_path, device, val_approximator=None):
         self.policy_converter = PlayNetworkPolicyConverter()
 
         # Learning rate
@@ -38,6 +40,8 @@ class Train:
 
         # Specify where to save model and what model to load.
         self.save_path = save_path
+
+        self.device = device
 
     def training_game(self):
         """Run a full game, storing states, state values and policies for each state.
@@ -56,6 +60,8 @@ class Train:
         board_fens = []
 
         board = chess.Board()
+
+
         while True:
             fen_string = board.fen()
             board_fens.append(fen_string)
@@ -79,11 +85,13 @@ class Train:
             # TODO: Consider removing `board.can_claim_draw()` as it may be slow to check.
             # See https://python-chess.readthedocs.io/en/latest/core.html#chess.Board.can_claim_draw
             if board.is_game_over() or board.can_claim_draw():
+                
                 break
 
         if self.val_approximator is None:
             state_values = self.assign_rewards(board, len(all_move_probs))
 
+        print("Game Over")
         return board_fens, state_values, all_move_probs
 
     def assign_rewards(self, board, length):
@@ -98,13 +106,9 @@ class Train:
             reward *= -1
             values[move_num] = reward
 
-        # For demonstration print the board and outcome
-        # print(board)
-        print(values)
-        print(board.outcome())
         return values
 
-    def training_episode(self, nnet, games, epochs, batch_size, num_saved_models, overwrite_save):
+    def create_dataset(self,games):
         """Builds dataset from given number of training games and current network,
         then trains the network on the MCTS output and game outcomes.
         """
@@ -119,8 +123,15 @@ class Train:
             state_values = torch.tensor(np.array(state_values)).float()
 
             # Create iterable dataset from game data
-            dataset = TensorDataset(inputs, state_values, move_probs)
-            train_dl = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=False)
+            dataset = TensorDataset(inputs, state_values, move_probs)            
+
+        return dataset
+            # Builds the dataset 
+
+    def trainon_dataset(self,dataset,dashboard, nnet, epochs, batch_size, num_saved_models, overwrite_save):
+        with torch.no_grad():
+            average_pol_loss = []
+            average_val_loss = []
 
             # Define loss functions
             ce_loss_fn = torch.nn.CrossEntropyLoss()
@@ -128,11 +139,18 @@ class Train:
 
             # Create optimizer for updating parameters during training.
             opt = torch.optim.SGD(nnet.parameters(), lr=self.lr, weight_decay=0.001, momentum=0.9)
+            train_dl = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=False)
 
             # Training Loop
-            for _ in range(epochs):
+            for e in range(epochs):
+                start = time.time()
+                value_losses = []
+                policy_losses = []
                 losses = []
+                num_moves = 0
                 for (inputs, state_values, move_probs) in train_dl:
+                    num_moves += 1
+
                     with torch.enable_grad():
                         policy_batch = []
                         value_batch = []
@@ -144,11 +162,18 @@ class Train:
                             value_batch.append(value)
 
                         # Convert the list of tensors to a single tensor for policy and value.
-                        policy_batch = torch.stack(policy_batch).float()
-                        value_batch = torch.stack(value_batch).flatten().float()
+                        policy_batch = torch.stack(policy_batch).float().to(self.device)
+                        value_batch = torch.stack(value_batch).flatten().float().to(self.device)
 
                         # Find the loss and store it
-                        loss = ce_loss_fn(policy_batch, move_probs) + mse_loss_fn(value_batch, state_values)
+
+                        pol_loss = ce_loss_fn(policy_batch, move_probs) 
+                        val_loss = mse_loss_fn(value_batch, state_values)
+                        policy_losses.append(pol_loss)
+                        value_losses.append(val_loss)
+
+                        loss = pol_loss + val_loss
+
                         losses.append(loss.item())
 
                         # Calculate Gradients
@@ -159,45 +184,59 @@ class Train:
 
                         # Reset gradients
                         opt.zero_grad()
-                print(losses)
-            # Saves model to specified file, or a new file if not specified.
-            if self.save_path != None:
-                save_model(nnet, self.save_path)
-            else:
-                for i in range(num_saved_models):
-                    if not(os.path.isfile(f'chess-AI/models-{i+1}.pt')):
-                        if overwrite_save and i != 0:
-                            save_model(nnet, f'chess-AI/models-{i}.pt')
-                            break
-                        save_model(nnet, f'chess-AI/models-{i+1}.pt')
-                        break
-                    if i == num_saved_models - 1:
-                        save_model(nnet, f'chess-AI/models-{num_saved_models}.pt')
+                
+                end = time.time()
 
+                policy_loss = sum(policy_losses)/len(policy_losses)
+                value_loss =  sum(value_losses)/len(value_losses)
+                average_pol_loss.append(policy_loss)
+                average_val_loss.append(value_loss)
+
+        dashboard.visualize_epochs(policy_loss,value_loss,end,start,num_moves,e)
+        dashboard.visualize_training_stats(average_pol_loss,average_val_loss)
+
+        # Saves model to specified file, or a new file if not specified.
+        if self.save_path != None:
+            save_model(nnet, self.save_path)
+        else:
+            for i in range(num_saved_models):
+                if not(os.path.isfile(f'models-{i+1}.pt')):
+                    if overwrite_save and i != 0:
+                        save_model(nnet, f'models-{i}.pt')
+                        break
+                    save_model(nnet, f'models-{i+1}.pt')
+                    break
+                if i == num_saved_models - 1:
+                    save_model(nnet, f'models-{num_saved_models}.pt')
 def main():
 
-    mcts_simulations = 3
-    mcts_amt = 100
-    exploration = 5
-    num_saved_models = 5
+    device = torch.device('cpu')
+    if torch.cuda.is_available():
+        device = torch.device('cuda:0')
+
+    dashboard = StreamlitDashboard()
+
+    stockfish_path = dashboard.set_stockfish_path()
+    stockfish = StockfishTrain(stockfish_path)
+    stockfish.set_params(dashboard)
+
+    stocktrain_games,stocktrain_epochs,mcts_games,mcts_epochs = dashboard.set_training_data()
+    mcts_simulations,exploration = dashboard.set_mcts_params()
+
     mcts = Mcts(exploration)
 
+    batch_size,lr = dashboard.set_nnet_hyperparamters()
 
+    model_path = dashboard.load_path()
+    dataset_path = dashboard.load_dataset()
 
-    stocktrain_amt = 100
-    stockfish_path = "/usr/local/bin/stockfish"
-    stockfish = StockfishTrain(stockfish_path)
-    stockfish.set_params()
-
-   
-
-    load_path = None
+    num_saved_models = 5
     overwrite_save = True
-    nnet = PlayNetwork()
 
+    nnet = PlayNetwork().to(device=device)
 
-    if load_path != None:
-        nnet = load_model(nnet, load_path)
+    if model_path != None:
+        nnet = load_model(nnet, model_path)
     else:
         for i in range(num_saved_models):
             if not(os.path.isfile(f'chess-AI/models-{i+2}.pt')):
@@ -205,17 +244,25 @@ def main():
                     nnet = load_model(nnet, f'chess-AI/models-{i+1}.pt')
                 break     
 
-    for _ in range(stocktrain_amt):
+    if(dashboard.train_button()):       
+
         value_approximator = lambda board: stockfish.get_value(board)
         stocktrain_moves = lambda board: stockfish.get_move_probs(board)
-        train = Train(lr=0.2, move_approximator=stocktrain_moves,val_approximator=value_approximator, save_path=None)
-        train.training_episode(nnet, games=3, epochs=3, batch_size=10, num_saved_models=num_saved_models, overwrite_save=overwrite_save)
-    
-    
-    for _ in range(mcts_amt):
-        mcts_moves = lambda board: mcts.get_tree_results(mcts_simulations, nnet, board, temperature=5)
-        train = Train(lr=0.2, move_approximator=mcts_moves, save_path=None)
-        train.training_episode(nnet, games=3, epochs=3, batch_size=10, num_saved_models=num_saved_models, overwrite_save=overwrite_save)
+        train = Train(lr=lr, move_approximator=stocktrain_moves, save_path=None, device=device, val_approximator=value_approximator)
+
+        if dataset_path:
+            dataset = torch.load(dataset_path)
+        else:
+            dataset = train.create_dataset(stocktrain_games)
+            torch.save(dataset,'stockfish_data.pt')
+
+        train.trainon_dataset(dataset,dashboard,nnet,epochs=stocktrain_epochs, batch_size=batch_size, num_saved_models=num_saved_models, overwrite_save=overwrite_save)
+
+        for _ in range(5):
+            mcts_moves = lambda board: mcts.get_tree_results(mcts_simulations, nnet, board, temperature=5)
+            train = Train(lr=lr, move_approximator=mcts_moves, save_path=None, device=device, val_approximator=None)
+            dataset = train.create_dataset(mcts_games)
+            train.trainon_dataset(dataset,dashboard,nnet, epochs=mcts_epochs, batch_size=batch_size, num_saved_models=num_saved_models, overwrite_save=overwrite_save)
 
     
 if __name__ == "__main__":
