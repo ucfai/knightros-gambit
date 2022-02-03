@@ -1,5 +1,7 @@
 from functools import reduce
 
+
+# Utility classes
 import chess
 import os
 import torch
@@ -8,6 +10,8 @@ import numpy as np
 from torch.utils.data import DataLoader, TensorDataset
 from zmq import device
 
+
+# User degined classes
 from mcts import Mcts
 from ai_io import save_model, load_model
 from nn_layout import PlayNetwork
@@ -61,6 +65,7 @@ class Train:
         board_fens = []
 
         board = chess.Board()
+
         while True:
             fen_string = board.fen()
             board_fens.append(fen_string)
@@ -69,14 +74,15 @@ class Train:
             # NOTE: moves[i] corresponds to search_probs[i]
             moves, move_probs, move = self.move_approximator(board)
 
-            # Converts mcts search probabilites to (8,8,73) vector
+            # Converts move probs into a (8,8,73) vector to be used for training
             move_probs_vector = self.policy_converter.compute_full_search_probs(moves, move_probs, board)
             all_move_probs.append(move_probs_vector)
 
+            # Val approximator will be none for MCTS
             if self.val_approximator is not None:
                 state_values.append(self.val_approximator(board))
 
-            # Makes the random action on the board, and gets fen string
+            # Makes the move on the pychess board
             move = chess.Move.from_uci(move)
             board.push(move)
 
@@ -86,6 +92,7 @@ class Train:
             if board.is_game_over() or board.can_claim_draw():
                 break
 
+        # Will assign the state values based on the result of the game for MCTS        
         if self.val_approximator is None:
             state_values = self.assign_rewards(board, len(all_move_probs))
 
@@ -106,14 +113,18 @@ class Train:
         return values
 
     def create_dataset(self,games):
-        """Builds dataset from given number of training games and current network,
-        then trains the network on the MCTS output and game outcomes.
+        """ Will build a dataset
+
+        Parameters:
+        games: The number of games in the dataset
         """
 
         with torch.no_grad():
             # Obtain data from games and separate into appropriate lists
             game_data = [self.training_game() for _ in range(games)]
 
+
+            # TODO: Fix this logic
             inputs = torch.stack([get_cnn_input(chess.Board(game[0])) for game in game_data])
             state_values = torch.tensor([game[1] for game in game_data])
             move_probs = torch.tensor([game[2] for game in game_data])
@@ -127,7 +138,7 @@ class Train:
     def trainon_dataset(self,dataset,dashboard, nnet, epochs, batch_size, num_saved_models, overwrite_save):
         with torch.no_grad():
 
-            # Holds the average losses for graphing purposes
+            # Stores the average losses to be graphed
             average_pol_loss = []
             average_val_loss = []
 
@@ -135,17 +146,21 @@ class Train:
             ce_loss_fn = torch.nn.CrossEntropyLoss()
             mse_loss_fn = torch.nn.MSELoss()
 
-            # Create optimizer for updating parameters during training.
+            # Create optimizer for updating parameters during training
+            # NOTE: We are using SGD right now, maybe consider other optimizer such as Adam
             opt = torch.optim.SGD(nnet.parameters(), lr=self.lr, weight_decay=0.001, momentum=0.9)
             train_dl = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=False)
 
-            # Training Loop
+            # Main training loop
             for e in range(epochs):
+
+                # Variables used solely for monitoring training
                 start = time.time()
                 value_losses = []
                 policy_losses = []
                 losses = []
                 num_moves = 0
+
                 for (inputs, state_values, move_probs) in train_dl:
                     num_moves += 1
 
@@ -166,7 +181,6 @@ class Train:
                         move_probs = move_probs.to(device=self.device)
                         state_values = state_values.to(device=self.device)
 
-                        # Find the loss and store it
 
                         pol_loss = ce_loss_fn(policy_batch, move_probs)
                         val_loss = mse_loss_fn(value_batch, state_values)
@@ -188,7 +202,7 @@ class Train:
 
                 end = time.time()
 
-                # Calculate average losses and add it to the list
+                # Calcualte and store the average losses
                 policy_loss = sum(policy_losses)/len(policy_losses)
                 value_loss =  sum(value_losses)/len(value_losses)
                 average_pol_loss.append(policy_loss.cpu())
@@ -199,6 +213,7 @@ class Train:
         dashboard.visualize_training_stats(average_pol_loss,average_val_loss)
 
         # Saves model to specified file, or a new file if not specified.
+        # TODO: Figure out how ofter we would like to save a model, right now looks like it is just saving at the end
         if self.save_path != None:
             save_model(nnet, self.save_path)
         else:
@@ -218,9 +233,13 @@ def main():
     if torch.cuda.is_available():
         device = torch.device('cuda:0')
 
+    # Initializes the streamlit dashboard
+    # NOTE: In official training we will not need the dashboard, just a way to play around with parameters
     dashboard = StreamlitDashboard()
 
     stockfish_path = dashboard.set_stockfish_path()
+
+    # Gets stockfish training object, and sets parameters
     stockfish = StockfishTrain(stockfish_path)
     stockfish.set_params(dashboard)
 
@@ -230,6 +249,7 @@ def main():
     mcts_amt = 5
     mcts_simulations,exploration = dashboard.set_mcts_params()
 
+    # Gets MCTS object and sets the exploration rate
     mcts = Mcts(exploration)
 
     batch_size,lr = dashboard.set_nnet_hyperparamters()

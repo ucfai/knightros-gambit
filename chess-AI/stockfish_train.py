@@ -8,14 +8,19 @@ import chess
 
 # Utilities 
 import numpy as np
-
 import random
 
 
 class StockfishTrain:
 
-    '''
-    Class for training our model utilizing stockfish
+    ''' Clas with all the necessary function for 
+    building a dataset using stockfish
+
+    
+    Attributes:
+        stockfish: The stockfish object
+        policy_converter: Reference to the Policy Converter Class
+    """
     '''
 
     def __init__(self,path):
@@ -29,18 +34,21 @@ class StockfishTrain:
         self.stockfish.set_depth(depth)
 
 
-    def sig(self,value):
+    def sig(self,value,scale):
+        '''Calculate the sigmoid of a value
+
+        Parameters:
+        value: The value to take the sigmoid of
+        scale: How much to scale the value by
         '''
-        Sigmoid function
-        '''
+        value = value/scale
         return 1 / (1 + np.exp(value))
 
     def choose_move(self,moves):
 
         '''
-        This ensures that we do not always just choose the top move
-        Dependent on epsilon , it will either pick the top moe or 
-        a random move
+        Chooses a move to mage
+        Ensures that the top move isn't always the one that is chosen
         '''
 
         epsilon = 0.3 
@@ -50,66 +58,59 @@ class StockfishTrain:
             move = moves[0]
         else:
             move = moves[random.randint(0,len(moves)-1)]
+
         return move
 
-    def update_dataset_stats(self,dataset_stats,board,player,move_count):
-
-        '''
-        Will display the information about the dataset
-        '''
-
-        if board.is_stalemate():
-            dataset_stats["stalemates"] += 1 
-        else:
-            if(player == 1):
-                dataset_stats["black_wins"] = 5
-            else:
-                dataset_stats["white_wins"] += 1
-
-        dataset_stats["completed_games"] += 1 
-        dataset_stats["game_moves"].append(move_count)
-        return dataset_stats
 
     def get_value(self,board):
-          
-        player = board.turn
 
-        if(player == chess.WHITE):
+        ''' 
+        Returns a value for a given state on the board
+        Utilizes stockfish Centipawn calculation through stockfish.get_evaluation()
+        '''
+ 
+        # get_evaluation() alway from white perspective, need to account for that  
+        if(board.turn == chess.WHITE):
             player = 1 
         else:
             player = -1
 
-        stockfish_value = self.stockfish.get_evaluation()["value"] * player 
-        stockfish_value = 1 - 2 * self.sig(stockfish_value)
+        value = self.stockfish.get_evaluation()["value"] * player 
+        value = 1 - 2 * self.sig(value)
 
-        return stockfish_value
+        return value
 
     def get_move_probs(self,board):
 
-        fen_string = board.fen()
+        '''
+        Gets the move probabilities from a position using stockfish get_top_moves
+        '''
 
+        fen_string = board.fen()
         self.stockfish.set_fen_position(fen_string)          
 
-        stockfish_topmoves = self.stockfish.get_top_moves(len(list(board.legal_moves)))
+        # Needs to get all the moves in order from best to worst
+        topmoves = self.stockfish.get_top_moves(len(list(board.legal_moves)))
     
         moves = []
         search_probs = []
-
         bestmove = False
 
-        for move in stockfish_topmoves:
+        for move in topmoves:
         
             # Get the move and append to the list of moves
             curr_move = move["Move"]
             moves.append(curr_move)
 
-            # Want to set the search prob of the best move equal to 1 and the others equal to 0
+            # Best move should have a prob of 1, where all others should be 0
+            # NOTE: Maybe instead of the best being 1 and the others zero, we can have some sort of distribution
             if (bestmove == False):
                 search_probs.append(1)
                 bestmove = True
             else:
                 search_probs.append(0)
 
+        # Will choose the move to make from the list of moves
         move = self.choose_move(moves)
 
         return moves,search_probs,move
