@@ -105,26 +105,23 @@ class Train:
 
         return values
 
-    def create_dataset(self,games):
-        """Builds dataset from given number of training games and current network,
-        then trains the network on the MCTS output and game outcomes.
+    def create_dataset(self, games):
+        """Builds dataset from given number of training games
         """
-
         with torch.no_grad():
             # Obtain data from games and separate into appropriate lists
             game_data = [self.training_game() for _ in range(games)]
 
-            inputs = torch.stack([get_cnn_input(chess.Board(game[0])) for game in game_data])
-            state_values = torch.tensor([game[1] for game in game_data])
-            move_probs = torch.tensor([game[2] for game in game_data])
+            inputs = torch.stack([get_cnn_input(chess.Board(state)) for game in game_data for state in game[0]])
+            state_values = torch.tensor(state_val for game in game_data for state_val in game[1])
+            move_probs = torch.tensor([move_prob for game in game_data for move_prob in game[2]])
 
             # Create iterable dataset from game data
             dataset = TensorDataset(inputs, state_values, move_probs)
 
         return dataset
-            # Builds the dataset
 
-    def trainon_dataset(self,dataset,dashboard, nnet, epochs, batch_size, num_saved_models, overwrite_save):
+    def trainon_dataset(self, dataset, dashboard, nnet, epochs, batch_size, num_saved_models, overwrite_save):
         with torch.no_grad():
 
             # Holds the average losses for graphing purposes
@@ -174,7 +171,6 @@ class Train:
                         value_losses.append(val_loss)
 
                         loss = pol_loss + val_loss
-
                         losses.append(loss.item())
 
                         # Calculate Gradients
@@ -190,16 +186,16 @@ class Train:
 
                 # Calculate average losses and add it to the list
                 policy_loss = sum(policy_losses)/len(policy_losses)
-                value_loss =  sum(value_losses)/len(value_losses)
+                value_loss = sum(value_losses)/len(value_losses)
                 average_pol_loss.append(policy_loss.cpu())
                 average_val_loss.append(value_loss.cpu())
 
-            dashboard.visualize_epochs(policy_loss,value_loss,end,start,num_moves,e)
+            dashboard.visualize_epochs(policy_loss, value_loss, end, start, num_moves, e)
 
-        dashboard.visualize_training_stats(average_pol_loss,average_val_loss)
+        dashboard.visualize_training_stats(average_pol_loss, average_val_loss)
 
         # Saves model to specified file, or a new file if not specified.
-        if self.save_path != None:
+        if self.save_path is not None:
             save_model(nnet, self.save_path)
         else:
             for i in range(num_saved_models):
@@ -224,11 +220,11 @@ def main():
     stockfish = StockfishTrain(stockfish_path)
     stockfish.set_params(dashboard)
 
-    stocktrain_games,stocktrain_epochs,mcts_games,mcts_epochs = dashboard.set_training_data()
+    stocktrain_games, stocktrain_epochs, mcts_games, mcts_epochs = dashboard.set_training_data()
 
-    #TODO: Figure out how many times to perform self play
+    # TODO: Figure out how many times to perform self play
     mcts_amt = 5
-    mcts_simulations,exploration = dashboard.set_mcts_params()
+    mcts_simulations, exploration = dashboard.set_mcts_params()
 
     mcts = Mcts(exploration)
 
@@ -241,7 +237,7 @@ def main():
 
     nnet = PlayNetwork().to(device=device)
 
-    if model_path != None:
+    if model_path is not None:
         nnet = load_model(nnet, model_path)
     else:
         for i in range(num_saved_models):
@@ -250,8 +246,7 @@ def main():
                     nnet = load_model(nnet, f'chess-AI/models-{i+1}.pt')
                 break     
 
-    if(dashboard.train_button()):
-
+    if dashboard.train_button():
         value_approximator = lambda board: stockfish.get_value(board)
         stocktrain_moves = lambda board: stockfish.get_move_probs(board)
         train = Train(lr=lr, move_approximator=stocktrain_moves, save_path=None, device=device, val_approximator=value_approximator)
@@ -261,16 +256,16 @@ def main():
             dataset = torch.load(dataset_path)
         else:
             dataset = train.create_dataset(stocktrain_games)
-            torch.save(dataset,'datasets/stockfish_data.pt')
+            torch.save(dataset, 'datasets/stockfish_data.pt')
 
         # Train using the stockfish datset
-        train.trainon_dataset(dataset,dashboard,nnet,epochs=stocktrain_epochs, batch_size=batch_size, num_saved_models=num_saved_models, overwrite_save=overwrite_save)
+        train.trainon_dataset(dataset, dashboard, nnet, epochs=stocktrain_epochs, batch_size=batch_size, num_saved_models=num_saved_models, overwrite_save=overwrite_save)
 
         for _ in range(mcts_amt):
             mcts_moves = lambda board: mcts.get_tree_results(mcts_simulations, nnet, board, temperature=5)
             train = Train(lr=lr, move_approximator=mcts_moves, save_path=None, device=device, val_approximator=None)
             dataset = train.create_dataset(mcts_games)
-            train.trainon_dataset(dataset,dashboard,nnet, epochs=mcts_epochs, batch_size=batch_size, num_saved_models=num_saved_models, overwrite_save=overwrite_save)
+            train.trainon_dataset(dataset, dashboard, nnet, epochs=mcts_epochs, batch_size=batch_size, num_saved_models=num_saved_models, overwrite_save=overwrite_save)
 
     
 if __name__ == "__main__":
