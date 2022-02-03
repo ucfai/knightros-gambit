@@ -16,6 +16,7 @@ from state_representation import get_cnn_input
 from stockfish_train import StockfishTrain
 from streamlit_dashboard import StreamlitDashboard
 
+
 class Train:
     """The main training class, used for training with Stockfish and the MCTS
 
@@ -27,6 +28,7 @@ class Train:
         save_path: The location where to save the model
         device: The device used for training (either CPU or CUDA)
     """
+
     def __init__(self, learning_rate, move_approximator, save_path, device, val_approximator=None):
         self.policy_converter = PlayNetworkPolicyConverter()
 
@@ -117,105 +119,101 @@ class Train:
         games: The total number of games in the dataset
         """
         with torch.no_grad():
-            # Obtain data from games and separate into appropriate lists
+            # Obtain data from games
             game_data = [self.training_game() for _ in range(games)]
 
-            # Convert all the fen strings into tensors that can be used to build the dataset
-            fen_strings = torch.stack([get_cnn_input(chess.Board(state)) for game in game_data for state in game[0]])
-            state_values = torch.tensor([state_val for game in game_data for state_val in game[1]]).float()
-            move_probs = torch.tensor([move_prob for game in game_data for move_prob in game[2]]).float()
+        # Convert all the fen strings into tensors that can be used to build the dataset
+        input_vectors = torch.stack([get_cnn_input(chess.Board(state)) for game in game_data for state in game[0]])
+        state_values = torch.tensor([state_val for game in game_data for state_val in game[1]]).float()
+        move_probs = torch.tensor([move_prob for game in game_data for move_prob in game[2]]).float()
 
-            # Create iterable dataset from game data
-            dataset = TensorDataset(fen_strings, state_values, move_probs)
+        # Create iterable dataset from game data
+        dataset = TensorDataset(input_vectors, state_values, move_probs)
 
         return dataset
 
-    def trainon_dataset(self,dataset,dashboard, nnet, epochs, batch_size, num_saved_models, overwrite_save):
+    def trainon_dataset(self, dataset, dashboard, nnet, epochs, batch_size, num_saved_models, overwrite_save):
+        """Function to train the model given a dataset
 
-        '''
-        Function to train the model given a dataset
         Parameters:
         dataset: the dataset to use for training
         dashboard: the streamlit dashboard
         nnet: the neural network
         epcohs: number of epochs
         batch_size: the batch size
-        
-        '''
-        with torch.no_grad():
+        """
 
-            # Stores the average losses that are used for graphing
-            average_pol_loss = []
-            average_val_loss = []
+        # Stores the average losses that are used for graphing
+        average_pol_loss = []
+        average_val_loss = []
 
-            # Define loss functions
-            ce_loss_fn = torch.nn.CrossEntropyLoss()
-            mse_loss_fn = torch.nn.MSELoss()
+        # Define loss functions
+        ce_loss_fn = torch.nn.CrossEntropyLoss()
+        mse_loss_fn = torch.nn.MSELoss()
 
-            # Create optimizer for updating parameters during training
-            # NOTE: We are using SGD right now, maybe consider other optimizers such as Adam
-            opt = torch.optim.SGD(nnet.parameters(), lr=self.learning_rate, weight_decay=0.001, momentum=0.9)
-            train_dl = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=False)
+        # Create optimizer for updating parameters during training
+        # NOTE: We are using SGD right now, maybe consider other optimizers such as Adam
+        opt = torch.optim.SGD(nnet.parameters(), lr=self.learning_rate, weight_decay=0.001, momentum=0.9)
+        train_dl = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=False)
 
-            # Main training loop
-            for epoch in range(epochs):
+        # Main training loop
+        for epoch in range(epochs):
 
-                # Variables used solely for monitoring training, not used for actually updating the model
-                start = time.time()
-                value_losses = []
-                policy_losses = []
-                losses = []
-                num_moves = 0
+            # Variables used solely for monitoring training, not used for actually updating the model
+            start = time.time()
+            value_losses = []
+            policy_losses = []
+            losses = []
+            num_moves = 0
 
-                for (inputs, state_values, move_probs) in train_dl:
-                    num_moves += 1
+            for (inputs, state_values, move_probs) in train_dl:
+                num_moves += 1
 
-                    with torch.enable_grad():
-                        policy_batch = []
-                        value_batch = []
+                policy_batch = []
+                value_batch = []
 
-                        # Store policies and values for entire batch
-                        for state in inputs:
-                            policy, value = nnet(state.to(device=self.device))
-                            policy_batch.append(policy)
-                            value_batch.append(value)
+                # Store policies and values for entire batch
+                for state in inputs:
+                    policy, value = nnet(state.to(device=self.device))
+                    policy_batch.append(policy)
+                    value_batch.append(value)
 
-                        # Convert the list of tensors to a single tensor for policy and value.
-                        policy_batch = torch.stack(policy_batch).float().to(self.device)
-                        value_batch = torch.stack(value_batch).flatten().float().to(self.device)
+                # Convert the list of tensors to a single tensor for policy and value.
+                policy_batch = torch.stack(policy_batch).float().to(self.device)
+                value_batch = torch.stack(value_batch).flatten().float().to(self.device)
 
-                        move_probs = move_probs.to(device=self.device)
-                        state_values = state_values.to(device=self.device)
+                move_probs = move_probs.to(device=self.device)
+                state_values = state_values.to(device=self.device)
 
-                        pol_loss = ce_loss_fn(policy_batch, move_probs)
-                        val_loss = mse_loss_fn(value_batch, state_values)
-                        policy_losses.append(pol_loss)
-                        value_losses.append(val_loss)
+                pol_loss = ce_loss_fn(policy_batch, move_probs)
+                val_loss = mse_loss_fn(value_batch, state_values)
+                policy_losses.append(pol_loss)
+                value_losses.append(val_loss)
 
-                        loss = pol_loss + val_loss
+                loss = pol_loss + val_loss
 
-                        losses.append(loss.item())
+                losses.append(loss.item())
 
-                        # Calculate Gradients
-                        loss.backward()
+                # Calculate Gradients
+                loss.backward()
 
-                        # Update parameters
-                        opt.step()
+                # Update parameters
+                opt.step()
 
-                        # Reset gradients
-                        opt.zero_grad()
+                # Reset gradients
+                opt.zero_grad()
 
-                end = time.time()
+            end = time.time()
 
-                # Calcualte and store the average losses
-                policy_loss = sum(policy_losses)/len(policy_losses)
-                value_loss =  sum(value_losses)/len(value_losses)
-                average_pol_loss.append(policy_loss.cpu())
-                average_val_loss.append(value_loss.cpu())
+            # Calculate and store the average losses
+            policy_loss = sum(policy_losses) / len(policy_losses)
+            value_loss = sum(value_losses) / len(value_losses)
+            average_pol_loss.append(policy_loss.cpu().detach().numpy())
+            average_val_loss.append(value_loss.cpu().detach().numpy())
 
-            dashboard.visualize_epochs(policy_loss,value_loss,end,start,num_moves,epoch)
+            dashboard.visualize_epochs(policy_loss, value_loss, end, start, num_moves, epoch)
 
-        dashboard.visualize_training_stats(average_pol_loss,average_val_loss)
+        dashboard.visualize_training_stats(average_pol_loss, average_val_loss)
 
         # Saves model to specified file, or a new file if not specified.
         # TODO: Figure out how ofter we would like to save a model, right now looks like it is just saving at the end of all the epochs
@@ -223,19 +221,19 @@ class Train:
             save_model(nnet, self.save_path)
         else:
             for i in range(num_saved_models):
-                if not(os.path.isfile(f'models/models-{i+1}.pt')):
+                if not (os.path.isfile(f'models/models-{i + 1}.pt')):
                     if overwrite_save and i != 0:
                         save_model(nnet, f'models/models-{i}.pt')
                         break
-                    save_model(nnet, f'models/models-{i+1}.pt')
+                    save_model(nnet, f'models/models-{i + 1}.pt')
                     break
                 if i == num_saved_models - 1:
                     save_model(nnet, f'models/models-{num_saved_models}.pt')
-def main():
 
-    '''
-    Main function for starting the training
-    '''
+
+def main():
+    """Main function for starting the training
+    """
 
     # Detect device to train on
     device = torch.device('cpu')
@@ -252,17 +250,16 @@ def main():
     stockfish = StockfishTrain(stockfish_path)
     stockfish.set_params(dashboard)
 
-    stocktrain_games,stocktrain_epochs,mcts_games,mcts_epochs = dashboard.set_training_data()
+    stocktrain_games, stocktrain_epochs, mcts_games, mcts_epochs = dashboard.set_training_data()
 
-    #TODO: Figure out how many times to perform self play (and better name for this variable)
+    # TODO: Figure out how many times to perform self play (and better name for this variable)
     mcts_amt = 5
-    mcts_simulations,exploration = dashboard.set_mcts_params()
+    mcts_simulations, exploration = dashboard.set_mcts_params()
 
     # Gets mcts object
     mcts = Mcts(exploration)
 
-
-    batch_size,learning_rate = dashboard.set_nnet_hyperparamters()
+    batch_size, learning_rate = dashboard.set_nnet_hyperparamters()
 
     # Ways to choose a model or a dataset to use
     model_path = dashboard.load_path()
@@ -279,43 +276,44 @@ def main():
         nnet = load_model(nnet, model_path)
     else:
         for i in range(num_saved_models):
-            if not(os.path.isfile(f'chess-AI/models-{i+2}.pt')):
+            if not (os.path.isfile(f'chess-AI/models-{i + 2}.pt')):
                 if i != 0:
-                    nnet = load_model(nnet, f'chess-AI/models-{i+1}.pt')
-                break     
+                    nnet = load_model(nnet, f'chess-AI/models-{i + 1}.pt')
+                break
 
-    if(dashboard.train_button()):
+    if dashboard.train_button():
 
         # Value and move approximators from stockfish
         value_approximator = lambda board: stockfish.get_value(board)
         stocktrain_moves = lambda board: stockfish.get_move_probs(board)
 
         # Training object instantiated using stockfish data
-        train = Train(learning_rate=learning_rate, move_approximator=stocktrain_moves, save_path=None, device=device, val_approximator=value_approximator)
+        train = Train(learning_rate=learning_rate, move_approximator=stocktrain_moves, save_path=None, device=device,
+                      val_approximator=value_approximator)
 
         # Dataset needs to be either created or loaded
         if dataset_path:
             dataset = torch.load(dataset_path)
         else:
             dataset = train.create_dataset(stocktrain_games)
-            
+
             # NOTE: Dataset should be given a more descriptive name, this is just temporary
-            torch.save(dataset,'datasets/stockfish_data.pt')
+            torch.save(dataset, 'datasets/stockfish_data.pt')
 
         # Train using the stockfish datset
-        train.trainon_dataset(dataset,dashboard,nnet,epochs=stocktrain_epochs, batch_size=batch_size, num_saved_models=num_saved_models, overwrite_save=overwrite_save)
+        train.trainon_dataset(dataset, dashboard, nnet, epochs=stocktrain_epochs, batch_size=batch_size,
+                              num_saved_models=num_saved_models, overwrite_save=overwrite_save)
 
-
-        #Will iterate through the number of self play simulations (again need to come up wih a name for this)
+        # Will iterate through the number of self play simulations (again need to come up wih a name for this)
         for _ in range(mcts_amt):
-
             # Move prob approximator for MCTS
             mcts_moves = lambda board: mcts.get_tree_results(mcts_simulations, nnet, board, temperature=5)
-            train = Train(learning_rate=learning_rate, move_approximator=mcts_moves, save_path=None, device=device, val_approximator=None)
+            train = Train(learning_rate=learning_rate, move_approximator=mcts_moves, save_path=None, device=device,
+                          val_approximator=None)
             dataset = train.create_dataset(mcts_games)
-            train.trainon_dataset(dataset,dashboard,nnet, epochs=mcts_epochs, batch_size=batch_size, num_saved_models=num_saved_models, overwrite_save=overwrite_save)
+            train.trainon_dataset(dataset, dashboard, nnet, epochs=mcts_epochs, batch_size=batch_size,
+                                  num_saved_models=num_saved_models, overwrite_save=overwrite_save)
 
-    
+
 if __name__ == "__main__":
     main()
- 
