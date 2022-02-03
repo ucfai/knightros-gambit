@@ -112,11 +112,10 @@ class Train:
         with torch.no_grad():
             # Obtain data from games and separate into appropriate lists
             game_data = [self.training_game() for _ in range(games)]
-            board_fens, state_values, move_probs = reduce(lambda g1, g2: (x+y for x, y in zip(g1, g2)), game_data)
 
-            inputs = torch.stack([get_cnn_input(chess.Board(fen)) for fen in board_fens])
-            move_probs = torch.tensor(np.array(move_probs)).float()
-            state_values = torch.tensor(np.array(state_values)).float()
+            inputs = torch.stack([get_cnn_input(chess.Board(game[0])) for game in game_data])
+            state_values = torch.tensor([game[1] for game in game_data])
+            move_probs = torch.tensor([game[2] for game in game_data])
 
             # Create iterable dataset from game data
             dataset = TensorDataset(inputs, state_values, move_probs)
@@ -174,29 +173,24 @@ class Train:
                     if i == num_saved_models - 1:
                         save_model(nnet, f'chess-AI/models-{num_saved_models}.pt')
 
-def main():
 
+def main():
     mcts_simulations = 3
     mcts_amt = 100
     exploration = 5
     num_saved_models = 5
     mcts = Mcts(exploration)
 
-
-
     stocktrain_amt = 100
     stockfish_path = "/usr/local/bin/stockfish"
     stockfish = StockfishTrain(stockfish_path)
     stockfish.set_params()
 
-   
-
     load_path = None
     overwrite_save = True
     nnet = PlayNetwork()
 
-
-    if load_path != None:
+    if load_path is not None:
         nnet = load_model(nnet, load_path)
     else:
         for i in range(num_saved_models):
@@ -208,10 +202,9 @@ def main():
     for _ in range(stocktrain_amt):
         value_approximator = lambda board: stockfish.get_value(board)
         stocktrain_moves = lambda board: stockfish.get_move_probs(board)
-        train = Train(lr=0.2, move_approximator=stocktrain_moves,val_approximator=value_approximator, save_path=None)
+        train = Train(lr=0.2, move_approximator=stocktrain_moves, val_approximator=value_approximator, save_path=None)
         train.training_episode(nnet, games=3, epochs=3, batch_size=10, num_saved_models=num_saved_models, overwrite_save=overwrite_save)
-    
-    
+
     for _ in range(mcts_amt):
         mcts_moves = lambda board: mcts.get_tree_results(mcts_simulations, nnet, board, temperature=5)
         train = Train(lr=0.2, move_approximator=mcts_moves, save_path=None)
