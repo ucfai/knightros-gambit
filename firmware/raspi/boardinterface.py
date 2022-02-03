@@ -328,8 +328,6 @@ class Board:
 
         If uci_move is not a capture, return value will be None. Else, return value is a tuple of
         `(piece_color, piece_type, cache_loc)`.
-
-        Returns a tuple of  location of cached piece as a BoardCell, if applicable.
         '''
         if not self.engine.is_capture(uci_move):
             return None
