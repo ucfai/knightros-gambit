@@ -12,7 +12,7 @@ import util
 import serial
 
 # TODO: Need to find the pi port and settings we intend to use
-ser = serial.Serial(port = '/dev/ttyS0')
+# ser = serial.Serial(port = '/dev/ttyS0')
 
 class Engine:
     '''Engine designed to be used for maintaining hardware board state.
@@ -235,19 +235,23 @@ class Board:
         # TODO: Comment out ser.write(msg) when testing game loop
         # ser.write(msg)
         
-        
-
         # TODO: This is for game loop dev, remove once we read from arduino
         self.set_status_from_arduino(ArduinoStatus.EXECUTING_MOVE, board_move.move_count, None)
 
     def get_status_from_arduino(self):
         '''Read status from Arduino over UART connection.
         '''
-        #New variable created, new_input, to store 4 bytes for UART Messages
-        #If the start byte is a ~ and the Arduino Status is valid, process the arduino status based on the new input
-        new_input = ser.read(4)
-        if new_input[0] == '~' and ArduinoStatus.is_valid_code(new_input[1]):
-            self.arduino_status = ArduinoStatus(new_input[1], new_input[3], new_input[2])
+        # New variable created, new_input, to store 4 bytes for UART Messages
+        # If the start byte is a ~ and the Arduino Status is valid, process the arduino status based on the new input
+        # TODO: Consider raising an error and/or clearing the buffer if this statement is
+        # False. Also consider having some way to retransmit the last message in the event
+        # that there was a parsing error.
+        # TODO: uncomment the next five lines
+        # new_input = ser.read(4)
+        # if new_input[0] == '~' and ArduinoStatus.is_valid_code(new_input[1]):
+        #    self.arduino_status = ArduinoStatus(new_input[1], new_input[3], new_input[2])
+        # else:
+        #    raise ValueError(f"Error: received unexpected status code: {new_input[1]}...")
         return self.arduino_status
 
     def set_status_from_arduino(self, status, move_count, extra):
