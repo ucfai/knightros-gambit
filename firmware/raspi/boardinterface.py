@@ -233,7 +233,7 @@ class Board:
 
         print(f"Sending message \"{msg}\" to arduino")
         # TODO: Comment out ser.write(msg) when testing game loop
-        #ser.write(msg)
+        # ser.write(msg)
         
         
 
