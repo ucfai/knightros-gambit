@@ -16,7 +16,6 @@ from state_representation import get_cnn_input
 from stockfish_train import StockfishTrain
 from streamlit_dashboard import StreamlitDashboard
 
-
 class Train:
     """The main training class, used for training with Stockfish and the MCTS
 

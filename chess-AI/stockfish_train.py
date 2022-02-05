@@ -20,7 +20,7 @@ class StockfishTrain:
         self.policy_converter = PlayNetworkPolicyConverter()
 
     def set_params(self, dashboard):
-        """Sets the elo and depth for stockfish using the dashboard
+        """ Sets the elo and depth for stockfish using the dashboard
         """
 
         elo, depth = dashboard.configure_stockfish()
@@ -56,7 +56,7 @@ class StockfishTrain:
         return move
 
     def get_value(self, board):
-        """Returns a value for a given state on the board
+        """ Returns a value for a given state on the board
         Utilizes stockfish Centipawn calculation through stockfish.get_evaluation()
         """
 

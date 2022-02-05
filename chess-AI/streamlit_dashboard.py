@@ -1,8 +1,10 @@
 import streamlit as st
 import platform
 
-
 class StreamlitDashboard:
+    '''
+    Stores all the feautures of the streamlit dashboard
+    '''
 
     def train_button(self):
         return st.sidebar.button("Begin Training")
