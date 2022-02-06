@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from mcts import Mcts
 from ai_io import save_model, load_model
 from nn_layout import PlayNetwork
-from output_representation import PlayNetworkPolicyConverter
+from output_representation import policy_converter
 from state_representation import get_cnn_input
 
 
@@ -20,11 +20,8 @@ class Train:
         mcts_simulations: Number of simulations to use for MCTS
         training_examples: List of all the training examples to be used
         mcts: References the MCTS class
-        policy_converter: References the PlayNetworkPolicyConverter class
     """
     def __init__(self, lr, move_approximator, save_path, val_approximator=None):
-        self.policy_converter = PlayNetworkPolicyConverter()
-
         # Learning rate
         self.lr = lr
 
@@ -64,7 +61,7 @@ class Train:
             moves, move_probs, move = self.move_approximator(board)
 
             # Converts mcts search probabilites to (8,8,73) vector
-            move_probs_vector = self.policy_converter.compute_full_search_probs(moves, move_probs, board)
+            move_probs_vector = policy_converter.compute_full_search_probs(moves, move_probs, board)
             all_move_probs.append(move_probs_vector)
 
             if self.val_approximator is not None:

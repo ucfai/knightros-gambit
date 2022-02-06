@@ -4,7 +4,7 @@ import random
 import numpy as np
 import torch
 
-from output_representation import PlayNetworkPolicyConverter
+from output_representation import policy_converter
 from state_representation import get_cnn_input
 
 
@@ -24,7 +24,6 @@ class Mcts:
         self.exploration = exploration
         self.state_values = {}
         self.p_values = {}
-        self.policy_converter = PlayNetworkPolicyConverter()
 
     def get_best_move(self, mcts_simulations, board, nnet):
         """Get best possible move after running given number of simulations"""
@@ -120,7 +119,7 @@ class Mcts:
 
             # Get predictions and value from the nnet at the current state
             policy, value = nnet(get_cnn_input(board))
-            policy_legal = self.policy_converter.find_value_of_all_legal_moves(policy, board)
+            policy_legal = policy_converter.find_value_of_all_legal_moves(policy, board)
 
             # Update P with network's policy output
             self.p_values.update({fen_string: policy_legal})
