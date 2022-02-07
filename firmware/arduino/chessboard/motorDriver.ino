@@ -7,6 +7,15 @@ enum MovementStatus
   INVALID_ARGS = 3
 };
 
+// 
+enum EighthStepsScale
+{
+  EIGHTH_STEPS_PER_WHOLE_STEP = 8,
+  EIGHTH_STEPS_PER_HALF_STEP = 4,
+  EIGHTH_STEPS_PER_QUARTER_STEP = 2,
+  EIGHTH_STEPS_PER_EIGHTH_STEP = 1
+};
+
 // Sets the scale of the motor driver corresponding to "motor"
 void setScale(int motor[], int scale)
 {
@@ -50,7 +59,7 @@ void disableMotors()
 void homeAxis(int motor[])
 {
   int *currentMotorPos;
-  int currentMotorNumEighthSteps;
+  int eighthStepsPerPulse;
   int i;
 
   // Stores corresponding motor position based off of which motor is being homed,
@@ -65,7 +74,7 @@ void homeAxis(int motor[])
   // Moving motor towards home for rough estimate
   digitalWrite(motor[DIR_PIN], LEFT);
   setScale(motor, WHOLE_STEPS);
-  currentMotorNumEighthSteps = -8;
+  eighthStepsPerPulse = -8;
   while (digitalRead(motor[ENDSTOP_PIN]) == LOW)
   {
     // Moves motor
@@ -74,30 +83,30 @@ void homeAxis(int motor[])
     digitalWrite(motor[STEP_PIN], HIGH);
 
     // Updates current motor position
-    *currentMotorPos += currentMotorNumEighthSteps;
+    *currentMotorPos += eighthStepsPerPulse;
   }
 
   // Flips direction again to move motor away from home to prepare for fine-tuning
   digitalWrite(motor[DIR_PIN], RIGHT);
-  currentMotorNumEighthSteps = 8;
+  eighthStepsPerPulse = 8;
   for (i = 0; i < HOME_CALIBRATION_OFFSET; i++)
   {
     digitalWrite(motor[STEP_PIN], LOW);
     delay(1);
     digitalWrite(motor[STEP_PIN], HIGH);
-    *currentMotorPos += currentMotorNumEighthSteps;
+    *currentMotorPos += eighthStepsPerPulse;
   }
 
   // Moves motor towards home for fine-tuned home position
   digitalWrite(motor[DIR_PIN], LEFT);
   setScale(motor, EIGHTH_STEPS);
-  currentMotorNumEighthSteps = -1;
+  eighthStepsPerPulse = -1;
   while (digitalRead(motor[ENDSTOP_PIN]) == LOW)
   {
     digitalWrite(motor[STEP_PIN], LOW);
     delay(1);
     digitalWrite(motor[STEP_PIN], HIGH);
-    *currentMotorPos += currentMotorNumEighthSteps;
+    *currentMotorPos += eighthStepsPerPulse;
   }
 
   // Sets the motor position to "home" position
@@ -121,7 +130,7 @@ uint8_t moveStraight(int motor[], int startCol, int startRow, int endCol, int en
   // How many steps per space
   int dir, numSteps, unitSpaces;
   int i;
-  int currentMotorNumEighthSteps;
+  int eighthStepsPerPulse;
   int *currentMotorPos;
 
   // Same as homeAxis(), sets the loop to only update a single motors position at a time
@@ -137,7 +146,7 @@ uint8_t moveStraight(int motor[], int startCol, int startRow, int endCol, int en
     dir = (endCol > startCol) ? RIGHT : LEFT;
     setScale(xMotor, WHOLE_STEPS);
     // Sets motor and direction if X movement
-    currentMotorNumEighthSteps = (dir == RIGHT) ? 8 : -8;
+    eighthStepsPerPulse = (dir == RIGHT) ? 8 : -8;
   }
   else if (endCol == startCol)
   {
@@ -146,7 +155,7 @@ uint8_t moveStraight(int motor[], int startCol, int startRow, int endCol, int en
     dir = (endRow > startRow) ? UP : DOWN;
     setScale(yMotor, WHOLE_STEPS);
     // Sets motor and direction if Y movement
-    currentMotorNumEighthSteps = (dir == UP) ? 8 : -8;
+    eighthStepsPerPulse = (dir == UP) ? 8 : -8;
   }
   else
   {
@@ -175,7 +184,7 @@ uint8_t moveStraight(int motor[], int startCol, int startRow, int endCol, int en
     digitalWrite(motor[STEP_PIN], HIGH);
 
     // Updating current position per step
-    *currentMotorPos += currentMotorNumEighthSteps;
+    *currentMotorPos += eighthStepsPerPulse;
   }
 
   return SUCCESS;
@@ -190,7 +199,7 @@ uint8_t moveDiagonal(int startCol, int startRow, int endCol, int endRow)
   int unitSpacesX, unitSpacesY;
   int dirX, dirY;
   int numStepsX, numStepsY;
-  int numEighthStepsX, numEighthStepsY;
+  int eighthStepsPerPulseX, eighthStepsPerPulseY;
   int i;
 
   // Sets scale and numEighthSteps for both X and Y
@@ -215,24 +224,24 @@ uint8_t moveDiagonal(int startCol, int startRow, int endCol, int endRow)
     setScale(xMotor, WHOLE_STEPS);
     setScale(yMotor, WHOLE_STEPS);
     // Sets sign based off of direction of each motor
-    numEighthStepsX = (dirX == RIGHT) ? 8 : -8;
-    numEighthStepsY = (dirY == UP) ? 8 : -8;
+    eighthStepsPerPulseX = (dirX == RIGHT) ? 8 : -8;
+    eighthStepsPerPulseY = (dirY == UP) ? 8 : -8;
   }
   else if (numStepsY > numStepsX && (numStepsY / numStepsX) == 2)
   {
     setScale(xMotor, HALF_STEPS);
     setScale(yMotor, WHOLE_STEPS);
     // Sets sign based off of direction of each motor
-    numEighthStepsX = (dirX == RIGHT) ? 4 : -4;
-    numEighthStepsY = (dirY == UP) ? 8 : -8;
+    eighthStepsPerPulseX = (dirX == RIGHT) ? 4 : -4;
+    eighthStepsPerPulseY = (dirY == UP) ? 8 : -8;
   }
   else if (numStepsY < numStepsX && (numStepsX / numStepsY) == 2)
   {
     setScale(xMotor, WHOLE_STEPS);
     setScale(yMotor, HALF_STEPS);
     // Sets sign based off of direction of each motor
-    numEighthStepsX = (dirX == RIGHT) ? 8 : -8;
-    numEighthStepsY = (dirY == UP) ? 4 : -4;
+    eighthStepsPerPulseX = (dirX == RIGHT) ? 8 : -8;
+    eighthStepsPerPulseY = (dirY == UP) ? 4 : -4;
   }
   else
   {
@@ -254,8 +263,8 @@ uint8_t moveDiagonal(int startCol, int startRow, int endCol, int endRow)
     digitalWrite(yMotor[STEP_PIN], HIGH);
 
     // Updates current position for both x and y
-    currentX += numEighthStepsX;
-    currentY += numEighthStepsY;
+    currentX += eighthStepsPerPulseX;
+    currentY += eighthStepsPerPulseY;
   }
 
   return SUCCESS;
