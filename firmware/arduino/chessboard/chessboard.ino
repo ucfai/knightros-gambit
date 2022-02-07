@@ -98,6 +98,10 @@ void setup()
 
   stepsPerUnitSpace = MILLIMETERS_PER_UNITSPACE * STEPS_PER_MILLIMETER;
 
+  // Being initialized to 0 for safety
+  currentX = 0;
+  currentY = 0;
+
   // Initializes global 2d array `pulsesPerSlope` which is used to define circle paths
   // that are used in the `makeCircle()` function in circleFunction.ino
   calculatePulsesPerSlope();
