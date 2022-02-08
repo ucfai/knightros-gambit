@@ -1,6 +1,6 @@
-'''
+"""
 Main training program
-'''
+"""
 import time
 import os
 import chess
@@ -224,7 +224,6 @@ class Train:
                     break
                 if i == num_saved_models - 1:
                     save_model(nnet, f'models/models-{num_saved_models}.pt')
-
 
 def main():
     """Main function for starting the training
