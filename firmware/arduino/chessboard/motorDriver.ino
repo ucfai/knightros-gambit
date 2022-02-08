@@ -129,13 +129,18 @@ void home()
 // A specific motor is passed to this function since we are only moving one here
 // Returns a 'MovementStatus' code, '0' if successful, varying nonzero values for various error codes
 // For all status codes, check 'MovementStatus' in chessboard.ino
-uint8_t moveStraight(uint8_t motor[], int startCol, int startRow, int endCol, int endRow)
+uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
 {
   // How many steps per space
   int dir, numSteps, unitSpaces;
   int i;
   int eighthStepsPerPulse;
   int *currentMotorPos;
+  float startCol, startRow;
+
+  // Converts current position to be in terms of unit spaces
+  startCol = currentX / eighthStepsPerUnitSpace;
+  startRow = currentY / eighthStepsPerUnitSpace;
 
   // Same as homeAxis(), sets the loop to only update a single motors position at a time
   // Direction is still determined seperately by if statements
@@ -198,13 +203,18 @@ uint8_t moveStraight(uint8_t motor[], int startCol, int startRow, int endCol, in
 // This can move in diagonal lines of slopes: 1, 2, and 1/2
 // Returns a 'MovementStatus' code, '0' if successful, varying nonzero values for various error codes
 // For all status codes, check 'MovementStatus' in chessboard.ino
-uint8_t moveDiagonal(int startCol, int startRow, int endCol, int endRow)
+uint8_t moveDiagonal(int endCol, int endRow)
 {
   int unitSpacesX, unitSpacesY;
   int dirX, dirY;
   int numStepsX, numStepsY;
   int eighthStepsPerPulseX, eighthStepsPerPulseY;
   int i;
+  float startRow, startCol;
+
+  // Converts current position to be in terms of unit spaces
+  startCol = currentX / eighthStepsPerUnitSpace;
+  startRow = currentY / eighthStepsPerUnitSpace;
 
   // Sets scale and numEighthSteps for both X and Y
   // Abs ensures that numStepsX and numStepsY will be positive
