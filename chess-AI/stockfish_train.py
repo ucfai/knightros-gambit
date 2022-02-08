@@ -7,12 +7,12 @@ from output_representation import PlayNetworkPolicyConverter
 
 
 class StockfishTrain:
-    """Class with all the necessary functions for
+    """Class with all the necessary functionialities for
     building a dataset using stockfish
 
     Attributes:
-        stockfish: The stockfish object
-        policy_converter: Reference to the Policy Converter Class
+        stockfish: the stockfish object
+        policy_converter: reference to the Policy Converter Class
     """
 
     def __init__(self, path):
@@ -21,9 +21,14 @@ class StockfishTrain:
 
     def set_params(self, dashboard):
         """ Sets the elo and depth for stockfish using the dashboard
+
+        Parameters:
+        dashboard: reference to the streamlit dashboard (this is temporary)
         """
 
         elo, depth = dashboard.configure_stockfish()
+        
+        # Set the elo and depth of the stockfish object
         self.stockfish.set_elo_rating(elo)
         self.stockfish.set_depth(depth)
 
@@ -38,18 +43,23 @@ class StockfishTrain:
         return 1 / (1 + np.exp(value/scale))
 
     def choose_move(self, moves):
-        """Chooses a move to make
-        Ensures that the top move isn't always the one that is chosen
+        """ Chooses the next move to make
+        We want to make sure the top move isn't always what is
+        chosen
 
         Parameters:
-        moves: The list of posisble moves to take
+        moves: The list of posssible moves to take
         """
 
         epsilon = 0.3
+        
+        # Return a random number in the range (0,1)
         rand = np.random.rand()
 
+        # Choose the best move 30% of the time
         if rand < epsilon:
             move = moves[0]
+        # Choose a random move 70% of the time , allows for exploration
         else:
             move = moves[random.randint(0, len(moves) - 1)]
 
@@ -58,27 +68,34 @@ class StockfishTrain:
     def get_value(self, board):
         """ Returns a value for a given state on the board
         Utilizes stockfish Centipawn calculation through stockfish.get_evaluation()
+        Will then use sig() to transform the value between (0,1)
         """
 
-        # get_evaluation() alway from white perspective, need to account for that
+        # get_evaluation() always from white perspective, need to account for that
+        # Positive is advantage white, negative is advantage black
+
         player = 1 if board.turn == chess.WHITE else -1
+        
+        # Player will transform the value depending on if black or white
+        state_value = self.stockfish.get_evaluation()["value"] * player
 
-        value = self.stockfish.get_evaluation()["value"] * player
-        value = 1 - 2 * self.sig(value, 1)
+        # Will use the sig() and transform between (0,1)
+        state_value = 1 - 2 * self.sig(state_value, 1)
 
-        return value
+        return state_value
 
     def get_move_probs(self, board):
         """Gets the move probabilities from a position using stockfish get_top_moves
         """
 
         fen_string = board.fen()
+
         self.stockfish.set_fen_position(fen_string)
 
-        # Needs to get all the moves in order from best to worst
+        # Gets all the moves in order from best to worst
         top_moves = self.stockfish.get_top_moves(len(list(board.legal_moves)))
 
-        # Get list of moves
+        # Create list of moves
         moves = [move["Move"] for move in top_moves]
 
         # Best move should have a prob of 1, where all others should be 0
