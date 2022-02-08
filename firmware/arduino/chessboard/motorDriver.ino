@@ -159,7 +159,7 @@ uint8_t moveStraight(uint8_t motor[], int startCol, int startRow, int endCol, in
     dir = (endRow > startRow) ? UP : DOWN;
     setScale(yMotor, WHOLE_STEPS);
     // Sets motor and direction if Y movement
-    eighthStepsPerPulse = (dir == UP) ? 8 : -8;
+    eighthStepsPerPulse = (dir == UP) ? POS_EIGHTH_STEPS_PER_WHOLE_STEP : NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
   }
   else
   {
