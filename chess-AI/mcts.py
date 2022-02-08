@@ -20,10 +20,19 @@ class Mcts:
         """
 
     def __init__(self, exploration):
+
+        # The states already visited from searching
         self.states_visited = []
+
+        # The exploration rate for search
         self.exploration = exploration
+
+        # State values corresponding to each fen_string
         self.state_values = {}
+
+        # The search_probs corresponding to each fen_string
         self.p_values = {}
+
         self.policy_converter = PlayNetworkPolicyConverter()
 
     def get_best_move(self, mcts_simulations, board, nnet):
