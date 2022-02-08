@@ -36,10 +36,10 @@ class Train:
 
     def __init__(self, learning_rate, move_approximator, save_path, device, val_approximator=None):
 
-        # Policy Converter is convert output of the model
+        # Policy Converter to convert output of the model
         self.policy_converter = PlayNetworkPolicyConverter()
 
-        # Learning rate for gradient descent while training
+        # Learning rate for gradient descent 
         self.learning_rate = learning_rate
 
         # board -> move_list, move_probabilities, move_to_take
@@ -299,12 +299,12 @@ def main():
     if dashboard.train_button():
 
         # Value and move approximators from stockfish
-        value_approximator = stockfish.get_value
+        stocktrain_value_approximator = stockfish.get_value
         stocktrain_moves = stockfish.get_move_probs
 
         # Training object instantiated using stockfish data
         train = Train(learning_rate=learning_rate, move_approximator=stocktrain_moves, save_path=None, device=device,
-                      val_approximator=value_approximator)
+                      val_approximator=stocktrain_value_approximator)
 
         # Dataset needs to be either created or loaded
         if dataset_path:
@@ -323,7 +323,7 @@ def main():
             mcts_moves = lambda board: mcts.get_tree_results(mcts_simulations, nnet, board, temperature=5)
             train = Train(learning_rate=learning_rate, move_approximator=mcts_moves, save_path=None, device=device,
                           val_approximator=None)
-                          
+
             dataset = train.create_dataset(mcts_games)
             train.train_on_dataset(dataset, dashboard, nnet, epochs=mcts_epochs, batch_size=batch_size,
                                    num_saved_models=num_saved_models, overwrite_save=overwrite_save)
