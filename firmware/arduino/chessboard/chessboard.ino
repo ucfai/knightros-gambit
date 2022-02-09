@@ -43,7 +43,6 @@ uint8_t yMotor[5] = {Y_MOTOR_STEP, Y_MOTOR_DIR, Y_MOTOR_MS1, Y_MOTOR_MS2, Y_AXIS
 #define STEPS_PER_MILLIMETER 5
 #define HOME_CALIBRATION_OFFSET 100
 float stepsPerUnitSpace;
-float eighthStepsPerUnitSpace;
 int currentX, currentY;
 
 // Motor directions
@@ -97,9 +96,8 @@ void setup()
   pinMode(Y_AXIS_ENDSTOP_SWITCH, INPUT);
   pinMode(CHESS_TIMER_BUTTON, INPUT);
 
-  // Defines different units of board being used
+  // Defines units of board being used
   stepsPerUnitSpace = MILLIMETERS_PER_UNITSPACE * STEPS_PER_MILLIMETER;
-  eighthStepsPerUnitSpace = stepsPerUnitSpace * 8;
 
   // Being initialized to 0 for safety
   currentX = 0;

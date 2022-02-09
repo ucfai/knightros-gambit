@@ -138,9 +138,9 @@ uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
   int *currentMotorPos;
   float startCol, startRow;
 
-  // Converts current position to be in terms of unit spaces
-  startCol = currentX / eighthStepsPerUnitSpace;
-  startRow = currentY / eighthStepsPerUnitSpace;
+  // Converts current position to be in terms of unit spaces instead of eight steps
+  startCol = currentX / (stepsPerUnitSpace * 8);
+  startRow = currentY / (stepsPerUnitSpace * 8);
 
   // Same as homeAxis(), sets the loop to only update a single motors position at a time
   // Direction is still determined seperately by if statements
@@ -212,9 +212,9 @@ uint8_t moveDiagonal(int endCol, int endRow)
   int i;
   float startRow, startCol;
 
-  // Converts current position to be in terms of unit spaces
-  startCol = currentX / eighthStepsPerUnitSpace;
-  startRow = currentY / eighthStepsPerUnitSpace;
+  // Converts current position to be in terms of unit spaces instead of eight steps
+  startCol = currentX / (stepsPerUnitSpace * 8);
+  startRow = currentY / (stepsPerUnitSpace * 8);
 
   // Sets scale and numEighthSteps for both X and Y
   // Abs ensures that numStepsX and numStepsY will be positive
