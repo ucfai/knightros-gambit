@@ -136,7 +136,12 @@ uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
   int i;
   int eighthStepsPerPulse;
   int *currentMotorPos;
-  float startCol, startRow;
+  int startCol, startRow;
+
+  // Checks if the EM is aligned properly
+  if((currentX % stepsPerUnitSpace) || (currentY % stepsPerUnitSpace)) {
+    return INVALID_ARGS;
+  }
 
   // Converts current position to be in terms of unit spaces instead of eighth steps
   startCol = currentX / (stepsPerUnitSpace * 8);
@@ -210,7 +215,12 @@ uint8_t moveDiagonal(int endCol, int endRow)
   int numStepsX, numStepsY;
   int eighthStepsPerPulseX, eighthStepsPerPulseY;
   int i;
-  float startRow, startCol;
+  int startRow, startCol;
+
+  // Checks if the EM is aligned properly
+  if((currentX % stepsPerUnitSpace) || (currentY % stepsPerUnitSpace)) {
+    return INVALID_ARGS;
+  }
 
   // Converts current position to be in terms of unit spaces instead of eighth steps
   startCol = currentX / (stepsPerUnitSpace * 8);

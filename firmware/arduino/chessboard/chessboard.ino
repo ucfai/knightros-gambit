@@ -40,9 +40,11 @@ uint8_t yMotor[5] = {Y_MOTOR_STEP, Y_MOTOR_DIR, Y_MOTOR_MS1, Y_MOTOR_MS2, Y_AXIS
 
 // Distance definitions
 #define MILLIMETERS_PER_UNITSPACE 32
-#define STEPS_PER_MILLIMETER 5
+#define STEPS_PER_MILLIMETER 5  // Whole steps per millimeter
 #define HOME_CALIBRATION_OFFSET 100
-float stepsPerUnitSpace;
+
+// Number of whole steps per unit space
+int stepsPerUnitSpace;
 int currentX, currentY;
 
 // Motor directions
