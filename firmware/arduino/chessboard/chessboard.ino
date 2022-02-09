@@ -96,7 +96,7 @@ void setup()
   pinMode(Y_AXIS_ENDSTOP_SWITCH, INPUT);
   pinMode(CHESS_TIMER_BUTTON, INPUT);
 
-  // Defines units of board being used
+  // Defines the board's units being used
   stepsPerUnitSpace = MILLIMETERS_PER_UNITSPACE * STEPS_PER_MILLIMETER;
 
   // Being initialized to 0 for safety

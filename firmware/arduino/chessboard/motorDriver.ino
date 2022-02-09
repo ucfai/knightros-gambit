@@ -138,7 +138,7 @@ uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
   int *currentMotorPos;
   float startCol, startRow;
 
-  // Converts current position to be in terms of unit spaces instead of eight steps
+  // Converts current position to be in terms of unit spaces instead of eighth steps
   startCol = currentX / (stepsPerUnitSpace * 8);
   startRow = currentY / (stepsPerUnitSpace * 8);
 
@@ -212,7 +212,7 @@ uint8_t moveDiagonal(int endCol, int endRow)
   int i;
   float startRow, startCol;
 
-  // Converts current position to be in terms of unit spaces instead of eight steps
+  // Converts current position to be in terms of unit spaces instead of eighth steps
   startCol = currentX / (stepsPerUnitSpace * 8);
   startRow = currentY / (stepsPerUnitSpace * 8);
 
