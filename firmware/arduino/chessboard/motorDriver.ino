@@ -140,7 +140,8 @@ uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
   int startCol, startRow;
 
   // Checks if the EM is aligned properly
-  if((currentX % stepsPerUnitSpace) || (currentY % stepsPerUnitSpace)) {
+  if ((currentX % stepsPerUnitSpace) || (currentY % stepsPerUnitSpace))
+  {
     return INVALID_ALIGNMENT;
   }
 
@@ -219,7 +220,8 @@ uint8_t moveDiagonal(int endCol, int endRow)
   int startRow, startCol;
 
   // Checks if the EM is aligned properly
-  if((currentX % stepsPerUnitSpace) || (currentY % stepsPerUnitSpace)) {
+  if ((currentX % stepsPerUnitSpace) || (currentY % stepsPerUnitSpace))
+  {
     return INVALID_ALIGNMENT;
   }
 
