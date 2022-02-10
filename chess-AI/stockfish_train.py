@@ -1,4 +1,6 @@
 import random
+from sys import maxsize
+from tkinter import CENTER
 import numpy as np
 from stockfish import Stockfish
 import chess
@@ -98,19 +100,24 @@ class StockfishTrain:
         # Create list of moves
         moves = [move["Move"] for move in top_moves]
 
-        # Best move should have a prob of 1, where all others should be 0
-        # NOTE: Maybe use some sort of prob distribution
-        search_probs = np.empty_like(top_moves)
-        for move in range(top_moves):
-            search_probs[move] = self.get_value(chess.Board(fen_string).push(chess.Move.from_uci(top_moves[move])), sig=False)
-
-        search_probs = torch.nn.Softmax(torch.from_numpy(search_probs))
-        print("Search probs:")
-        print(search_probs)
-        print()
+        search_probs = []
+        player = 1 if board.turn == chess.WHITE else -1
         
-        # search_probs = [0 for _ in top_moves]
-        # search_probs[0] = 1
+        for move in top_moves:
+            # if move["Centipawn"] is none, that means that there is
+            # a potential mate in (x) number of moves
+            # if x > 0 , that is a mate for white in x moves
+            # if x < 0, that is a mate for black in x moves
+            if move["Centipawn"] == None:
+                # large value * (1/move["mate"]) * player will arrange search probs
+                # based on best mate
+                search_probs.append(10000000 * (1 / move["Mate"]) * player)
+            else:
+                # TODO: CHANGE 75 TO HYPERPARAMETER
+                search_probs.append(move["Centipawn"] * player / 75)
+
+        search_probs = torch.nn.functional.softmax(torch.tensor(search_probs).float(), dim=0)
+        print(search_probs)
 
         # Will choose the move to make from the list of moves
         move = self.choose_move(moves)

@@ -14,7 +14,6 @@ from nn_layout import PlayNetwork
 from output_representation import PlayNetworkPolicyConverter
 from state_representation import get_cnn_input
 from stockfish_train import StockfishTrain
-from streamlit_dashboard import StreamlitDashboard
 
 class Train:
     """The main training class, will train using stockfish and mcts
@@ -260,7 +259,7 @@ def main():
     batch_size, learning_rate = 8,0.1
 
     # Gets stockfish training object, and sets parameters (elo,depth)
-    stockfish_path = "/usr/local/bin/stockfish"
+    stockfish_path = "C:/Users/juddb/Stockfish/stockfish_14.1_win_x64_avx2/stockfish_14.1_win_x64_avx2.exe"
     stockfish = StockfishTrain(stockfish_path)
     stockfish.set_params()
 
