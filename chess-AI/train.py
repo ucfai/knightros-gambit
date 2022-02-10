@@ -209,7 +209,7 @@ class Train:
                 loss = pol_loss + val_loss
 
                 # Add to list for graphing purposes
-                policy_losses.append(pol_loss)
+                policy_losses.append(pol_loss) 
                 value_losses.append(val_loss)
                 losses.append(loss.item())
 
