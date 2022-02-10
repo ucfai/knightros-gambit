@@ -28,12 +28,10 @@ class PlayNetwork(nn.Module):
         self.num_res_blocks = 2
         self.num_filters = 32
 
-        self.device = torch.device('cpu')
-        if torch.cuda.is_available():
-            self.device = torch.device('cuda:0')
+        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-        # Takes 119 channels of input comprised of 7 previous states' piece and repetition
-        # planes plus the current state input of 21 channels.
+        # Takes 19 channels of input comprised of current state's piece and repetition
+        # planes
         self.conv_layer = nn.Sequential(nn.Conv2d(in_channels=19,
                                                   out_channels=self.num_filters,
                                                   kernel_size=3,

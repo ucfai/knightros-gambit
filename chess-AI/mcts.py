@@ -20,7 +20,6 @@ class Mcts:
         """
 
     def __init__(self, exploration):
-
         # The states already visited from searching
         self.states_visited = []
 
