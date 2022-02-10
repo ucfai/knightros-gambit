@@ -19,18 +19,16 @@ class StockfishTrain:
         self.stockfish = Stockfish(path)
         self.policy_converter = PlayNetworkPolicyConverter()
 
-    def set_params(self, dashboard):
+    def set_params(self):
         """ Sets the elo and depth for stockfish using the dashboard
 
         Parameters:
         dashboard: reference to the streamlit dashboard (this is temporary)
         """
-
-        elo, depth = dashboard.configure_stockfish()
         
         # Set the elo and depth of the stockfish object
-        self.stockfish.set_elo_rating(elo)
-        self.stockfish.set_depth(depth)
+        self.stockfish.set_elo_rating(1000)
+        self.stockfish.set_depth(3)
 
     def sig(self, value, scale):
         """Calculate the sigmoid of a value
@@ -65,7 +63,7 @@ class StockfishTrain:
 
         return move
 
-    def get_value(self, board):
+    def get_value(self, board, sig=True):
         """ Returns a value for a given state on the board
         Utilizes stockfish Centipawn calculation through stockfish.get_evaluation()
         Will then use sig() to transform the value between (0,1)
@@ -80,7 +78,8 @@ class StockfishTrain:
         state_value = self.stockfish.get_evaluation()["value"] * player
 
         # Will use the sig() and transform between (0,1)
-        state_value = 1 - 2 * self.sig(state_value, 1)
+        if sig == True:
+            state_value = 1 - 2 * self.sig(state_value, 1)
 
         return state_value
 
@@ -100,6 +99,10 @@ class StockfishTrain:
 
         # Best move should have a prob of 1, where all others should be 0
         # NOTE: Maybe use some sort of prob distribution
+        search_probs = np.empty_like(top_moves)
+        for move in range(top_moves):
+            search_probs[move] = self.get_value(board.fen(fen_string), sig=False)
+
         search_probs = [0 for _ in top_moves]
         search_probs[0] = 1
 
