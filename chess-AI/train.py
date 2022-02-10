@@ -1,11 +1,11 @@
 """
 Main training program
 """
-import time
 import os
+import time
+
 import chess
 import torch
-
 from torch.utils.data import DataLoader, TensorDataset
 
 from mcts import Mcts
@@ -113,7 +113,8 @@ class Train:
         
         state_values = [0 for _ in range(length)]
 
-        # If board.outcome() is none , then there is a draw
+        # if board.outcome() is None, the game is not over
+        # if board.outcome().winner is None, the game is a draw
         if (board.outcome() is not None) and (board.outcome().winner is not None):
             reward = -1
         for move_num in range(length - 1, -1, -1):
@@ -125,12 +126,13 @@ class Train:
     def create_dataset(self, games):
         """Builds a dataset with the size of (games)
 
-        Parameters:
+        Attributes:
         games: The total number of games to generate for the dataset
 
         """
 
-        # Using tensors but do not want to keep track of gradients
+        # Storing gradients for all forward passes in each training game is demanding. Instead,
+        # ignore gradients for now and store only the gradients needed for a particular batch later on
         with torch.no_grad():
             # Obtain data from training games
             game_data = [self.training_game() for _ in range(games)]
@@ -147,14 +149,14 @@ class Train:
         return dataset
 
     def train_on_dataset(self, dataset, nnet, epochs, batch_size, num_saved_models, overwrite_save):
-        """Function to train the with a dataset passed as a parameter
+        """Train with the specified dataset
 
-        Parameters:
-        dataset: the dataset to use for training
-        dashboard: the streamlit dashboard (this will eventually be removed)
-        nnet: the neural network
-        epochs: number of epochs
-        batch_size: the batch size for SGD
+        Attributes:
+            dataset: the dataset to use for training
+            dashboard: the streamlit dashboard (this will eventually be removed)
+            nnet: the neural network
+            epochs: number of epochs
+            batch_size: the batch size for SGD
         """
 
         # Stores the average losses which are used for graphing
@@ -166,7 +168,7 @@ class Train:
         mse_loss_fn = torch.nn.MSELoss()
 
         # Create optimizer for updating parameters during training
-        # NOTE: We are using SGD right now, maybe consider other optimizers such as Adam
+        # TODO: Consider using other optimizers, such as Adam
         opt = torch.optim.SGD(nnet.parameters(), lr=self.learning_rate, weight_decay=0.001, momentum=0.9)
         train_dl = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=False)
 
@@ -249,9 +251,7 @@ def main():
     """
 
     # Detect device to train on
-    device = torch.device('cpu')
-    if torch.cuda.is_available():
-        device = torch.device('cuda:0')
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
     # Get dataset parameters from dashboard
     stocktrain_games, stocktrain_epochs = 1000,10
@@ -291,8 +291,9 @@ def main():
 
 
     # Value and move approximators from stockfish
+    epsilon = 0.3
     stocktrain_value_approximator = stockfish.get_value
-    stocktrain_moves = stockfish.get_move_probs
+    stocktrain_moves = lambda board: stockfish.get_move_probs(board, epsilon)
 
     # Training object instantiated using stockfish data
     train = Train(learning_rate=learning_rate, move_approximator=stocktrain_moves, save_path=None, device=device,

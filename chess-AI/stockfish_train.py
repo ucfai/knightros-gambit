@@ -1,17 +1,18 @@
 import random
-from sys import maxsize
-from tkinter import CENTER
-import numpy as np
-from stockfish import Stockfish
 import chess
+import numpy as np
 import torch
+from stockfish import Stockfish
 
 from output_representation import PlayNetworkPolicyConverter
 
 
 class StockfishTrain:
-    """Class with all the necessary functionialities for
-    building a dataset using stockfish
+    """Build a dataset of moves and stockfish evaluations.
+
+    This dataset is used to decrease training time for the Knightr0 AI. After initializing the
+    weights of the neural network using the Stockfish evaluations, we use self-play to
+    complete training.
 
     Attributes:
         stockfish: the stockfish object
@@ -23,10 +24,10 @@ class StockfishTrain:
         self.policy_converter = PlayNetworkPolicyConverter()
 
     def set_params(self):
-        """ Sets the elo and depth for stockfish using the dashboard
+        """Sets the elo and depth for stockfish using the dashboard
 
-        Parameters:
-        dashboard: reference to the streamlit dashboard (this is temporary)
+        Attributes:
+          dashboard: reference to the streamlit dashboard (this is temporary)
         """
         
         # Set the elo and depth of the stockfish object
@@ -36,40 +37,40 @@ class StockfishTrain:
     def sig(self, value, scale):
         """Calculate the sigmoid of a value
 
-        Parameters:
-        value: The value to take the sigmoid of
-        scale: How much to scale the value by
+        Attributes:
+            value: The value to take the sigmoid of
+            scale: How much to scale the value by
         """
 
         return 1 / (1 + np.exp(value/scale))
 
-    def choose_move(self, moves):
-        """ Chooses the next move to make
-        We want to make sure the top move isn't always what is
-        chosen
+    def choose_move(self, moves, epsilon):
+        """Choose the next move to make with an epsilon-greedy strategy.
 
-        Parameters:
-        moves: The list of posssible moves to take
+        To encourage exploration, a random move is chosen with probability 1-epsilon.
+        Otherwise, the best action (according to the stockfish evaluation) is chosen.
+
+        Attributes:
+            moves: A list of legal moves, ordered by Stockfish evaluation from best to worst
         """
 
-        epsilon = 0.3
-        
         # Return a random number in the range (0,1)
         rand = np.random.rand()
 
-        # Choose the best move 30% of the time
+        # With probability 1-epsilon, choose the best move
         if rand < epsilon:
             move = moves[0]
-        # Choose a random move 70% of the time , allows for exploration
+        # With probability epsilon, choose a random move (to encourage exploration)
         else:
             move = moves[random.randint(0, len(moves) - 1)]
 
         return move
 
     def get_value(self, board, sig=True):
-        """ Returns a value for a given state on the board
-        Utilizes stockfish Centipawn calculation through stockfish.get_evaluation()
-        Will then use sig() to transform the value between (0,1)
+        """Return a Stockfish evaluation of the given position.
+
+        The optional `sig` parameter specifies whether to softmax
+        the return value (by default, the value is softmaxed).
         """
 
         # get_evaluation() always from white perspective, need to account for that
@@ -80,13 +81,13 @@ class StockfishTrain:
         # Player will transform the value depending on if black or white
         state_value = self.stockfish.get_evaluation()["value"] * player
 
-        # Will use the sig() and transform between (0,1)
-        if sig == True:
+        # Transform state value to be in the range [-1, 1]
+        if sig:
             state_value = 1 - 2 * self.sig(state_value, 1)
 
         return state_value
 
-    def get_move_probs(self, board):
+    def get_move_probs(self, board, epsilon=0.3):
         """Gets the move probabilities from a position using stockfish get_top_moves
         """
 
@@ -120,6 +121,6 @@ class StockfishTrain:
         print(search_probs)
 
         # Will choose the move to make from the list of moves
-        move = self.choose_move(moves)
+        move = self.choose_move(moves, epsilon)
 
         return moves, search_probs, move
