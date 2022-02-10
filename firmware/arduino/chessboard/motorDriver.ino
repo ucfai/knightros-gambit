@@ -4,7 +4,8 @@ enum MovementStatus
   SUCCESS = 0,
   HIT_X_ENDSTOP = 1,
   HIT_Y_ENDSTOP = 2,
-  INVALID_ARGS = 3
+  INVALID_ARGS = 3,
+  INVALID_ALIGNMENT = 4
 };
 
 // Current position tracking scale in eighth steps
@@ -140,7 +141,7 @@ uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
 
   // Checks if the EM is aligned properly
   if((currentX % stepsPerUnitSpace) || (currentY % stepsPerUnitSpace)) {
-    return INVALID_ARGS;
+    return INVALID_ALIGNMENT;
   }
 
   // Converts current position to be in terms of unit spaces instead of eighth steps
@@ -219,7 +220,7 @@ uint8_t moveDiagonal(int endCol, int endRow)
 
   // Checks if the EM is aligned properly
   if((currentX % stepsPerUnitSpace) || (currentY % stepsPerUnitSpace)) {
-    return INVALID_ARGS;
+    return INVALID_ALIGNMENT;
   }
 
   // Converts current position to be in terms of unit spaces instead of eighth steps

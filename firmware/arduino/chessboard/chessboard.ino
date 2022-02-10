@@ -45,6 +45,8 @@ uint8_t yMotor[5] = {Y_MOTOR_STEP, Y_MOTOR_DIR, Y_MOTOR_MS1, Y_MOTOR_MS2, Y_AXIS
 
 // Number of whole steps per unit space
 int stepsPerUnitSpace;
+
+// currentX and currentY measure distance from the origin (bottom left corner of the board) in eighth steps
 int currentX, currentY;
 
 // Motor directions
