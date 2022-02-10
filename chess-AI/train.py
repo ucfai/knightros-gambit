@@ -147,7 +147,7 @@ class Train:
         # Return the dataset to be used
         return dataset
 
-    def train_on_dataset(self, dataset, dashboard, nnet, epochs, batch_size, num_saved_models, overwrite_save):
+    def train_on_dataset(self, dataset, nnet, epochs, batch_size, num_saved_models, overwrite_save):
         """Function to train the with a dataset passed as a parameter
 
         Parameters:
@@ -226,9 +226,7 @@ class Train:
             average_pol_loss.append(policy_loss.cpu().detach().numpy())
             average_val_loss.append(value_loss.cpu().detach().numpy())
 
-            dashboard.visualize_epochs(policy_loss, value_loss, end, start, num_moves, epoch)
-
-        dashboard.visualize_training_stats(average_pol_loss, average_val_loss)
+  
 
         # Saves model to specified file, or a new file if not specified.
         # TODO: Figure frequency of model saving, right now it is after every epoch
@@ -256,24 +254,20 @@ def main():
     if torch.cuda.is_available():
         device = torch.device('cuda:0')
 
-    # Initializes the streamlit dashboard
-    # NOTE: In official training we will not be using the dashboard
-    dashboard = StreamlitDashboard()
-
-
     # Get dataset parameters from dashboard
-    stocktrain_games, stocktrain_epochs, mcts_games, mcts_epochs = dashboard.set_training_data()
-    batch_size, learning_rate = dashboard.set_nnet_hyperparamters()
+    stocktrain_games, stocktrain_epochs = 1000,10
+    mcts_games, mcts_epochs = 100,100
+    batch_size, learning_rate = 8,0.1
 
     # Gets stockfish training object, and sets parameters (elo,depth)
-    stockfish_path = dashboard.set_stockfish_path()
+    stockfish_path = "/usr/local/bin/stockfish"
     stockfish = StockfishTrain(stockfish_path)
-    stockfish.set_params(dashboard)
+    stockfish.set_params()
 
     # Get MCTS object and parameters
     # TODO: Figure out how many times to perform self play (and better name for this variable)
     mcts_amt = 5
-    mcts_amt, mcts_simulations, exploration = dashboard.set_mcts_params()
+    mcts_amt, mcts_simulations, exploration = 5,100,0.5
     mcts = Mcts(exploration)
 
     nnet = PlayNetwork().to(device=device)
@@ -283,8 +277,8 @@ def main():
     overwrite_save = True
 
     # Will get the paths to load models and datasets from
-    model_path = dashboard.load_path()
-    dataset_path = dashboard.load_dataset()
+    model_path = None
+    dataset_path = None
 
     # Load in a model
     if model_path is not None:
@@ -296,37 +290,36 @@ def main():
                     nnet = load_model(nnet, f'chess-AI/models-{i + 1}.pt')
                 break
 
-    if dashboard.train_button():
 
-        # Value and move approximators from stockfish
-        stocktrain_value_approximator = stockfish.get_value
-        stocktrain_moves = stockfish.get_move_probs
+    # Value and move approximators from stockfish
+    stocktrain_value_approximator = stockfish.get_value
+    stocktrain_moves = stockfish.get_move_probs
 
-        # Training object instantiated using stockfish data
-        train = Train(learning_rate=learning_rate, move_approximator=stocktrain_moves, save_path=None, device=device,
-                      val_approximator=stocktrain_value_approximator)
+    # Training object instantiated using stockfish data
+    train = Train(learning_rate=learning_rate, move_approximator=stocktrain_moves, save_path=None, device=device,
+                    val_approximator=stocktrain_value_approximator)
 
-        # Dataset needs to be either created or loaded
-        if dataset_path:
-            dataset = torch.load(dataset_path)
-        else:
-            dataset = train.create_dataset(stocktrain_games)
-            # NOTE: Dataset should be given a more descriptive name, this is just temporary
-            torch.save(dataset, 'datasets/stockfish_data.pt')
+    # Dataset needs to be either created or loaded
+    if dataset_path:
+        dataset = torch.load(dataset_path)
+    else:
+        dataset = train.create_dataset(stocktrain_games)
+        # NOTE: Dataset should be given a more descriptive name, this is just temporary
+        torch.save(dataset, 'datasets/stockfish_data.pt')
 
-        # Train using the stockfish dataset
-        train.train_on_dataset(dataset, dashboard, nnet, epochs=stocktrain_epochs,batch_size=batch_size,
-                               num_saved_models=num_saved_models, overwrite_save=overwrite_save)
+    # Train using the stockfish dataset
+    train.train_on_dataset(dataset, nnet, epochs=stocktrain_epochs,batch_size=batch_size,
+                            num_saved_models=num_saved_models, overwrite_save=overwrite_save)
 
-        # Will iterate through the number of training episodes
-        for _ in range(mcts_amt):
-            mcts_moves = lambda board: mcts.get_tree_results(mcts_simulations, nnet, board, temperature=5)
-            train = Train(learning_rate=learning_rate, move_approximator=mcts_moves, save_path=None, device=device,
-                          val_approximator=None)
+    # Will iterate through the number of training episodes
+    for _ in range(mcts_amt):
+        mcts_moves = lambda board: mcts.get_tree_results(mcts_simulations, nnet, board, temperature=5)
+        train = Train(learning_rate=learning_rate, move_approximator=mcts_moves, save_path=None, device=device,
+                        val_approximator=None)
 
-            dataset = train.create_dataset(mcts_games)
-            train.train_on_dataset(dataset, dashboard, nnet, epochs=mcts_epochs, batch_size=batch_size,
-                                   num_saved_models=num_saved_models, overwrite_save=overwrite_save)
+        dataset = train.create_dataset(mcts_games)
+        train.train_on_dataset(dataset, nnet, epochs=mcts_epochs, batch_size=batch_size,
+                                num_saved_models=num_saved_models, overwrite_save=overwrite_save)
 
 
 if __name__ == "__main__":
