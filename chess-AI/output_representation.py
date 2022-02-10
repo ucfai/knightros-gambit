@@ -7,7 +7,7 @@ import numpy as np
 import chess
 
 
-class PlayNetworkPolicyConverter:
+class _PlayNetworkPolicyConverter:
     """Class for converting output of PlayNetwork policy to a UCI chess move.
     """
 
@@ -231,7 +231,7 @@ class PlayNetworkPolicyConverter:
         return full_search_probs
 
 
-policy_converter = PlayNetworkPolicyConverter()
+policy_converter = _PlayNetworkPolicyConverter()
 
 
 def main():
