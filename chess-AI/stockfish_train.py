@@ -2,6 +2,7 @@ import random
 import numpy as np
 from stockfish import Stockfish
 import chess
+import torch
 
 from output_representation import PlayNetworkPolicyConverter
 
@@ -101,10 +102,15 @@ class StockfishTrain:
         # NOTE: Maybe use some sort of prob distribution
         search_probs = np.empty_like(top_moves)
         for move in range(top_moves):
-            search_probs[move] = self.get_value(board.fen(fen_string), sig=False)
+            search_probs[move] = self.get_value(chess.Board(fen_string).push(chess.Move.from_uci(top_moves[move])), sig=False)
 
-        search_probs = [0 for _ in top_moves]
-        search_probs[0] = 1
+        search_probs = torch.nn.Softmax(torch.from_numpy(search_probs))
+        print("Search probs:")
+        print(search_probs)
+        print()
+        
+        # search_probs = [0 for _ in top_moves]
+        # search_probs[0] = 1
 
         # Will choose the move to make from the list of moves
         move = self.choose_move(moves)
