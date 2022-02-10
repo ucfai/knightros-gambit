@@ -40,9 +40,13 @@ uint8_t yMotor[5] = {Y_MOTOR_STEP, Y_MOTOR_DIR, Y_MOTOR_MS1, Y_MOTOR_MS2, Y_AXIS
 
 // Distance definitions
 #define MILLIMETERS_PER_UNITSPACE 32
-#define STEPS_PER_MILLIMETER 5
+#define STEPS_PER_MILLIMETER 5  // Whole steps per millimeter
 #define HOME_CALIBRATION_OFFSET 100
-float stepsPerUnitSpace;
+
+// Number of whole steps per unit space
+int stepsPerUnitSpace;
+
+// currentX and currentY measure distance from the origin (bottom left corner of the board) in eighth steps
 int currentX, currentY;
 
 // Motor directions
@@ -96,6 +100,7 @@ void setup()
   pinMode(Y_AXIS_ENDSTOP_SWITCH, INPUT);
   pinMode(CHESS_TIMER_BUTTON, INPUT);
 
+  // Defines the board's units being used
   stepsPerUnitSpace = MILLIMETERS_PER_UNITSPACE * STEPS_PER_MILLIMETER;
 
   // Being initialized to 0 for safety
