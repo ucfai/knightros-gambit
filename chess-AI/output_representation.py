@@ -93,14 +93,14 @@ class _PlayNetworkPolicyConverter:
             n_squares = -n_squares
 
         move_directions = {
-            "N":  np.array([0, n_squares]),
-            "S":  np.array([0, -n_squares]),
-            "E":  np.array([n_squares,  0]),
-            "W":  np.array([-n_squares, 0]),
-            "NE": np.array([n_squares,   n_squares]),
-            "NW": np.array([-n_squares,  n_squares]),
+            "N": np.array([0, n_squares]),
+            "S": np.array([0, -n_squares]),
+            "E": np.array([n_squares, 0]),
+            "W": np.array([-n_squares, 0]),
+            "NE": np.array([n_squares, n_squares]),
+            "NW": np.array([-n_squares, n_squares]),
             "SW": np.array([-n_squares, -n_squares]),
-            "SE": np.array([n_squares,  -n_squares]),
+            "SE": np.array([n_squares, -n_squares]),
         }
 
         if move[0] == "knight":
@@ -223,11 +223,12 @@ class _PlayNetworkPolicyConverter:
 
     def compute_full_search_probs(self, legal_moves, search_probs, board):
         """This assumes that legal_moves[i] corresponds to search_probs[i].
-     """
+        """
         full_search_probs = np.zeros((8, 8, 73))
         for i, uci_move in enumerate(legal_moves):
             j, k, l = self.convert_uci_move_to_policy_indices(uci_move, board)
             full_search_probs[j, k, l] = search_probs[i]
+
         return full_search_probs
 
 
