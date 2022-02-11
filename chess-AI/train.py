@@ -11,13 +11,13 @@ from torch.utils.data import DataLoader, TensorDataset
 from mcts import Mcts
 from ai_io import save_model, load_model
 from nn_layout import PlayNetwork
-from output_representation import PlayNetworkPolicyConverter
+from output_representation import policy_converter
 from state_representation import get_cnn_input
 from stockfish_train import StockfishTrain
 
 class Train:
     """The main training class, will train using stockfish and mcts
-    
+
     1. Will create a dataset or load a dataset of (fen_strings,move_probs,values)
     generated from Stockfish
     2. Will then train using the model
@@ -32,13 +32,8 @@ class Train:
         save_path: The location where to save the model
         device: The device used for training (either CPU or CUDA)
     """
-
     def __init__(self, learning_rate, move_approximator, save_path, device, val_approximator=None):
-
-        # Policy Converter to convert output of the model
-        self.policy_converter = PlayNetworkPolicyConverter()
-
-        # Learning rate for gradient descent 
+        # Learning rate for gradient descent
         self.learning_rate = learning_rate
 
         # board -> move_list, move_probabilities, move_to_take
@@ -60,7 +55,7 @@ class Train:
         Returns a tuple of 3 lists where the ith element in each list corresponds to the board state:
             1) fen strings representing board state
             2) policy values for all legal moves
-            3) state value predictions 
+            3) state value predictions
         """
 
         # Stores probability distributions and values from the approximators
@@ -81,8 +76,8 @@ class Train:
             # NOTE: moves[i] corresponds to search_probs[i]
             moves, move_probs, move = self.move_approximator(board)
 
-            # Converts move probs into a (8,8,73) vector to be used for training
-            move_probs_vector = self.policy_converter.compute_full_search_probs(moves, move_probs, board)
+            # Converts mcts search probabilites to (8,8,73) vector to be used for training
+            move_probs_vector = policy_converter.compute_full_search_probs(moves, move_probs, board)
             all_move_probs.append(move_probs_vector)
 
             # val_approximator will not be none for Stockfish
@@ -110,7 +105,7 @@ class Train:
         NOTE: Want to triple check this logic, reward assignment is very important
         """
         reward = 0
-        
+
         state_values = [0 for _ in range(length)]
 
         # if board.outcome() is None, the game is not over
@@ -210,7 +205,7 @@ class Train:
                 loss = pol_loss + val_loss
 
                 # Add to list for graphing purposes
-                policy_losses.append(pol_loss) 
+                policy_losses.append(pol_loss)
                 value_losses.append(val_loss)
                 losses.append(loss.item())
 
@@ -227,11 +222,11 @@ class Train:
             average_pol_loss.append(policy_loss.cpu().detach().numpy())
             average_val_loss.append(value_loss.cpu().detach().numpy())
 
-  
+
 
         # Saves model to specified file, or a new file if not specified.
         # TODO: Figure frequency of model saving, right now it is after every epoch
-        # TODO: Determine better names for the models when saving 
+        # TODO: Determine better names for the models when saving
         if self.save_path is not None:
             save_model(nnet, self.save_path)
         else:
