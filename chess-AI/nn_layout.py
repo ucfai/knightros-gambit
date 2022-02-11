@@ -11,7 +11,7 @@ L = 7   the number of constant number planes besides repetition like castling, m
 import torch
 from torch import nn
 
-from output_representation import PlayNetworkPolicyConverter
+from output_representation import policy_converter
 from state_representation import get_cnn_input
 
 
@@ -109,7 +109,6 @@ def main():
 
     import chess
     board = chess.Board()
-    policy_converter = PlayNetworkPolicyConverter()
 
     policy, value = model(get_cnn_input(board))
     print(policy)

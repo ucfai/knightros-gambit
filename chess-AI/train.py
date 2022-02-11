@@ -11,13 +11,17 @@ from torch.utils.data import DataLoader, TensorDataset
 from mcts import Mcts
 from ai_io import save_model, load_model
 from nn_layout import PlayNetwork
-from output_representation import PlayNetworkPolicyConverter
+from output_representation import policy_converter
 from state_representation import get_cnn_input
 from stockfish_train import StockfishTrain
 
 
 def training_game(val_approximator, move_approximator):
     """Run a full game, storing fen_strings, policies, and values
+
+    Attributes:
+        val_approximator: Supplies a value for a given board state
+        move_approximator: Supplies a policy distribution over legal moves and a move to take
 
     Returns a tuple of 3 lists where the ith element in each list corresponds to the board state:
         1) fen strings representing board state
@@ -43,8 +47,8 @@ def training_game(val_approximator, move_approximator):
         # NOTE: moves[i] corresponds to search_probs[i]
         moves, move_probs, move = move_approximator(board)
 
-        # Converts move probs into a (8,8,73) vector to be used for training
-        move_probs_vector = self.policy_converter.compute_full_search_probs(moves, move_probs, board)
+        # Converts mcts search probabilites to (8,8,73) vector to be used for training
+        move_probs_vector = policy_converter.compute_full_search_probs(moves, move_probs, board)
         all_move_probs.append(move_probs_vector)
 
         # val_approximator will not be none for Stockfish
@@ -61,7 +65,7 @@ def training_game(val_approximator, move_approximator):
         if board.is_game_over() or board.can_claim_draw():
             break
 
-    # valu_approximator will be none for mcts
+    # value_approximator will be none for mcts
     if val_approximator is None:
         all_state_values = assign_rewards(board, len(all_move_probs))
 
@@ -91,8 +95,9 @@ def create_dataset(games, move_approximator, val_approximator=None):
     """Builds a dataset with the size of (games)
 
     Attributes:
-    games: The total number of games to generate for the dataset
-
+        games: The total number of games to generate for the dataset
+        val_approximator: Supplies a value for a given board state
+        move_approximator: Supplies a policy distribution over legal moves and a move to take
     """
 
     # Storing gradients for all forward passes in each training game is demanding. Instead,
@@ -120,8 +125,12 @@ def train_on_dataset(dataset, nnet, learning_rate, epochs, batch_size, device, s
         dataset: the dataset to use for training
         dashboard: the streamlit dashboard (this will eventually be removed)
         nnet: the neural network
+        learning_rate: the learning rate for the optimizer
         epochs: number of epochs
         batch_size: the batch size for SGD
+        device: the device being used to train (either CPU or GPU)
+        save_path: path for model checkpointing
+        num_saved_models: number of models to store
     """
 
     # Stores the average losses which are used for graphing

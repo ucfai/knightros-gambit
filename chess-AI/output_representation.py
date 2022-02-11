@@ -1,14 +1,16 @@
-'''This file prototypes the conversion from the network output representation to a chess move.
+"""This file prototypes the conversion from the network output representation to a chess move.
 
 Uses https://ai.stackexchange.com/questions/27336/how-does-the-alpha-zeros-move-encoding-work?rq=1
 for reference.
-'''
+"""
 import numpy as np
 import chess
 
-class PlayNetworkPolicyConverter:
-    '''Class for converting output of PlayNetwork policy to a UCI chess move.
-    '''
+
+class _PlayNetworkPolicyConverter:
+    """Class for converting output of PlayNetwork policy to a UCI chess move.
+    """
+
     def __init__(self):
         # We create 56 entries for each `(n_squares, direction)` pair
         self.codes_dict, i = {}, 0
@@ -16,28 +18,28 @@ class PlayNetworkPolicyConverter:
         for n_squares in range(1, 8):
             # 8 directions
             for direction in ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]:
-                self.codes_dict[(n_squares,direction)] = i
+                self.codes_dict[(n_squares, direction)] = i
                 i += 1
 
         assert len(self.codes_dict) == 56
 
         # The knight moves we'll encode as the long "two"-cell edge move first
         # and the short "one"-cell edge second:
-        for two in ["N","S"]:
-            for one in ["E","W"]:
-                self.codes_dict[("knight", two, one)] , i = i , i + 1
-        for two in ["E","W"]:
-            for one in ["N","S"]:
-                self.codes_dict[("knight", two, one)] , i = i , i + 1
+        for two in ["N", "S"]:
+            for one in ["E", "W"]:
+                self.codes_dict[("knight", two, one)], i = i, i + 1
+        for two in ["E", "W"]:
+            for one in ["N", "S"]:
+                self.codes_dict[("knight", two, one)], i = i, i + 1
 
         # Now we should have 64 codes. As I understand, the final 9 moves are
         # when a pawn reaches the final rank and chosen to be underpromoted.
         # It can reach teh final rank either by moving N, or by capturing NE,
         # NW. Underpromotion is possible to three pieces. Writing the code:
 
-        for move in ["N","NW","NE"]:
-            for promote_to in ["r","n","b"]:
-                self.codes_dict[("underpromotion", move, promote_to)] , i = i , i + 1
+        for move in ["N", "NW", "NE"]:
+            for promote_to in ["r", "n", "b"]:
+                self.codes_dict[("underpromotion", move, promote_to)], i = i, i + 1
 
         # The above gives us 73 codes
         assert len(self.codes_dict) == 73
@@ -65,14 +67,14 @@ class PlayNetworkPolicyConverter:
         }
 
     def convert_policy_indices_to_uci_move(self, indices, board_t):
-        '''Construct move in UCI format from indices corresponding to neural network output cell.
+        """Construct move in UCI format from indices corresponding to neural network output cell.
 
         Returns None if the move is not a legal chess move.
         Need to convert information about square and move to UCI (e.g. e1e4)
         We need to know whether white or black turn (so that we know relative N S etc)
         This is so we know moving 2 spaces N is either increasing 2 or decreasing 2
         Note: this validates move w/in context of current game state, returns None if invalid move.
-        '''
+        """
         square = (indices[0], indices[1])
         move = self.codes_list[indices[2]]
 
@@ -81,7 +83,7 @@ class PlayNetworkPolicyConverter:
 
         # Set number of squares to move selected piece
         if move[0] == "knight" or move[0] == "underpromotion":
-            n_squares =  1
+            n_squares = 1
         else:
             n_squares = move[0]
 
@@ -95,10 +97,10 @@ class PlayNetworkPolicyConverter:
             "S": np.array([0, -n_squares]),
             "E": np.array([n_squares, 0]),
             "W": np.array([-n_squares, 0]),
-            "NE":np.array([n_squares, n_squares]),
-            "NW":np.array([-n_squares, n_squares]),
-            "SW":np.array([-n_squares, -n_squares]),
-            "SE":np.array([n_squares, -n_squares]),
+            "NE": np.array([n_squares, n_squares]),
+            "NW": np.array([-n_squares, n_squares]),
+            "SW": np.array([-n_squares, -n_squares]),
+            "SE": np.array([n_squares, -n_squares]),
         }
 
         if move[0] == "knight":
@@ -121,13 +123,12 @@ class PlayNetworkPolicyConverter:
         elif chess.Move.from_uci(uci_move + 'q') in board_t.legal_moves:
             uci_move += 'q'
 
-
         # Validate move, return only if legal
         return uci_move if chess.Move.from_uci(uci_move) in board_t.legal_moves else None
 
     def convert_uci_move_to_policy_indices(self, uci_move, board_t):
-        '''Convert a uci move to a tuple of three indices corresponding to a cell in the policy.
-        '''
+        """Convert a uci move to a tuple of three indices corresponding to a cell in the policy.
+        """
         start_sq = uci_move[:2]
         start_coords = [self.idx_from_file[uci_move[0]], int(uci_move[1]) - 1]
         end_coords = [self.idx_from_file[uci_move[2]], int(uci_move[3]) - 1]
@@ -187,15 +188,15 @@ class PlayNetworkPolicyConverter:
         return [*start_coords, self.codes_list.index((n_squares, direction))]
 
     def find_best_move(self, policy, board_t):
-        '''Find the best move according to the policy outputted by the network.
-        '''
+        """Find the best move according to the policy outputted by the network.
+        """
         # This gets three indices (x, y, z) of maximum value in policy 3d array
         max_indices = np.unravel_index(policy.argmax(), policy.shape)
         return self.convert_policy_indices_to_uci_move(max_indices, board_t)
 
     def find_best_legal_move(self, policy, board_t):
-        '''Return the legal move with the highest value as given by the policy.
-        '''
+        """Return the legal move with the highest value as given by the policy.
+        """
         max_val_move = None
         max_val = -float('inf')
 
@@ -210,8 +211,8 @@ class PlayNetworkPolicyConverter:
         return max_val_move
 
     def find_value_of_all_legal_moves(self, policy, board_t):
-        '''Returns a dictionary containing the value of each legal move in the current board state.
-        '''
+        """Returns a dictionary containing the value of each legal move in the current board state.
+        """
         move_vals = {}
         for move in board_t.legal_moves:
             uci_move = move.uci()
@@ -221,23 +222,27 @@ class PlayNetworkPolicyConverter:
         return move_vals
 
     def compute_full_search_probs(self, legal_moves, search_probs, board):
-     '''This assumes that legal_moves[i] corresponds to search_probs[i].
-     '''
-     full_search_probs = np.zeros((8, 8, 73))
-     for i, uci_move in enumerate(legal_moves):
-         j, k, l = self.convert_uci_move_to_policy_indices(uci_move, board)
-         full_search_probs[j, k, l] = search_probs[i]
-     return full_search_probs
+        """This assumes that legal_moves[i] corresponds to search_probs[i].
+        """
+        full_search_probs = np.zeros((8, 8, 73))
+        for i, uci_move in enumerate(legal_moves):
+            j, k, l = self.convert_uci_move_to_policy_indices(uci_move, board)
+            full_search_probs[j, k, l] = search_probs[i]
+
+        return full_search_probs
+
+
+policy_converter = _PlayNetworkPolicyConverter()
+
 
 def main():
-    '''Entry point for driver to test output representation converter.
-    '''
+    """Entry point for driver to test output representation converter.
+    """
     # Create a flattened vector of 4672 moves, reshape to have size 8, 8, 73
     policy = np.arange(8 * 8 * 73).reshape((8, 8, 73))
 
     # Create a python-chess board
     board = chess.Board()
-    policy_converter = PlayNetworkPolicyConverter()
 
     move_values = policy_converter.find_value_of_all_legal_moves(policy, board)
     for move, value in move_values.items():
@@ -247,6 +252,6 @@ def main():
     # is being parsed correctly both for uci -> indices and indices -> uci
     # Functions should be inverse of each other.
 
-if __name__ == "__main__": 
+
+if __name__ == "__main__":
     main()
-    
