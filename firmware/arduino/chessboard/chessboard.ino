@@ -20,14 +20,14 @@
 #define X_MOTOR_MS2 12
 #define X_MOTOR_DIR 27
 #define X_MOTOR_STEP 14
-int xMotor[5] = {X_MOTOR_STEP, X_MOTOR_DIR, X_MOTOR_MS1, X_MOTOR_MS2, X_AXIS_ENDSTOP_SWITCH};
+uint8_t xMotor[5] = {X_MOTOR_STEP, X_MOTOR_DIR, X_MOTOR_MS1, X_MOTOR_MS2, X_AXIS_ENDSTOP_SWITCH};
 
 // Y motor pins
 #define Y_MOTOR_MS1 26
 #define Y_MOTOR_MS2 25
 #define Y_MOTOR_DIR 32
 #define Y_MOTOR_STEP 33
-int yMotor[5] = {Y_MOTOR_STEP, Y_MOTOR_DIR, Y_MOTOR_MS1, Y_MOTOR_MS2, Y_AXIS_ENDSTOP_SWITCH};
+uint8_t yMotor[5] = {Y_MOTOR_STEP, Y_MOTOR_DIR, Y_MOTOR_MS1, Y_MOTOR_MS2, Y_AXIS_ENDSTOP_SWITCH};
 
 // Shared motor pins
 #define MOTOR_ENABLE 4
@@ -40,9 +40,13 @@ int yMotor[5] = {Y_MOTOR_STEP, Y_MOTOR_DIR, Y_MOTOR_MS1, Y_MOTOR_MS2, Y_AXIS_END
 
 // Distance definitions
 #define MILLIMETERS_PER_UNITSPACE 32
-#define STEPS_PER_MILLIMETER 5
+#define STEPS_PER_MILLIMETER 5  // Whole steps per millimeter
 #define HOME_CALIBRATION_OFFSET 100
-float stepsPerUnitSpace;
+
+// Number of whole steps per unit space
+int stepsPerUnitSpace;
+
+// currentX and currentY measure distance from the origin (bottom left corner of the board) in eighth steps
 int currentX, currentY;
 
 // Motor directions
@@ -96,7 +100,12 @@ void setup()
   pinMode(Y_AXIS_ENDSTOP_SWITCH, INPUT);
   pinMode(CHESS_TIMER_BUTTON, INPUT);
 
+  // Defines the board's units being used
   stepsPerUnitSpace = MILLIMETERS_PER_UNITSPACE * STEPS_PER_MILLIMETER;
+
+  // Being initialized to 0 for safety
+  currentX = 0;
+  currentY = 0;
 
   // Initializes global 2d array `pulsesPerSlope` which is used to define circle paths
   // that are used in the `makeCircle()` function in circleFunction.ino
