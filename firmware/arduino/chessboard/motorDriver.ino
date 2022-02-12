@@ -191,16 +191,16 @@ uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
   // Rotate motor some number of steps
   for (i = 0; i < numSteps; i++)
   {
-    if (digitalRead(POS_X_AXIS_ENDSTOP_SWITCH) == HIGH)
+    if (digitalRead(X_AXIS_MAX_ENDSTOP) == HIGH)
       return HIT_POS_X_ENDSTOP;
 
-    if (digitalRead(POS_Y_AXIS_ENDSTOP_SWITCH) == HIGH)
+    if (digitalRead(Y_AXIS_MAX_ENDSTOP) == HIGH)
       return HIT_POS_Y_ENDSTOP;
     
-    if (digitalRead(NEG_X_AXIS_ENDSTOP_SWITCH) == HIGH)
+    if (digitalRead(X_AXIS_ZERO_ENDSTOP) == HIGH)
       return HIT_NEG_X_ENDSTOP;
 
-    if (digitalRead(NEG_Y_AXIS_ENDSTOP_SWITCH) == HIGH)
+    if (digitalRead(Y_AXIS_ZERO_ENDSTOP) == HIGH)
       return HIT_NEG_Y_ENDSTOP;
 
     digitalWrite(motor[STEP_PIN], LOW);
@@ -285,16 +285,16 @@ uint8_t moveDiagonal(int endCol, int endRow)
 
   for (i = 0; i < numStepsX; i++)
   {
-    if (digitalRead(POS_X_AXIS_ENDSTOP_SWITCH) == HIGH)
+    if (digitalRead(X_AXIS_MAX_ENDSTOP) == HIGH)
       return HIT_POS_X_ENDSTOP;
 
-    if (digitalRead(POS_Y_AXIS_ENDSTOP_SWITCH) == HIGH)
+    if (digitalRead(Y_AXIS_MAX_ENDSTOP) == HIGH)
       return HIT_POS_Y_ENDSTOP;
     
-    if (digitalRead(NEG_X_AXIS_ENDSTOP_SWITCH) == HIGH)
+    if (digitalRead(X_AXIS_ZERO_ENDSTOP) == HIGH)
       return HIT_NEG_X_ENDSTOP;
 
-    if (digitalRead(NEG_Y_AXIS_ENDSTOP_SWITCH) == HIGH)
+    if (digitalRead(Y_AXIS_ZERO_ENDSTOP) == HIGH)
       return HIT_NEG_Y_ENDSTOP;
 
     digitalWrite(xMotor[STEP_PIN], LOW);
