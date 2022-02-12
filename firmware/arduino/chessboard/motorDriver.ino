@@ -2,10 +2,12 @@
 enum MovementStatus
 {
   SUCCESS = 0,
-  HIT_X_ENDSTOP = 1,
-  HIT_Y_ENDSTOP = 2,
-  INVALID_ARGS = 3,
-  INVALID_ALIGNMENT = 4
+  HIT_POS_X_ENDSTOP = 1,
+  HIT_POS_Y_ENDSTOP = 2,
+  HIT_NEG_X_ENDSTOP = 3,
+  HIT_NEG_Y_ENDSTOP = 4,
+  INVALID_ARGS = 5,
+  INVALID_ALIGNMENT = 6
 };
 
 // Current position tracking scale in eighth steps
@@ -189,11 +191,17 @@ uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
   // Rotate motor some number of steps
   for (i = 0; i < numSteps; i++)
   {
-    if (digitalRead(X_AXIS_ENDSTOP_SWITCH) == HIGH)
-      return HIT_X_ENDSTOP;
+    if (digitalRead(X_AXIS_MAX_ENDSTOP) == HIGH)
+      return HIT_POS_X_ENDSTOP;
 
-    if (digitalRead(Y_AXIS_ENDSTOP_SWITCH) == HIGH)
-      return HIT_Y_ENDSTOP;
+    if (digitalRead(Y_AXIS_MAX_ENDSTOP) == HIGH)
+      return HIT_POS_Y_ENDSTOP;
+    
+    if (digitalRead(X_AXIS_ZERO_ENDSTOP) == HIGH)
+      return HIT_NEG_X_ENDSTOP;
+
+    if (digitalRead(Y_AXIS_ZERO_ENDSTOP) == HIGH)
+      return HIT_NEG_Y_ENDSTOP;
 
     digitalWrite(motor[STEP_PIN], LOW);
     delay(1); // 1 milliSecond
@@ -277,11 +285,17 @@ uint8_t moveDiagonal(int endCol, int endRow)
 
   for (i = 0; i < numStepsX; i++)
   {
-    if (digitalRead(X_AXIS_ENDSTOP_SWITCH) == HIGH)
-      return HIT_X_ENDSTOP;
+    if (digitalRead(X_AXIS_MAX_ENDSTOP) == HIGH)
+      return HIT_POS_X_ENDSTOP;
 
-    if (digitalRead(Y_AXIS_ENDSTOP_SWITCH) == HIGH)
-      return HIT_Y_ENDSTOP;
+    if (digitalRead(Y_AXIS_MAX_ENDSTOP) == HIGH)
+      return HIT_POS_Y_ENDSTOP;
+    
+    if (digitalRead(X_AXIS_ZERO_ENDSTOP) == HIGH)
+      return HIT_NEG_X_ENDSTOP;
+
+    if (digitalRead(Y_AXIS_ZERO_ENDSTOP) == HIGH)
+      return HIT_NEG_Y_ENDSTOP;
 
     digitalWrite(xMotor[STEP_PIN], LOW);
     digitalWrite(yMotor[STEP_PIN], LOW);
