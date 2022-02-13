@@ -549,7 +549,10 @@ class Graveyard:
             raise ValueError("Cannot modify graveyard in increments greater than 1")
 
 class Message:
-    """Base class for different message types sent to Arduino.
+    """Abstract base class for different message types sent to Arduino.
+
+    Note: This class should not be used directly!
+    Should create an instance of Move or Instruction as needed.
 
     Attributes:
         move_count: int specifying move number in current game. Note, a single chess move may
