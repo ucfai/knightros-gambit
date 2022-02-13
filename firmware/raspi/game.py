@@ -125,28 +125,29 @@ def main():
             # TODO: figure out edge/error cases and handle them here
             raise ValueError("Unimplemented, need to handle errors")
 
-        if board.move_queue:
-            # Arduino sends and receives move_count % 10, since it can only transmit one char for
-            # move count
-            if all([board_status.move_count == board.move_queue[0].move_count % 10,
-                    board_status.status == ArduinoStatus.IDLE]):
-                board.move_queue.popleft()
+        if board_status.status == ArduinoStatus.IDLE:
+            if board.move_queue:
+                # Arduino sends and receives move_count % 10, since it can only transmit one char for
+                # move count
+                if all([board_status.move_count == board.move_queue[0].move_count % 10,
+                        board_status.status == ArduinoStatus.IDLE]):
+                    board.move_queue.popleft()
 
-        if board.move_queue:
-            board.dispatch_move_from_queue()
-            continue
+            if board.move_queue:
+                board.dispatch_msg_from_queue()
+                continue
 
-        board.show_on_cli()
+            board.show_on_cli()
 
-        if is_human_turn:
-            handle_human_move(mode_of_interaction, board)
-        else:
-            handle_ai_move(ai_player, board)
-        # TODO: After every move, center piece that was just moved on its new square. Need to
-        # account for castles as well.
+            if is_human_turn:
+                handle_human_move(mode_of_interaction, board)
+            else:
+                handle_ai_move(ai_player, board)
+            # TODO: After every move, center piece that was just moved on its new square. Need to
+            # account for castles as well.
 
-        is_human_turn = not is_human_turn
-        # Status.write_game_status_to_disk(board)
+            is_human_turn = not is_human_turn
+            # Status.write_game_status_to_disk(board)
 
 if __name__ == '__main__':
     main()
