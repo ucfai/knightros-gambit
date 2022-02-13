@@ -275,30 +275,24 @@ class Board:
             self.send_instruction_to_arduino(msg)
 
     def send_uci_move_to_arduino(self, board_move):
-        '''Constructs and sends uci move according to pi-arduino message format doc.
-        '''
-        # Convert BoardCell integer coordinates to chars s.t. 0 <=> 'A', ..., 11 <=> 'L' before
-        # sending message so that each coord only takes up one byte. This will need to be
-        # converted back on the Arduino side.
-        source_str = chr(board_move.source.row + ord('A')) + chr(board_move.source.col + ord('A'))
-        dest_str = chr(board_move.dest.row + ord('A')) + chr(board_move.dest.col + ord('A'))
-        msg = f"~{board_move.op_code}{source_str}{dest_str}{board_move.move_count % 10}"
+        """Constructs and sends uci move according to pi-arduino message format doc.
+        """
+        print(f"Sending message \"{str(board_move)}\" to arduino")
 
-        print(f"Sending message \"{msg}\" to arduino")
-        # TODO: Comment out ser.write(msg) when testing game loop
-        # ser.write(msg)
+        # TODO: Comment out below when testing game loop
+        # ser.write(str(board_move))
+
         # TODO: This is for game loop dev, remove once we read from arduino
         self.set_status_from_arduino(ArduinoStatus.EXECUTING_MOVE, board_move.move_count)
 
     def send_instruction_to_arduino(self, instruction):
         '''Constructs and sends instruction according to pi-arduino message format doc.
         '''
-        set_zero = "0" if instruction.set_zero else "1"
-        msg = f"~{instruction.op_code}{set_zero}000{instruction.move_count % 10}"
+        print(f"Sending message \"{str(instruction)}\" to arduino")
 
-        print(f"Sending message \"{msg}\" to arduino")
-        # TODO: Comment out ser.write(msg) when testing game loop
-        # ser.write(msg)
+        # TODO: Comment out below when testing game loop
+        # ser.write(str(instruction))
+
         # TODO: This is for game loop dev, remove once we read from arduino
         self.set_status_from_arduino(ArduinoStatus.EXECUTING_MOVE, instruction.move_count)
 
@@ -585,6 +579,14 @@ class Move(Message):
         self.source = source
         self.dest = dest
 
+    def __str__(self):
+        # Convert BoardCell integer coordinates to chars s.t. 0 <=> 'A', ..., 11 <=> 'L' before
+        # sending message so that each coord only takes up one byte. This will need to be
+        # converted back on the Arduino side.
+        source_str = chr(self.source.row + ord('A')) + chr(self.source.col + ord('A'))
+        dest_str = chr(self.dest.row + ord('A')) + chr(self.dest.col + ord('A'))
+        return f"~{self.op_code}{source_str}{dest_str}{self.move_count % 10}"
+
 class Instruction(Message):
     """Wrapper class for instruction type messages.
 
@@ -597,3 +599,7 @@ class Instruction(Message):
     def __init__(self, move_count, set_zero, op_code):
         super().__init__(move_count, op_code)
         self.set_zero = set_zero
+
+    def __str__(self):
+        set_zero = "0" if self.set_zero else "1"
+        return f"~{self.op_code}{set_zero}000{self.move_count % 10}"
