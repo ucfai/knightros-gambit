@@ -269,32 +269,13 @@ class Board:
     def send_message_to_arduino(self, msg):
         '''Constructs and sends message according to pi-arduino message format doc.
         '''
-        if msg.op_code in OpCode.UCI_MOVE_OPCODES:
-            self.send_uci_move_to_arduino(msg)
-        else:  # msg is in INSTRUCTION_OPCODES
-            self.send_instruction_to_arduino(msg)
-
-    def send_uci_move_to_arduino(self, board_move):
-        """Constructs and sends uci move according to pi-arduino message format doc.
-        """
-        print(f"Sending message \"{str(board_move)}\" to arduino")
+        print(f"Sending message \"{str(msg)}\" to arduino")
 
         # TODO: Comment out below when testing game loop
-        # ser.write(str(board_move))
+        # ser.write(str(msg))
 
         # TODO: This is for game loop dev, remove once we read from arduino
-        self.set_status_from_arduino(ArduinoStatus.EXECUTING_MOVE, board_move.move_count)
-
-    def send_instruction_to_arduino(self, instruction):
-        '''Constructs and sends instruction according to pi-arduino message format doc.
-        '''
-        print(f"Sending message \"{str(instruction)}\" to arduino")
-
-        # TODO: Comment out below when testing game loop
-        # ser.write(str(instruction))
-
-        # TODO: This is for game loop dev, remove once we read from arduino
-        self.set_status_from_arduino(ArduinoStatus.EXECUTING_MOVE, instruction.move_count)
+        self.set_status_from_arduino(ArduinoStatus.EXECUTING_MOVE, msg.move_count)
 
     def get_status_from_arduino(self):
         '''Read status from Arduino over UART connection.
