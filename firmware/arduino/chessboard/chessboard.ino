@@ -44,12 +44,16 @@ uint8_t yMotor[6] = {Y_MOTOR_STEP, Y_MOTOR_DIR, Y_MOTOR_MS1, Y_MOTOR_MS2, Y_AXIS
 #define MILLIMETERS_PER_UNITSPACE 32
 #define STEPS_PER_MILLIMETER 5  // Whole steps per millimeter
 #define HOME_CALIBRATION_OFFSET 100
+#define TOTAL_UNITSPACES 24
 
 // Number of whole steps per unit space
 int stepsPerUnitSpace;
 
 // currentX and currentY measure distance from the origin (bottom left corner of the board) in eighth steps
 int currentX, currentY;
+
+// Maximum position that currentX/Y may reach
+int posExtreme;
 
 // Motor directions
 #define UP 0 
@@ -106,6 +110,9 @@ void setup()
 
   // Defines the board's units being used
   stepsPerUnitSpace = MILLIMETERS_PER_UNITSPACE * STEPS_PER_MILLIMETER;
+
+  // Max position in terms of eighth steps
+  posExtreme = 8 * stepsPerUnitSpace * TOTAL_UNITSPACES;
 
   // Being initialized to 0 for safety
   currentX = 0;
