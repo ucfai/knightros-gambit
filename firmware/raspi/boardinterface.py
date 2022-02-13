@@ -199,13 +199,20 @@ class Board:
                                       "Should we loop until move is valid? What if "
                                       "the board is messed up? Need to revisit.")
 
+    # TODO: Figure out mechanics of how this works. Want the message retransmitted before we do
+    # anything else, but don't necessarily want to have this count as a "Move".
+    def retransmit_last_msg(self):
+        """Create message to request Arduino retransmit last message and add to msg_queue.
+        """
+        self.add_instruction_to_queue(OpCode.RETRANSMIT_LAST_MSG)
+
     def set_electromagnet(self, off):
         """Create message to set state of electromagnet and add to msg_queue.
 
         Attributes:
             off: boolean, if True, turns electromagnet off, else on.
         """
-        self.add_instruction_to_queue(off, OpCode.SET_ELECTROMAGNET)
+        self.add_instruction_to_queue(OpCode.SET_ELECTROMAGNET, off)
 
     def align_axis(self, align_to_zero):
         """Create message to align axis and add to msg_queue.
@@ -213,7 +220,7 @@ class Board:
         Attributes:
             off: boolean, if True, aligns axis to zero, else to max position.
         """
-        self.add_instruction_to_queue(align_to_zero, OpCode.ALIGN_AXIS)
+        self.add_instruction_to_queue(OpCode.ALIGN_AXIS, align_to_zero)
 
     def make_move(self, uci_move):
         ''' This function assumes that is_valid_move has been called for the uci_move.
@@ -466,8 +473,8 @@ class Board:
         move = Move(self.move_count, source, dest, op_code)
         self.msg_queue.append(move)
 
-    def add_instruction_to_queue(self, set_zero, op_code):
-        '''Increment move count and add Move to self.msg_queue.
+    def add_instruction_to_queue(self, op_code, set_zero=False):
+        '''Increment move count and add Instruction to self.msg_queue.
         '''
         self.move_count += 1
         instruction = Instruction(self.move_count, set_zero, op_code)
