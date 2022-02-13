@@ -8,9 +8,13 @@ class BoardCell:
     '''Helper class for indexing entirety of board.
     '''
     def __init__(self, row=None, col=None):
-        '''Point, if no args passed, initialized to (0,0), top left corner of board
+        '''Point, if no args passed, initialized to (0,0), bottom left corner of entire board.
 
-        Corresponds to center of board square
+        Board representation uses two unit spaces for each cell. So center of bottom left cell is
+        at (1, 1). Similarly, center of bottom left cell of chessboard (either 'a1' or 'h8'
+        depending on whether human plays white or black) is (5, 5). The bottom left corner of the
+        playing area of the chessboard is (4, 4). The top right corner of the entire board is at
+        (24, 24).
         '''
         self.row = row if row else 0
         self.col = col if col else 0
@@ -25,6 +29,10 @@ class BoardCell:
         return (self.row, self.col)
 
     def to_chess_sq(self):
+        '''Returns string representation of BoardCell.
+
+        Assumes BoardCell(0, 0) <=> 'a1' and BoardCell(7, 7) <=> 'h8'.
+        '''
         return chr(self.col + ord('a')) + chr(self.row + ord('1'))
 
 def create_stockfish_wrapper():
@@ -66,22 +74,22 @@ def init_dead_piece_graveyards():
     '''Creates and returns a dictionary of BoardCell for each dead piece type.
     '''
     dead_piece_graveyards = {}
-    dead_piece_graveyards["wq"] = [BoardCell(2, 10), BoardCell(4, 10), BoardCell(4, 11)]
-    dead_piece_graveyards["wb"] = [BoardCell(2, 11), BoardCell(5, 10), BoardCell(5, 11)]
-    dead_piece_graveyards["wn"] = [BoardCell(3, 10), BoardCell(6, 10), BoardCell(6, 11)]
-    dead_piece_graveyards["wr"] = [BoardCell(3, 11), BoardCell(7, 10), BoardCell(7, 11)]
+    dead_piece_graveyards["wq"] = [BoardCell(5, 21), BoardCell(9, 21), BoardCell(9, 23)]
+    dead_piece_graveyards["wb"] = [BoardCell(5, 23), BoardCell(11, 21), BoardCell(11, 23)]
+    dead_piece_graveyards["wn"] = [BoardCell(7, 21), BoardCell(13, 21), BoardCell(13, 23)]
+    dead_piece_graveyards["wr"] = [BoardCell(7, 23), BoardCell(15, 21), BoardCell(15, 23)]
     dead_piece_graveyards["wp"] = [
-        BoardCell(8, 10), BoardCell(8, 11), BoardCell(9, 10), BoardCell(9, 11),
-        BoardCell(10, 10), BoardCell(10, 11), BoardCell(11, 10), BoardCell(11, 11),
+        BoardCell(17, 21), BoardCell(17, 23), BoardCell(19, 21), BoardCell(19, 23),
+        BoardCell(21, 21), BoardCell(21, 23), BoardCell(23, 21), BoardCell(23, 23),
     ]
 
-    dead_piece_graveyards["bq"] = [BoardCell(2, 0), BoardCell(4, 0), BoardCell(4, 1)]
-    dead_piece_graveyards["bb"] = [BoardCell(2, 1), BoardCell(5, 0), BoardCell(5, 1)]
-    dead_piece_graveyards["bn"] = [BoardCell(3, 0), BoardCell(6, 0), BoardCell(6, 1)]
-    dead_piece_graveyards["br"] = [BoardCell(3, 1), BoardCell(7, 0), BoardCell(7, 1)]
+    dead_piece_graveyards["bq"] = [BoardCell(5, 1), BoardCell(9, 1), BoardCell(9, 3)]
+    dead_piece_graveyards["bb"] = [BoardCell(5, 3), BoardCell(11, 1), BoardCell(11, 3)]
+    dead_piece_graveyards["bn"] = [BoardCell(7, 1), BoardCell(13, 1), BoardCell(13, 3)]
+    dead_piece_graveyards["br"] = [BoardCell(7, 3), BoardCell(15, 1), BoardCell(15, 3)]
     dead_piece_graveyards["bp"] = [
-        BoardCell(8, 0), BoardCell(8, 1), BoardCell(9, 0), BoardCell(9, 1),
-        BoardCell(10, 0), BoardCell(10, 1), BoardCell(11, 0), BoardCell(11, 1),
+        BoardCell(17, 1), BoardCell(17, 3), BoardCell(19, 1), BoardCell(19, 3),
+        BoardCell(21, 1), BoardCell(21, 3), BoardCell(23, 1), BoardCell(23, 3),
     ]
 
     return dead_piece_graveyards
@@ -89,12 +97,14 @@ def init_dead_piece_graveyards():
 def init_capture_squares():
     '''Creates and returns two BoardCell objects corresponding to capture squares.
     '''
-    w_capture_sq = BoardCell(1, 1)
-    b_capture_sq = BoardCell(1, 10)
+    w_capture_sq = BoardCell(3, 3)
+    b_capture_sq = BoardCell(3, 21)
 
     return w_capture_sq, b_capture_sq
 
 def uci_move_from_boardcells(source, dest):
+    '''Returns uci move (as string) from two BoardCells.
+    '''
     return source.to_chess_sq() + dest.to_chess_sq()
 
 def get_piece_info_from_square(square, grid):
@@ -136,19 +146,21 @@ def get_2d_board(fen, turn=None):
     # flips perspective to current player
     if turn:
         if turn == 'w':
-            board_state.append(brow)
+            board.append(brow)
         else:
-            board_state.insert(0, brow)
+            board.insert(0, brow)
     return board
 
 def is_promotion(prev_board_fen, move):
-    # Note: This differs from boardinterface.Engine.is_promotion in that it checks for a promotion
-    # in the case that the UCI move is not yet known. It is less efficient as it creates a 2d grid
-    # to check for the piece previously at the square, corresponding to move[:2], and thus should
-    # only be used when boardinterface.Engine.is_promotion can not be used.
+    '''Returns True if move is a promotional move.
 
+    Note: This differs from boardinterface.Engine.is_promotion in that it checks for a promotion
+    in the case that the UCI move is not yet known. It is less efficient as it creates a 2d grid
+    to check for the piece previously at the square, corresponding to move[:2], and thus should
+    only be used when boardinterface.Engine.is_promotion can not be used.
+    '''
     # If piece in prev_board_fen at square move[:2] is a pawn and move[3] is the final rank,
     # this is a promotion. Note: Don't need to check color since white pawn can't move to row 1
-    # and vice versa for black
+    # and vice versa for black.
     return (get_piece_info_from_square(move[:2], get_2d_board(prev_board_fen))[1] == 'p') and \
            (move[3] in ('1', '8'))
