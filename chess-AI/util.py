@@ -1,12 +1,13 @@
-'''Helper file for miscellaneous utility classes and functions.
-'''
+"""Helper file for miscellaneous utility classes and functions.
+"""
 import platform
 
+import numpy as np
 from stockfish import Stockfish
 
 def create_stockfish_wrapper():
-    '''Create simple wrapper around stockfish python module depending on operating system type.
-    '''
+    """Create simple wrapper around stockfish python module depending on operating system type.
+    """
     operating_system = platform.system().lower()
     if operating_system == "darwin":
         stockfish_path = "/usr/local/bin/stockfish"
@@ -21,3 +22,13 @@ def create_stockfish_wrapper():
                          "'darwin' (osx), 'linux', 'windows', 'raspi'")
 
     return Stockfish(stockfish_path)
+
+def sig(value, scale):
+    """Calculate the sigmoid of a value
+
+    Attributes:
+        value: The value to take the sigmoid of
+        scale: How much to scale the value by
+    """
+
+    return 1 / (1 + np.exp(value/scale))
