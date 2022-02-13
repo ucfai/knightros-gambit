@@ -1,8 +1,10 @@
 import random
+
 import chess
 import numpy as np
 import torch
-from stockfish import Stockfish
+
+from util import create_stockfish_wrapper
 
 class StockfishTrain:
     """Build a dataset of moves and stockfish evaluations.
@@ -15,8 +17,8 @@ class StockfishTrain:
         stockfish: the stockfish object
     """
 
-    def __init__(self, path):
-        self.stockfish = Stockfish(path)
+    def __init__(self):
+        self.stockfish = create_stockfish_wrapper()
 
     def set_params(self):
         """Sets the elo and depth for stockfish using the dashboard

@@ -258,8 +258,7 @@ def main():
                 break
 
     # Gets stockfish training object, and sets parameters (elo,depth)
-    stockfish_path = "../../chess-engine/stockfish_14.1_win_x64_avx2.exe"
-    stockfish = StockfishTrain(stockfish_path)
+    stockfish = StockfishTrain()
     stockfish.set_params()
 
     # Value and move approximators from stockfish
