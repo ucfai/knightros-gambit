@@ -118,14 +118,15 @@ def create_dataset(games, move_approximator, val_approximator=None):
     return dataset
 
 
-def train_on_dataset(dataset, nnet, learning_rate, epochs, batch_size, device, save_path, num_saved_models, overwrite_save):
+def train_on_dataset(dataset, nnet, learning_rate, momentum, weight_decay, epochs, batch_size, device, save_path, num_saved_models, overwrite_save):
     """Train with the specified dataset
 
     Attributes:
         dataset: the dataset to use for training
-        dashboard: the streamlit dashboard (this will eventually be removed)
         nnet: the neural network
         learning_rate: the learning rate for the optimizer
+        momentum: additional parameter for the optimizer
+        weight_decay: loss term encouraging smaller weights
         epochs: number of epochs
         batch_size: the batch size for SGD
         device: the device being used to train (either CPU or GPU)
@@ -143,7 +144,7 @@ def train_on_dataset(dataset, nnet, learning_rate, epochs, batch_size, device, s
 
     # Create optimizer for updating parameters during training
     # TODO: Consider using other optimizers, such as Adam
-    opt = torch.optim.SGD(nnet.parameters(), lr=learning_rate, weight_decay=0.001, momentum=0.9)
+    opt = torch.optim.SGD(nnet.parameters(), lr=learning_rate, weight_decay=weight_decay, momentum=momentum)
     train_dl = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=False)
 
     # Main training loop
@@ -226,20 +227,15 @@ def main():
     # Detect device to train on
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-    # Get dataset parameters from dashboard
+    # Stockfish specific parameters
     stocktrain_games, stocktrain_epochs = 1000, 10
+
+    # MCTS specific parameters
     mcts_games, mcts_epochs = 100, 100
-    batch_size, learning_rate = 8, 0.1
-
-    # Gets stockfish training object, and sets parameters (elo,depth)
-    stockfish_path = r"C:\Users\jhoyo\Downloads\stockfish_14.1_win_x64_avx2.exe"
-    stockfish = StockfishTrain(stockfish_path)
-    stockfish.set_params()
-
-    # Get MCTS object and parameters
-    # TODO: Figure out how many times to perform self play (and better name for this variable)
     mcts_amt, mcts_simulations, exploration = 5, 100, 0.5
-    mcts = Mcts(exploration)
+
+    # General parameters
+    batch_size, learning_rate, momentum, weight_decay = 8, 0.1, 0.9, 0.001
 
     nnet = PlayNetwork().to(device=device)
 
@@ -261,10 +257,14 @@ def main():
                     nnet = load_model(nnet, f'chess-AI/models-{i + 1}.pt')
                 break
 
+    # Gets stockfish training object, and sets parameters (elo,depth)
+    stockfish_path = "../../chess-engine/stockfish_14.1_win_x64_avx2.exe"
+    stockfish = StockfishTrain(stockfish_path)
+    stockfish.set_params()
+
     # Value and move approximators from stockfish
-    epsilon = 0.3
     stocktrain_value_approximator = stockfish.get_value
-    stocktrain_moves = lambda board: stockfish.get_move_probs(board, epsilon)
+    stocktrain_moves = lambda board: stockfish.get_move_probs(board, epsilon=0.3)
 
     # Dataset needs to be either created or loaded
     if dataset_path:
@@ -275,15 +275,19 @@ def main():
         torch.save(dataset, 'datasets/stockfish_data.pt')
 
     # Train using the stockfish dataset
-    train_on_dataset(dataset, nnet, learning_rate, stocktrain_epochs, batch_size, device,
+    train_on_dataset(dataset, nnet, learning_rate, momentum, weight_decay, stocktrain_epochs, batch_size, device,
                      save_path=None, num_saved_models=num_saved_models, overwrite_save=overwrite_save)
+
+    # Get MCTS object and parameters
+    # TODO: Figure out how many times to perform self play (and better name for this variable)
+    mcts = Mcts(exploration)
 
     # Will iterate through the number of training episodes
     for _ in range(mcts_amt):
         mcts_moves = lambda board: mcts.get_tree_results(mcts_simulations, nnet, board, temperature=5)
 
         dataset = create_dataset(mcts_games, mcts_moves)
-        train_on_dataset(dataset, nnet, learning_rate, mcts_epochs, batch_size, device,
+        train_on_dataset(dataset, nnet, learning_rate, momentum, weight_decay, mcts_epochs, batch_size, device,
                          save_path=None, num_saved_models=num_saved_models, overwrite_save=overwrite_save)
 
 
