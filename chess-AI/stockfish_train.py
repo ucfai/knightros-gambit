@@ -19,19 +19,16 @@ class StockfishTrain:
         stockfish: the stockfish object
     """
 
-    def __init__(self):
-        self.stockfish = util.create_stockfish_wrapper()
-
-    def set_params(self):
-        """Sets the elo and depth for stockfish using the dashboard
+    def __init__(self, elo=1000, depth=3):
+        """Create wrapper around Stockfish engine.
 
         Attributes:
-          dashboard: reference to the streamlit dashboard (this is temporary)
+            elo: int specifying strength (elo) of stockfish engine
+            depth: int specifying how many levels deep stockfish should search on each move
         """
-
-        # Set the elo and depth of the stockfish object
-        self.stockfish.set_elo_rating(1000)
-        self.stockfish.set_depth(3)
+        self.stockfish = util.create_stockfish_wrapper()
+        self.stockfish.set_elo_rating(elo)
+        self.stockfish.set_depth(depth)
 
     @staticmethod
     def choose_move(moves, epsilon):
