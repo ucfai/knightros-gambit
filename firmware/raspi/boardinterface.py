@@ -185,7 +185,7 @@ class Board:
         self.arduino_status = ArduinoStatus(ArduinoStatus.IDLE, self.move_count, None)
 
         self.graveyard = Graveyard()
-        self.move_queue = deque()
+        self.msg_queue = deque()
         self.human_plays_white_pieces = human_plays_white_pieces
 
     def send_move_to_board(self, uci_move):
@@ -198,6 +198,29 @@ class Board:
             raise NotImplementedError("Need to handle case of invalid move input. "
                                       "Should we loop until move is valid? What if "
                                       "the board is messed up? Need to revisit.")
+
+    # TODO: Figure out mechanics of how this works. Want the message retransmitted before we do
+    # anything else, but don't necessarily want to have this count as a "Move".
+    def retransmit_last_msg(self):
+        """Create message to request Arduino retransmit last message and add to msg_queue.
+        """
+        self.add_instruction_to_queue(OpCode.RETRANSMIT_LAST_MSG)
+
+    def set_electromagnet(self, off):
+        """Create message to set state of electromagnet and add to msg_queue.
+
+        Attributes:
+            off: boolean, if True, turns electromagnet off, else on.
+        """
+        self.add_instruction_to_queue(OpCode.SET_ELECTROMAGNET, off)
+
+    def align_axis(self, align_to_zero):
+        """Create message to align axis and add to msg_queue.
+
+        Attributes:
+            off: boolean, if True, aligns axis to zero, else to max position.
+        """
+        self.add_instruction_to_queue(OpCode.ALIGN_AXIS, align_to_zero)
 
     def make_move(self, uci_move):
         ''' This function assumes that is_valid_move has been called for the uci_move.
@@ -250,27 +273,23 @@ class Board:
         '''
         return self.engine.valid_moves_from_position()
 
-    def send_message_to_arduino(self, board_move):
+    def send_message_to_arduino(self, msg):
         '''Constructs and sends message according to pi-arduino message format doc.
         '''
-        # Convert BoardCell integer coordinates to chars s.t. 0 <=> 'A', ..., 11 <=> 'L' before
-        # sending message so that each coord only takes up one byte. This will need to be
-        # converted back on the Arduino side.
-        source_str = chr(board_move.source.row + ord('A')) + chr(board_move.source.col + ord('A'))
-        dest_str = chr(board_move.dest.row + ord('A')) + chr(board_move.dest.col + ord('A'))
-        msg = f"~{board_move.op_code}{source_str}{dest_str}{board_move.move_count % 10}"
+        print(f"Sending message \"{str(msg)}\" to arduino")
 
-        print(f"Sending message \"{msg}\" to arduino")
-        # TODO: Comment out ser.write(msg) when testing game loop
-        # ser.write(msg)
+        # TODO: Comment out below when testing game loop
+        # ser.write(str(msg))
+
         # TODO: This is for game loop dev, remove once we read from arduino
-        self.set_status_from_arduino(ArduinoStatus.EXECUTING_MOVE, board_move.move_count, None)
+        self.set_status_from_arduino(ArduinoStatus.EXECUTING_MOVE, msg.move_count)
 
     def get_status_from_arduino(self):
         '''Read status from Arduino over UART connection.
         '''
         # New variable created, new_input, to store 4 bytes for UART Messages
-        # If the start byte is a ~ and the Arduino Status is valid, process the arduino status based on the new input
+        # If the start byte is a ~ and the Arduino Status is valid, process the arduino status based
+        # on the new input
         # TODO: Implement error handling. Arduino should retransmit last
         # message in the event of a parsing error
         # TODO: uncomment the next five lines when testing the game loop on the pi
@@ -281,7 +300,7 @@ class Board:
         #    raise ValueError(f"Error: received unexpected status code: {new_input[1]}...")
         return self.arduino_status
 
-    def set_status_from_arduino(self, status, move_count, extra):
+    def set_status_from_arduino(self, status, move_count, extra=None):
         '''Placeholder function; used for game loop development only.
         '''
         self.arduino_status = ArduinoStatus(status, move_count, extra)
@@ -410,7 +429,7 @@ class Board:
 
         source, dest = Engine.get_chess_coords_from_uci_move(uci_move)
 
-        board_2d = self.board_grids[-1]
+        board_2d = self.engine.board_grids[-1]
         # Cut number of cases from 8 to 4 by treating soure and dest interchangeably
         left, right = (source, dest) if source.col < dest.col else (dest, source)
         if left.col == right.col - 1:
@@ -438,21 +457,28 @@ class Board:
                                          board_2d[left.row][left.col + 1],  # P3
                                          board_2d[left.row][left.col + 2]]])  # P4
 
-    def dispatch_move_from_queue(self):
-        '''Send move at front of self.move_queue to Arduino, if queue is non-empty.
+    def dispatch_msg_from_queue(self):
+        '''Send move at front of self.msg_queue to Arduino, if queue is non-empty.
         '''
-        if not self.move_queue:
+        if not self.msg_queue:
             raise ValueError("No moves to dispatch")
         # Note: move is only removed from the queue in the main game loop when the status received
         # from the Arduino confirms that the move has successfully been executed on the Arduino.
-        self.send_message_to_arduino(self.move_queue[0])
+        self.send_message_to_arduino(self.msg_queue[0])
 
     def add_move_to_queue(self, source, dest, op_code):
-        '''Increment move count and add Move to self.move_queue.
+        '''Increment move count and add Move to self.msg_queue.
         '''
         self.move_count += 1
         move = Move(self.move_count, source, dest, op_code)
-        self.move_queue.append(move)
+        self.msg_queue.append(move)
+
+    def add_instruction_to_queue(self, op_code, set_zero=False):
+        '''Increment move count and add Instruction to self.msg_queue.
+        '''
+        self.move_count += 1
+        instruction = Instruction(self.move_count, set_zero, op_code)
+        self.msg_queue.append(instruction)
 
     def backfill_promotion_area_from_graveyard(self, color, piece_type):
         '''
@@ -510,7 +536,24 @@ class Graveyard:
         else:
             raise ValueError("Cannot modify graveyard in increments greater than 1")
 
-class Move:
+class Message:
+    """Abstract base class for different message types sent to Arduino.
+
+    Note: This class should not be used directly!
+    Should create an instance of Move or Instruction as needed.
+
+    Attributes:
+        move_count: int specifying move number in current game. Note, a single chess move may
+            be composed of multiple Move objects. For example, a capture is one Move to send
+            the captured piece to the graveyard, and another to move the capturing piece to
+            the new square.
+        op_code: OpCode specifying how piece should be moved.
+    """
+    def __init__(self, move_count, op_code):
+        self.move_count = move_count
+        self.op_code = op_code
+
+class Move(Message):
     """Wrapper class for moves from specified source to dest.
 
     Attributes:
@@ -523,7 +566,31 @@ class Move:
         op_code: OpCode specifying how piece should be moved.
     """
     def __init__(self, move_count, source, dest, op_code):
-        self.move_count = move_count
+        super().__init__(move_count, op_code)
         self.source = source
         self.dest = dest
-        self.op_code = op_code
+
+    def __str__(self):
+        # Convert BoardCell integer coordinates to chars s.t. 0 <=> 'A', ..., 11 <=> 'L' before
+        # sending message so that each coord only takes up one byte. This will need to be
+        # converted back on the Arduino side.
+        source_str = chr(self.source.row + ord('A')) + chr(self.source.col + ord('A'))
+        dest_str = chr(self.dest.row + ord('A')) + chr(self.dest.col + ord('A'))
+        return f"~{self.op_code}{source_str}{dest_str}{self.move_count % 10}"
+
+class Instruction(Message):
+    """Wrapper class for instruction type messages.
+
+    Attributes:
+        move_count: int specifying move number in current game. Each instruction increments the
+            number of moves in the game.
+        set_zero: bool flag used for ALIGN_AXIS and SET_ELECTROMAGNET. See OpCode for more info.
+        op_code: OpCode specifying how piece should be moved.
+    """
+    def __init__(self, move_count, set_zero, op_code):
+        super().__init__(move_count, op_code)
+        self.set_zero = set_zero
+
+    def __str__(self):
+        set_zero = "0" if self.set_zero else "1"
+        return f"~{self.op_code}{set_zero}000{self.move_count % 10}"
