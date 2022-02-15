@@ -6,6 +6,44 @@
 #define RX2 16
 #define TX2 17
 
+// UART input and flags
+char moveCount;
+volatile char currentState = '0';
+volatile char errorCode;
+volatile char charArray1[6];
+volatile char charArray2[6];
+volatile char * tempCharPtr;
+volatile char * rxBufferPtr = charArray1;
+volatile char * receivedMessagePtr = charArray2;
+volatile bool receivedMessageValidFlag = false;
+volatile unsigned long previous_activation_time = 0;
+volatile bool movementFlag = false; // Prevents END_TURN transmissions during movement function
+volatile bool transmitFlag = false; // Queues END_TURN transmission after movement function
+
+enum ArduinoState
+{
+  IDLE = '0',
+  EXECUTING = '1',
+  END_TURN = '2',
+  ERROR = '3'
+};
+
+enum MoveCommandType
+{
+  DIRECT = '0',
+  EDGES = '1',
+  ALIGN = '2'
+};
+
+enum ErrorCode
+{
+  NO_ERROR = '0',
+  INVALID_OP = '1',
+  INVALID_LOCATION = '2',
+  INCOMPLETE_INSTRUCTION = '3',
+  MOVEMENT_ERROR = '4'
+};
+
 // Electromagnet
 #define ELECTROMAGNET 23
 #define PWM_HALF_SCALE 127 // 127 is for 50% duty cycle, 255 is for 100% duty cycle
@@ -122,6 +160,31 @@ void setup()
 
 void loop()
 {
-  
+  if (receivedMessageValidFlag && !movementFlag)
+  {
+    receivedMessageValidFlag = false;
 
+    currentState = EXECUTING;
+    if (validateMessageFromPi(receivedMessagePtr))
+    { 
+        // Sends acknowledgement
+        sendMessageToPi(currentState, receivedMessagePtr[5], errorCode);
+
+        movementFlag = true;
+        makeMove(receivedMessagePtr);
+        movementFlag = false;
+
+        // Tell Pi that the chess timer button was pressed
+        if (transmitFlag) // old definiton of transmit flag
+            sendMessageToPi(END_TURN, 0, receivedMessagePtr[5]);
+        transmitFlag = false;
+    }
+    // Sends move success/error
+    sendMessageToPi(currentState, receivedMessagePtr[5], errorCode);
+  }
+  else if (transmitFlag && !movementFlag)
+  {
+    sendMessageToPi(currentState, moveCount, errorCode);
+    transmitFlag = false;
+  }
 }

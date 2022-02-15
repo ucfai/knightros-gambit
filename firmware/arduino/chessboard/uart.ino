@@ -1,35 +1,6 @@
 char incomingByte;
-char buffer[6];
+
 int byteNum = -1; // -1 indicates that the start code hasn't been received
-char currentState = '0';
-char errorCode;
-volatile unsigned long previous_activation_time = 0;
-volatile bool movementFlag = false; // Prevents END_TURN transmissions during movement function
-volatile bool transmitFlag = false; // Queues END_TURN transmission after movement function
-
-enum ArduinoState
-{
-    IDLE = '0',
-    EXECUTING = '1',
-    END_TURN = '2',
-    ERROR = '3'
-};
-
-enum MoveCommandType
-{
-    DIRECT = '0',
-    EDGES = '1',
-    ALIGN = '2'
-};
-
-enum ErrorCode
-{
-    NO_ERROR = '0',
-    INVALID_OP = '1',
-    INVALID_LOCATION = '2',
-    INCOMPLETE_INSTRUCTION = '3',
-    MOVEMENT_ERROR = '4'
-};
 
 // Send message to Pi when the chess timer is pressed
 void chessTimerISR()
@@ -40,15 +11,9 @@ void chessTimerISR()
     if (current_time - previous_activation_time > DEBOUNCE_TIME || 
        (current_time < previous_activation_time && previous_activation_time - current_time > DEBOUNCE_TIME))
     {
-        previous_activation_time = current_time; 
-        if (movementFlag)
-        {
-            transmitFlag = true;
-        }
-        else
-        {
-            sendMessageToPi(END_TURN, 0, buffer[5]);
-        }
+        previous_activation_time = current_time;
+        currentState = END_TURN;
+        transmitFlag = true;
     }
 }
 
@@ -69,7 +34,8 @@ void serialEvent2()
             {
                 currentState = ERROR;
                 errorCode = INCOMPLETE_INSTRUCTION;
-                sendMessageToPi(currentState, buffer[5], errorCode);
+                transmitFlag = true;
+                // OLD sendMessageToPi(currentState, buffer[5], errorCode);
             }
 
             byteNum = 0;
@@ -77,7 +43,7 @@ void serialEvent2()
         // Add byte to buffer
         else if (byteNum  !=  -1)
         {
-            buffer[byteNum++] = incomingByte;
+            rxBufferPtr[byteNum++] = incomingByte;
         }
 
         // Check if the buffer is full, process input
@@ -86,32 +52,19 @@ void serialEvent2()
             // Reset buffer position
             byteNum = -1;
 
-            // Process input
-            // Returns true for valid input and false for invalid input.
-            currentState = EXECUTING;
-            if (validateMessageFromPi(buffer))
-            { 
-                // Sends acknowledgement
-                sendMessageToPi(currentState, buffer[5], errorCode);
+            // Swap rxBufferPtr and receivedMessagePtr pointers
+            tempCharPtr = rxBufferPtr;
+            rxBufferPtr = receivedMessagePtr;
+            receivedMessagePtr = tempCharPtr;
 
-                movementFlag = true;
-                makeMove(buffer);
-                movementFlag = false;
-
-                // Tell Pi that the chess timer button was pressed
-                if (transmitFlag)
-                    sendMessageToPi(END_TURN, 0, buffer[5]);
-                transmitFlag = false;
-            }
-
-            // Sends move success/error
-            sendMessageToPi(currentState, buffer[5], errorCode);
+            // Tell game loop to process input
+            receivedMessageValidFlag = true;
         }
     }
 }
 
 // Check that the instruction is valid
-bool validateMessageFromPi(char * message)
+bool validateMessageFromPi(volatile char * message)
 {
     if (message[0] == DIRECT || message[0] == EDGES)
     {
@@ -139,11 +92,15 @@ bool validateMessageFromPi(char * message)
         currentState = ERROR;
         return false;
     }
+
+    // Update last valid move count
+    moveCount = message[5];
+
     errorCode = NO_ERROR;
     return true;
 }
 
-bool makeMove(char * message)
+bool makeMove(volatile char * message)
 {
     // Move type 0
     if (message[0]  ==  DIRECT)
@@ -189,7 +146,7 @@ bool makeMove(char * message)
     return true;
 }
 
-void sendMessageToPi(char status, char moveCount, char errorMessage)
+void sendMessageToPi(volatile char status, char moveCount, char errorMessage)
 {
     Serial2.write('~');
     Serial2.write(status);
@@ -197,7 +154,7 @@ void sendMessageToPi(char status, char moveCount, char errorMessage)
     Serial2.write(moveCount);
 }
 
-bool isInvalidCoord (char c)
+bool isInvalidCoord (volatile char c)
 {
-    return c < 'A' || c > 'L';
+    return c < 'A' || c > 'X';
 }
