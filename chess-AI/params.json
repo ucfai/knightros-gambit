@@ -1,0 +1,30 @@
+{
+    "nnet": {
+        "optimizer": {
+            "lr": 0.01,
+            "weight_decay": 0.1,
+            "momentum": 1.0,
+            "batch_size":8,
+            "epochs":1000
+        },
+        "saving":{
+            "frequency": 5
+        }
+    },    
+
+    "mcts":{
+        "exploration":0.5,
+        "temperature":0.5,
+        "training_simulations": 100,
+        "games": 100
+    },
+
+    "stockfish":{
+        "elo": 1000,
+        "depth":5,
+        "games":100,
+        "sigmoid_scalar": 0.1,
+        "move_epsilon":0.5,
+        "probability_scalar":0.5
+    }
+}
