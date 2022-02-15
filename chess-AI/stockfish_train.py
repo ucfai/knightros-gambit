@@ -4,9 +4,6 @@ import numpy as np
 import torch
 from stockfish import Stockfish
 
-from output_representation import PlayNetworkPolicyConverter
-
-
 class StockfishTrain:
     """Build a dataset of moves and stockfish evaluations.
 
@@ -16,12 +13,10 @@ class StockfishTrain:
 
     Attributes:
         stockfish: the stockfish object
-        policy_converter: reference to the Policy Converter Class
     """
 
     def __init__(self, path):
         self.stockfish = Stockfish(path)
-        self.policy_converter = PlayNetworkPolicyConverter()
 
     def set_params(self):
         """Sets the elo and depth for stockfish using the dashboard

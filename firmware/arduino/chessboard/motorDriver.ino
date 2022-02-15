@@ -2,9 +2,12 @@
 enum MovementStatus
 {
   SUCCESS = 0,
-  HIT_X_ENDSTOP = 1,
-  HIT_Y_ENDSTOP = 2,
-  INVALID_ARGS = 3
+  HIT_POS_X_ENDSTOP = 1,
+  HIT_POS_Y_ENDSTOP = 2,
+  HIT_NEG_X_ENDSTOP = 3,
+  HIT_NEG_Y_ENDSTOP = 4,
+  INVALID_ARGS = 5,
+  INVALID_ALIGNMENT = 6
 };
 
 // Current position tracking scale in eighth steps
@@ -129,13 +132,24 @@ void home()
 // A specific motor is passed to this function since we are only moving one here
 // Returns a 'MovementStatus' code, '0' if successful, varying nonzero values for various error codes
 // For all status codes, check 'MovementStatus' in chessboard.ino
-uint8_t moveStraight(uint8_t motor[], int startCol, int startRow, int endCol, int endRow)
+uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
 {
   // How many steps per space
   int dir, numSteps, unitSpaces;
   int i;
   int eighthStepsPerPulse;
   int *currentMotorPos;
+  int startCol, startRow;
+
+  // Checks if the EM is aligned properly
+  if ((currentX % stepsPerUnitSpace) || (currentY % stepsPerUnitSpace))
+  {
+    return INVALID_ALIGNMENT;
+  }
+
+  // Converts current position to be in terms of unit spaces instead of eighth steps
+  startCol = currentX / (stepsPerUnitSpace * 8);
+  startRow = currentY / (stepsPerUnitSpace * 8);
 
   // Same as homeAxis(), sets the loop to only update a single motors position at a time
   // Direction is still determined seperately by if statements
@@ -177,11 +191,17 @@ uint8_t moveStraight(uint8_t motor[], int startCol, int startRow, int endCol, in
   // Rotate motor some number of steps
   for (i = 0; i < numSteps; i++)
   {
-    if (digitalRead(X_AXIS_ENDSTOP_SWITCH) == HIGH)
-      return HIT_X_ENDSTOP;
+    if (digitalRead(X_AXIS_MAX_ENDSTOP) == HIGH)
+      return HIT_POS_X_ENDSTOP;
 
-    if (digitalRead(Y_AXIS_ENDSTOP_SWITCH) == HIGH)
-      return HIT_Y_ENDSTOP;
+    if (digitalRead(Y_AXIS_MAX_ENDSTOP) == HIGH)
+      return HIT_POS_Y_ENDSTOP;
+    
+    if (digitalRead(X_AXIS_ZERO_ENDSTOP) == HIGH)
+      return HIT_NEG_X_ENDSTOP;
+
+    if (digitalRead(Y_AXIS_ZERO_ENDSTOP) == HIGH)
+      return HIT_NEG_Y_ENDSTOP;
 
     digitalWrite(motor[STEP_PIN], LOW);
     delay(1); // 1 milliSecond
@@ -198,13 +218,24 @@ uint8_t moveStraight(uint8_t motor[], int startCol, int startRow, int endCol, in
 // This can move in diagonal lines of slopes: 1, 2, and 1/2
 // Returns a 'MovementStatus' code, '0' if successful, varying nonzero values for various error codes
 // For all status codes, check 'MovementStatus' in chessboard.ino
-uint8_t moveDiagonal(int startCol, int startRow, int endCol, int endRow)
+uint8_t moveDiagonal(int endCol, int endRow)
 {
   int unitSpacesX, unitSpacesY;
   int dirX, dirY;
   int numStepsX, numStepsY;
   int eighthStepsPerPulseX, eighthStepsPerPulseY;
   int i;
+  int startRow, startCol;
+
+  // Checks if the EM is aligned properly
+  if ((currentX % stepsPerUnitSpace) || (currentY % stepsPerUnitSpace))
+  {
+    return INVALID_ALIGNMENT;
+  }
+
+  // Converts current position to be in terms of unit spaces instead of eighth steps
+  startCol = currentX / (stepsPerUnitSpace * 8);
+  startRow = currentY / (stepsPerUnitSpace * 8);
 
   // Sets scale and numEighthSteps for both X and Y
   // Abs ensures that numStepsX and numStepsY will be positive
@@ -254,11 +285,17 @@ uint8_t moveDiagonal(int startCol, int startRow, int endCol, int endRow)
 
   for (i = 0; i < numStepsX; i++)
   {
-    if (digitalRead(X_AXIS_ENDSTOP_SWITCH) == HIGH)
-      return HIT_X_ENDSTOP;
+    if (digitalRead(X_AXIS_MAX_ENDSTOP) == HIGH)
+      return HIT_POS_X_ENDSTOP;
 
-    if (digitalRead(Y_AXIS_ENDSTOP_SWITCH) == HIGH)
-      return HIT_Y_ENDSTOP;
+    if (digitalRead(Y_AXIS_MAX_ENDSTOP) == HIGH)
+      return HIT_POS_Y_ENDSTOP;
+    
+    if (digitalRead(X_AXIS_ZERO_ENDSTOP) == HIGH)
+      return HIT_NEG_X_ENDSTOP;
+
+    if (digitalRead(Y_AXIS_ZERO_ENDSTOP) == HIGH)
+      return HIT_NEG_Y_ENDSTOP;
 
     digitalWrite(xMotor[STEP_PIN], LOW);
     digitalWrite(yMotor[STEP_PIN], LOW);
