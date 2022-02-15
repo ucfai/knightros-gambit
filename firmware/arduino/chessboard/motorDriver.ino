@@ -100,6 +100,7 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
     endstopPin = ZERO_ENDSTOP_PIN;
   }
   setScale(motor, WHOLE_STEPS);
+
   while (digitalRead(motor[endstopPin]) == LOW)
   {
     // Moves motor
@@ -122,6 +123,7 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
     digitalWrite(motor[DIR_PIN], RIGHT);
     eighthStepsPerPulse = POS_EIGHTH_STEPS_PER_WHOLE_STEP;
   }
+
   for (i = 0; i < HOME_CALIBRATION_OFFSET; i++)
   {
     digitalWrite(motor[STEP_PIN], LOW);
@@ -144,6 +146,7 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
     endstopPin = ZERO_ENDSTOP_PIN;
   }
   setScale(motor, EIGHTH_STEPS);
+  
   while (digitalRead(motor[endstopPin]) == LOW)
   {
     digitalWrite(motor[STEP_PIN], LOW);
