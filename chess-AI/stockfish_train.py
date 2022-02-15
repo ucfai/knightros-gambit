@@ -1,8 +1,12 @@
+"""This file holds the StockfishTrain class, used to augment our self-play training approach.
+"""
 import random
+
 import chess
 import numpy as np
 import torch
-from stockfish import Stockfish
+
+import util
 
 class StockfishTrain:
     """Build a dataset of moves and stockfish evaluations.
@@ -15,31 +19,19 @@ class StockfishTrain:
         stockfish: the stockfish object
     """
 
-    def __init__(self, path):
-        self.stockfish = Stockfish(path)
-
-    def set_params(self):
-        """Sets the elo and depth for stockfish using the dashboard
+    def __init__(self, elo=1000, depth=3):
+        """Create wrapper around Stockfish engine.
 
         Attributes:
-          dashboard: reference to the streamlit dashboard (this is temporary)
+            elo: int specifying strength (elo) of stockfish engine
+            depth: int specifying how many levels deep stockfish should search on each move
         """
-        
-        # Set the elo and depth of the stockfish object
-        self.stockfish.set_elo_rating(1000)
-        self.stockfish.set_depth(3)
+        self.stockfish = util.create_stockfish_wrapper()
+        self.stockfish.set_elo_rating(elo)
+        self.stockfish.set_depth(depth)
 
-    def sig(self, value, scale):
-        """Calculate the sigmoid of a value
-
-        Attributes:
-            value: The value to take the sigmoid of
-            scale: How much to scale the value by
-        """
-
-        return 1 / (1 + np.exp(value/scale))
-
-    def choose_move(self, moves, epsilon):
+    @staticmethod
+    def choose_move(moves, epsilon):
         """Choose the next move to make with an epsilon-greedy strategy.
 
         To encourage exploration, a random move is chosen with probability 1-epsilon.
@@ -72,13 +64,13 @@ class StockfishTrain:
         # Positive is advantage white, negative is advantage black
 
         player = 1 if board.turn == chess.WHITE else -1
-        
+
         # Player will transform the value depending on if black or white
         state_value = self.stockfish.get_evaluation()["value"] * player
 
         # Transform state value to be in the range [-1, 1]
         if sig:
-            state_value = 1 - 2 * self.sig(state_value, 1)
+            state_value = 1 - 2 * util.sig(state_value, 1)
 
         return state_value
 
@@ -98,13 +90,13 @@ class StockfishTrain:
 
         search_probs = []
         player = 1 if board.turn == chess.WHITE else -1
-        
+
         for move in top_moves:
             # if move["Centipawn"] is none, that means that there is
             # a potential mate in (x) number of moves
             # if x > 0 , that is a mate for white in x moves
             # if x < 0, that is a mate for black in x moves
-            if move["Centipawn"] == None:
+            if move["Centipawn"] is None:
                 # large value * (1/move["mate"]) * player will arrange search probs
                 # based on best mate
                 search_probs.append(10000000 * (1 / move["Mate"]) * player)
@@ -116,6 +108,6 @@ class StockfishTrain:
         print(search_probs)
 
         # Will choose the move to make from the list of moves
-        move = self.choose_move(moves, epsilon)
+        move = StockfishTrain.choose_move(moves, epsilon)
 
         return moves, search_probs, move

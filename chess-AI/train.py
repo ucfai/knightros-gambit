@@ -257,10 +257,9 @@ def main():
                     nnet = load_model(nnet, f'chess-AI/models-{i + 1}.pt')
                 break
 
-    # Gets stockfish training object, and sets parameters (elo,depth)
-    stockfish_path = "../../chess-engine/stockfish_14.1_win_x64_avx2.exe"
-    stockfish = StockfishTrain(stockfish_path)
-    stockfish.set_params()
+    # Initialize stockfish training object
+    elo, depth = 1000, 3
+    stockfish = StockfishTrain(elo, depth)
 
     # Value and move approximators from stockfish
     stocktrain_value_approximator = stockfish.get_value
