@@ -75,10 +75,11 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   int *currentMotorPos;
   int eighthStepsPerPulse;
   int i;
+  uint8_t endstopPin;
 
   // Stores corresponding motor position based off of which motor is being aligned,
   // so that correct position can be incremented by function
-  currentMotorPos = (motor == xMotor) ? &currentX : &currentY;
+  currentMotorPos = (motor == xMotor) ? &currPositionX : &currPositionY;
 
   // Loop until endstop collision, then fine tune it
   // LEFT and DOWN have same value, as do RIGHT and UP. Use LEFT
@@ -90,14 +91,16 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   {
     digitalWrite(motor[DIR_PIN], RIGHT);
     eighthStepsPerPulse = POS_EIGHTH_STEPS_PER_WHOLE_STEP;
+    endstopPin = MAX_ENDSTOP_PIN;
   }
   else
   {
     digitalWrite(motor[DIR_PIN], LEFT);
     eighthStepsPerPulse = NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
+    endstopPin = ZERO_ENDSTOP_PIN;
   }
   setScale(motor, WHOLE_STEPS);
-  while (digitalRead(motor[ENDSTOP_PIN]) == LOW)
+  while (digitalRead(motor[endstopPin]) == LOW)
   {
     // Moves motor
     digitalWrite(motor[STEP_PIN], LOW);
@@ -132,14 +135,16 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   {
     digitalWrite(motor[DIR_PIN], RIGHT);
     eighthStepsPerPulse = POS_EIGHTH_STEPS_PER_WHOLE_STEP;
+    endstopPin = MAX_ENDSTOP_PIN;
   }
   else
   {
     digitalWrite(motor[DIR_PIN], LEFT);
     eighthStepsPerPulse = NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
+    endstopPin = ZERO_ENDSTOP_PIN;
   }
   setScale(motor, EIGHTH_STEPS);
-  while (digitalRead(motor[ENDSTOP_PIN]) == LOW)
+  while (digitalRead(motor[endstopPin]) == LOW)
   {
     digitalWrite(motor[STEP_PIN], LOW);
     delay(1);
@@ -148,7 +153,7 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   }
 
   // Sets the motor position to either the max position or 0
-  *currentMotorPos = (alignmentCode == POS_EXTREME) ? posExtreme : 0;
+  *currentMotorPos = (alignmentCode == POS_EXTREME) ? maxPosition : 0;
 }
 
 // Aligns both axis to home
@@ -173,18 +178,18 @@ uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
   int startCol, startRow;
 
   // Checks if the EM is aligned properly
-  if ((currentX % stepsPerUnitSpace) || (currentY % stepsPerUnitSpace))
+  if ((currPositionX % stepsPerUnitSpace) || (currPositionY % stepsPerUnitSpace))
   {
     return INVALID_ALIGNMENT;
   }
 
   // Converts current position to be in terms of unit spaces instead of eighth steps
-  startCol = currentX / (stepsPerUnitSpace * 8);
-  startRow = currentY / (stepsPerUnitSpace * 8);
+  startCol = currPositionX / (stepsPerUnitSpace * 8);
+  startRow = currPositionY / (stepsPerUnitSpace * 8);
 
   // Same as homeAxis(), sets the loop to only update a single motors position at a time
   // Direction is still determined seperately by if statements
-  currentMotorPos = (motor == xMotor) ? &currentX : &currentY;
+  currentMotorPos = (motor == xMotor) ? &currPositionX : &currPositionY;
 
   // This could be two cases, x or y movement
   // Abs ensures that numSteps will be positive
@@ -259,14 +264,14 @@ uint8_t moveDiagonal(int endCol, int endRow)
   int startRow, startCol;
 
   // Checks if the EM is aligned properly
-  if ((currentX % stepsPerUnitSpace) || (currentY % stepsPerUnitSpace))
+  if ((currPositionX % stepsPerUnitSpace) || (currPositionY % stepsPerUnitSpace))
   {
     return INVALID_ALIGNMENT;
   }
 
   // Converts current position to be in terms of unit spaces instead of eighth steps
-  startCol = currentX / (stepsPerUnitSpace * 8);
-  startRow = currentY / (stepsPerUnitSpace * 8);
+  startCol = currPositionX / (stepsPerUnitSpace * 8);
+  startRow = currPositionY / (stepsPerUnitSpace * 8);
 
   // Sets scale and numEighthSteps for both X and Y
   // Abs ensures that numStepsX and numStepsY will be positive
@@ -335,8 +340,8 @@ uint8_t moveDiagonal(int endCol, int endRow)
     digitalWrite(yMotor[STEP_PIN], HIGH);
 
     // Updates current position for both x and y
-    currentX += eighthStepsPerPulseX;
-    currentY += eighthStepsPerPulseY;
+    currPositionX += eighthStepsPerPulseX;
+    currPositionY += eighthStepsPerPulseY;
   }
 
   return SUCCESS;

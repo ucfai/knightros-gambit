@@ -49,11 +49,11 @@ uint8_t yMotor[6] = {Y_MOTOR_STEP, Y_MOTOR_DIR, Y_MOTOR_MS1, Y_MOTOR_MS2, Y_AXIS
 // Number of whole steps per unit space
 int stepsPerUnitSpace;
 
-// currentX and currentY measure distance from the origin (bottom left corner of the board) in eighth steps
-int currentX, currentY;
+// currPositionX and currPositionY measure distance from the origin (bottom left corner of the board) in eighth steps
+int currPositionX, currPositionY;
 
-// Maximum position that currentX/Y may reach
-int posExtreme;
+// Maximum position that currPositionX/Y may reach
+int maxPosition;
 
 // Motor directions
 #define UP 0 
@@ -72,7 +72,8 @@ int posExtreme;
 #define DIR_PIN 1
 #define MS1_PIN 2
 #define MS2_PIN 3
-#define ENDSTOP_PIN 4
+#define ZERO_ENDSTOP_PIN 4
+#define MAX_ENDSTOP_PIN 5
 
 // Button debounce time (in milliseconds)
 #define DEBOUNCE_TIME 100 
@@ -112,11 +113,11 @@ void setup()
   stepsPerUnitSpace = MILLIMETERS_PER_UNITSPACE * STEPS_PER_MILLIMETER;
 
   // Max position in terms of eighth steps
-  posExtreme = 8 * stepsPerUnitSpace * TOTAL_UNITSPACES;
+  maxPosition = 8 * stepsPerUnitSpace * TOTAL_UNITSPACES;
 
   // Being initialized to 0 for safety
-  currentX = 0;
-  currentY = 0;
+  currPositionX = 0;
+  currPositionY = 0;
 
   // Initializes global 2d array `pulsesPerSlope` which is used to define circle paths
   // that are used in the `makeCircle()` function in circleFunction.ino
