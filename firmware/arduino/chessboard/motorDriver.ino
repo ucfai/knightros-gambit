@@ -26,8 +26,8 @@ enum EighthStepsScale
 // Sets position extremes to be used as alignment codes
 enum positionExtremes
 {
-  POS_EXTREME = 1,
-  NEG_EXTREME = 0
+  MAX_POSITION = 1,
+  ZERO_POSITION = 0
 };
 
 // Sets the scale of the motor driver corresponding to "motor"
@@ -87,7 +87,7 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
 
   // Sets scale and direction for motor and current position
   // Moving motor towards max or 0 for rough estimate
-  if (alignmentCode == POS_EXTREME)
+  if (alignmentCode == MAX_POSITION)
   {
     digitalWrite(motor[DIR_PIN], RIGHT);
     eighthStepsPerPulse = POS_EIGHTH_STEPS_PER_WHOLE_STEP;
@@ -113,7 +113,7 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   }
 
   // Flips direction again to move motor away from max or 0 to prepare for fine-tuning
-  if (alignmentCode == POS_EXTREME)
+  if (alignmentCode == MAX_POSITION)
   {
     digitalWrite(motor[DIR_PIN], LEFT);
     eighthStepsPerPulse = NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
@@ -133,17 +133,15 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   }
 
   // Moves motor towards max or 0 for fine-tuned alignment
-  if (alignmentCode == POS_EXTREME)
+  if (alignmentCode == MAX_POSITION)
   {
     digitalWrite(motor[DIR_PIN], RIGHT);
     eighthStepsPerPulse = POS_EIGHTH_STEPS_PER_WHOLE_STEP;
-    endstopPin = MAX_ENDSTOP_PIN;
   }
   else
   {
     digitalWrite(motor[DIR_PIN], LEFT);
     eighthStepsPerPulse = NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
-    endstopPin = ZERO_ENDSTOP_PIN;
   }
   setScale(motor, EIGHTH_STEPS);
   
@@ -156,14 +154,14 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   }
 
   // Sets the motor position to either the max position or 0
-  *currentMotorPos = (alignmentCode == POS_EXTREME) ? maxPosition : 0;
+  *currentMotorPos = (alignmentCode == MAX_POSITION) ? maxPosition : 0;
 }
 
 // Aligns both axis to home
 void home()
 {
-  alignAxis(xMotor, NEG_EXTREME);
-  alignAxis(yMotor, NEG_EXTREME);
+  alignAxis(xMotor, ZERO_POSITION);
+  alignAxis(yMotor, ZERO_POSITION);
 }
 
 // Moves the magnet from the "start" point to the "end" point
