@@ -18,7 +18,8 @@ volatile char * receivedMessagePtr = charArray2;
 volatile bool receivedMessageValidFlag = false;
 volatile unsigned long previous_activation_time = 0;
 volatile bool movementFlag = false; // Prevents END_TURN transmissions during movement function
-volatile bool transmitFlag = false; // Queues END_TURN transmission after movement function
+volatile bool buttonFlag = false; // Queues END_TURN transmission after movement function
+volatile bool errorFlag = false;
 
 enum ArduinoState
 {
@@ -160,6 +161,7 @@ void setup()
 
 void loop()
 {
+  // Proccess the received message
   if (receivedMessageValidFlag && !movementFlag)
   {
     receivedMessageValidFlag = false;
@@ -173,18 +175,20 @@ void loop()
         movementFlag = true;
         makeMove(receivedMessagePtr);
         movementFlag = false;
-
-        // Tell Pi that the chess timer button was pressed
-        if (transmitFlag) // old definiton of transmit flag
-            sendMessageToPi(END_TURN, 0, receivedMessagePtr[5]);
-        transmitFlag = false;
     }
     // Sends move success/error
     sendMessageToPi(currentState, receivedMessagePtr[5], errorCode);
   }
-  else if (transmitFlag && !movementFlag)
+
+  // Transmit button press
+  else if (buttonFlag)
   {
-    sendMessageToPi(currentState, moveCount, errorCode);
-    transmitFlag = false;
+    sendMessageToPi(END_TURN, moveCount, 0);
+    buttonFlag = false;
+  }
+  else if (errorFlag)
+  {
+    errorFlag = false;
+    sendMessageToPi(ERROR, moveCount, errorCode);
   }
 }

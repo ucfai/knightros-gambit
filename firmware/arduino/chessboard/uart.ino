@@ -12,8 +12,7 @@ void chessTimerISR()
        (current_time < previous_activation_time && previous_activation_time - current_time > DEBOUNCE_TIME))
     {
         previous_activation_time = current_time;
-        currentState = END_TURN;
-        transmitFlag = true;
+        buttonFlag = true;
     }
 }
 
@@ -34,8 +33,7 @@ void serialEvent2()
             {
                 currentState = ERROR;
                 errorCode = INCOMPLETE_INSTRUCTION;
-                transmitFlag = true;
-                // OLD sendMessageToPi(currentState, buffer[5], errorCode);
+                errorFlag = true;
             }
 
             byteNum = 0;
