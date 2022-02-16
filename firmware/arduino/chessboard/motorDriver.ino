@@ -26,8 +26,8 @@ enum EighthStepsScale
 // Sets position extremes to be used as alignment codes
 enum positionExtremes
 {
-  ZERO_POSITION = 0
-  MAX_POSITION = 1,
+  ZERO_POSITION = 0,
+  MAX_POSITION = 1
 };
 
 // Sets the scale of the motor driver corresponding to "motor"
