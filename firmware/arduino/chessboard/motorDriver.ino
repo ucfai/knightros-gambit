@@ -82,20 +82,19 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   currentMotorPos = (motor == xMotor) ? &currPositionX : &currPositionY;
 
   // Loop until endstop collision, then fine tune it
-  // LEFT and DOWN have same value, as do RIGHT and UP. Use LEFT
-  // and RIGHT arbitrarily while tuning end stop for both x and y axes.
+  // Use POS_DIR and NEG_DIR to set correct direction of motor alignment despite axis
 
   // Sets scale and direction for motor and current position
   // Moving motor towards max or 0 for rough estimate
   if (alignmentCode == MAX_POSITION)
   {
-    digitalWrite(motor[DIR_PIN], RIGHT);
+    digitalWrite(motor[DIR_PIN], POS_DIR);
     eighthStepsPerPulse = POS_EIGHTH_STEPS_PER_WHOLE_STEP;
     endstopPin = MAX_ENDSTOP_PIN;
   }
   else
   {
-    digitalWrite(motor[DIR_PIN], LEFT);
+    digitalWrite(motor[DIR_PIN], NEG_DIR);
     eighthStepsPerPulse = NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
     endstopPin = ZERO_ENDSTOP_PIN;
   }
@@ -115,12 +114,12 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   // Flips direction again to move motor away from max or 0 to prepare for fine-tuning
   if (alignmentCode == MAX_POSITION)
   {
-    digitalWrite(motor[DIR_PIN], LEFT);
+    digitalWrite(motor[DIR_PIN], NEG_DIR);
     eighthStepsPerPulse = NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
   }
   else
   {
-    digitalWrite(motor[DIR_PIN], RIGHT);
+    digitalWrite(motor[DIR_PIN], POS_DIR);
     eighthStepsPerPulse = POS_EIGHTH_STEPS_PER_WHOLE_STEP;
   }
 
@@ -135,12 +134,12 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   // Moves motor towards max or 0 for fine-tuned alignment
   if (alignmentCode == MAX_POSITION)
   {
-    digitalWrite(motor[DIR_PIN], RIGHT);
+    digitalWrite(motor[DIR_PIN], POS_DIR);
     eighthStepsPerPulse = POS_EIGHTH_STEPS_PER_WHOLE_STEP;
   }
   else
   {
-    digitalWrite(motor[DIR_PIN], LEFT);
+    digitalWrite(motor[DIR_PIN], NEG_DIR);
     eighthStepsPerPulse = NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
   }
   setScale(motor, EIGHTH_STEPS);
@@ -198,19 +197,19 @@ uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
   {
     // X movement
     unitSpaces = abs(endCol - startCol);
-    dir = (endCol > startCol) ? RIGHT : LEFT;
+    dir = (endCol > startCol) ? POS_DIR : NEG_DIR;
     setScale(xMotor, WHOLE_STEPS);
     // Sets motor and direction if X movement
-    eighthStepsPerPulse = (dir == RIGHT) ? POS_EIGHTH_STEPS_PER_WHOLE_STEP : NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
+    eighthStepsPerPulse = (dir == POS_DIR) ? POS_EIGHTH_STEPS_PER_WHOLE_STEP : NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
   }
   else if (endCol == startCol)
   {
     // Y movement
     unitSpaces = abs(endRow - startRow);
-    dir = (endRow > startRow) ? UP : DOWN;
+    dir = (endRow > startRow) ? POS_DIR : NEG_DIR;
     setScale(yMotor, WHOLE_STEPS);
     // Sets motor and direction if Y movement
-    eighthStepsPerPulse = (dir == UP) ? POS_EIGHTH_STEPS_PER_WHOLE_STEP : NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
+    eighthStepsPerPulse = (dir == POS_DIR) ? POS_EIGHTH_STEPS_PER_WHOLE_STEP : NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
   }
   else
   {
@@ -278,10 +277,10 @@ uint8_t moveDiagonal(int endCol, int endRow)
   // Abs ensures that numStepsX and numStepsY will be positive
   // to ensure proper for loop execution
   unitSpacesX = abs(endCol - startCol);
-  dirX = (endCol > startCol) ? RIGHT : LEFT;
+  dirX = (endCol > startCol) ? POS_DIR : NEG_DIR;
 
   unitSpacesY = abs(endRow - startRow);
-  dirY = (endRow > startRow) ? UP : DOWN;
+  dirY = (endRow > startRow) ? POS_DIR : NEG_DIR;
 
   numStepsX = unitSpacesX * stepsPerUnitSpace;
   numStepsY = unitSpacesY * stepsPerUnitSpace;
@@ -296,24 +295,24 @@ uint8_t moveDiagonal(int endCol, int endRow)
     setScale(xMotor, WHOLE_STEPS);
     setScale(yMotor, WHOLE_STEPS);
     // Sets sign based off of direction of each motor
-    eighthStepsPerPulseX = (dirX == RIGHT) ? POS_EIGHTH_STEPS_PER_WHOLE_STEP : NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
-    eighthStepsPerPulseY = (dirY == UP) ? POS_EIGHTH_STEPS_PER_WHOLE_STEP : NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
+    eighthStepsPerPulseX = (dirX == POS_DIR) ? POS_EIGHTH_STEPS_PER_WHOLE_STEP : NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
+    eighthStepsPerPulseY = (dirY == POS_DIR) ? POS_EIGHTH_STEPS_PER_WHOLE_STEP : NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
   }
   else if (numStepsY > numStepsX && (numStepsY / numStepsX) == 2)
   {
     setScale(xMotor, HALF_STEPS);
     setScale(yMotor, WHOLE_STEPS);
     // Sets sign based off of direction of each motor
-    eighthStepsPerPulseX = (dirX == RIGHT) ? POS_EIGHTH_STEPS_PER_HALF_STEP : NEG_EIGHTH_STEPS_PER_HALF_STEP;
-    eighthStepsPerPulseY = (dirY == UP) ? POS_EIGHTH_STEPS_PER_WHOLE_STEP : NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
+    eighthStepsPerPulseX = (dirX == POS_DIR) ? POS_EIGHTH_STEPS_PER_HALF_STEP : NEG_EIGHTH_STEPS_PER_HALF_STEP;
+    eighthStepsPerPulseY = (dirY == POS_DIR) ? POS_EIGHTH_STEPS_PER_WHOLE_STEP : NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
   }
   else if (numStepsY < numStepsX && (numStepsX / numStepsY) == 2)
   {
     setScale(xMotor, WHOLE_STEPS);
     setScale(yMotor, HALF_STEPS);
     // Sets sign based off of direction of each motor
-    eighthStepsPerPulseX = (dirX == RIGHT) ? POS_EIGHTH_STEPS_PER_WHOLE_STEP : NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
-    eighthStepsPerPulseY = (dirY == UP) ? POS_EIGHTH_STEPS_PER_HALF_STEP : NEG_EIGHTH_STEPS_PER_HALF_STEP;
+    eighthStepsPerPulseX = (dirX == POS_DIR) ? POS_EIGHTH_STEPS_PER_WHOLE_STEP : NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
+    eighthStepsPerPulseY = (dirY == POS_DIR) ? POS_EIGHTH_STEPS_PER_HALF_STEP : NEG_EIGHTH_STEPS_PER_HALF_STEP;
   }
   else
   {
