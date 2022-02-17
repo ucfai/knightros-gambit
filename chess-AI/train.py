@@ -235,10 +235,9 @@ def main():
     # Load in a model
     load_model(nnet, model_path, num_saved_models)
 
-    # Gets stockfish training object, and sets parameters (elo,depth)
-    stockfish_path = "C:/Users/juddb/Stockfish/stockfish_14.1_win_x64_avx2/stockfish_14.1_win_x64_avx2.exe"
-    stockfish = StockfishTrain(stockfish_path)
-    stockfish.set_params()
+    # Initialize stockfish training object
+    elo, depth = 1000, 3
+    stockfish = StockfishTrain(elo, depth)
 
     # Value and move approximators from stockfish
     stocktrain_value_approximator = stockfish.get_value

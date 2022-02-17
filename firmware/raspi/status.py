@@ -64,6 +64,31 @@ class OpCode:
     # This code indicates Arduino should use electromagnet to center piece on square
     ALIGN_PIECE_ON_SQUARE = '2'
 
+    # OpCodes that use a UCI move to generate a movement type message
+    UCI_MOVE_OPCODES = (
+        MOVE_PIECE_IN_STRAIGHT_LINE,
+        MOVE_PIECE_ALONG_SQUARE_EDGES,
+        ALIGN_PIECE_ON_SQUARE)
+
+    # This code indicates Arduino should align an axis
+    # Setting first info bit (e.g. msg[2]) to '0' indicates aligning to zero, '1' indicates
+    # aligning to max
+    ALIGN_AXIS = '3'
+
+    # This code indicates Arduino should set the state of the electromagnet
+    # Setting first info bit (e.g. msg[2]) to '0' indicates OFF, '1' indicates ON
+    SET_ELECTROMAGNET = '4'
+
+    # This code indicates Arduino should retransmit last message
+    # This code used when a corrupted or misaligned message is received
+    RETRANSMIT_LAST_MSG = '5'
+
+    # OpCodes that specify Arduino should perform a non-UCI move action
+    INSTRUCTION_OPCODES = (
+        ALIGN_AXIS,
+        SET_ELECTROMAGNET,
+        RETRANSMIT_LAST_MSG)
+
 class ArduinoException(Exception):
     '''Helper class for custom Arduino exceptions.
     '''
