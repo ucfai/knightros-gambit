@@ -1,6 +1,9 @@
 """
 Main training program
 """
+import argparse
+import json
+
 import chess
 import numpy as np
 import torch
@@ -253,6 +256,93 @@ def train_on_mcts(nnet, exploration, mcts_simulations, training_episodes, option
         dataset = create_dataset(options.games, mcts_moves)
         train_on_dataset(dataset, nnet, options)
 
+def init_params(nnet, device):
+    # Set up parameter initialization scheme, either from file, or from dashboard
+    parser = argparse.ArgumentParser(
+        description='Specifies whether to run train.py with streamlit or json.')
+    parser.add_argument('-j', '--json', 
+                        dest='json',
+                        action='store_const',
+                        const=True,
+                        default=False,
+                        help='if specified, load params from file')
+    parser.add_argument('-d', '--dashboard',
+                        dest='dashboard',
+                        action='store_const',
+                        const=True,
+                        default=False,
+                        help='if specified, load params from dashboard')
+
+    args = parser.parse_args()
+    # Note: if --json is specified, it takes precedence over --dashboard.
+    if args.json:
+        with open('params.json') as f:
+            params = json.load(f)
+        model_path = params['saving']['model_path']
+        dataset_path = params['saving']['dataset_path']
+
+        num_saved_models = params['saving']['num_saved_models']
+        overwrite = params['saving']['overwrite']
+        learning_rate = params['misc_params']['lr']
+        momentum = params['misc_params']['momentum']
+        weight_decay = params['misc_params']['weight_decay']
+
+        stock_epochs = params['stockfish']['epochs']
+        stock_batch_size = params['stockfish']['batch_size']
+        stock_games = params['stockfish']['games']
+        elo, depth = params['stockfish']['elo'], params['stockfish']['depth']
+
+        mcts_epochs = params['mcts']['epochs']
+        mcts_batch_size = params['mcts']['batch_size']
+        mcts_games = params['mcts']['games'] 
+        exploration = params['mcts']['exploration']
+        training_episodes = params['mcts']['training_episodes']
+        mcts_simulations = params['mcts']['simulations']
+    elif args.dashboard:
+        # TODO: Have reasonable defaults in case certain hyperparams are not specified within the
+        # streamlit dashboard. Can use the params in params.json
+
+        # TODO: Update this to set all these values through the streamlit dashboard instead
+        # model_path = params['saving']['model_path']
+        # dataset_path = params['saving']['dataset_path']
+
+        # num_saved_models = params['saving']['num_saved_models']
+        # overwrite = params['saving']['overwrite']
+        # learning_rate = params['misc_params']['lr']
+        # momentum = params['misc_params']['momentum']
+        # weight_decay = params['misc_params']['weight_decay']
+
+        # stock_epochs = params['stockfish']['epochs']
+        # stock_batch_size = params['stockfish']['batch_size']
+        # stock_games = params['stockfish']['games']
+        # elo, depth = params['stockfish']['elo'], params['stockfish']['depth']
+
+        # mcts_epochs = params['mcts']['epochs']
+        # mcts_batch_size = params['mcts']['batch_size']
+        # mcts_games = params['mcts']['games'] 
+        # exploration = params['mcts']['exploration']
+        # training_episodes = params['mcts']['training_episodes']
+        # mcts_simulations = params['mcts']['simulations']
+        raise ValueError("Unimplemented")
+    else:
+        raise ValueError("This program must be run with the `train.sh` script. See the script "
+                         "for usage instructions.")
+
+    # Load in a model
+    load_model(nnet, model_path, num_saved_models)
+
+    # Train network using stockfish evaluations
+    stockfish_options = TrainOptions(learning_rate, momentum, weight_decay, stock_epochs,
+                                     stock_batch_size, stock_games, device, model_path,
+                                     num_saved_models, overwrite)
+
+    mcts_options = TrainOptions(learning_rate, momentum, weight_decay, mcts_epochs,
+                                mcts_batch_size, mcts_games, device, model_path,
+                                num_saved_models, overwrite)
+
+    # TODO: We might want to create MctsOptions and StockfishOptions to house some of these params
+    return (nnet, elo, depth, dataset_path, stockfish_options, exploration, training_episodes,
+            mcts_simulations, mcts_options)
 
 def main():
     """Main function that will be run when starting training
@@ -262,33 +352,13 @@ def main():
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     nnet = PlayNetwork().to(device=device)
 
-    # Will get the paths to load models and datasets from
-    model_path = None
-    dataset_path = None
+    # TODO: this looks bad and would be better if we encapsulate more of these params
+    nnet, elo, depth, dataset_path, stockfish_options, exploration, training_episodes, \
+        mcts_simulations, mcts_options = init_params(nnet, device)
 
-    # Set general purpose parameters
-    num_saved_models, overwrite = 5, True
-    learning_rate, momentum, weight_decay = 0.1, 0.9, 0.001
-
-    # Load in a model
-    load_model(nnet, model_path, num_saved_models)
-
-    # Set stockfish specific parameters
-    stock_epochs, stock_batch_size, stock_games = 10, 8, 10
-    elo, depth = 1000, 3
-
-    # Train network using stockfish evaluations
-    stockfish_options = TrainOptions(learning_rate, momentum, weight_decay, stock_epochs, stock_batch_size, stock_games,
-                                     device, model_path, num_saved_models, overwrite)
     train_on_stockfish(nnet, elo, depth, dataset_path, stockfish_options)
 
-    # Set MCTS specific parameters
-    mcts_epochs, mcts_batch_size, mcts_games = 100, 8, 100
-    exploration, training_episodes, mcts_simulations = 5, 5, 10
-
     # Train network using MCTS
-    mcts_options = TrainOptions(learning_rate, momentum, weight_decay, mcts_epochs, mcts_batch_size, mcts_games,
-                                device, model_path, num_saved_models, overwrite)
     train_on_mcts(nnet, exploration, training_episodes, mcts_simulations, mcts_options)
 
 

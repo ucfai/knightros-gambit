@@ -3,9 +3,9 @@
 # ./train.sh json
 
 if [ "$1" = "streamlit" ]; then
-    streamlit run $2.py
+    streamlit run train.py -- -d
 elif [ "$1" = "json" ]; then
-    python $2.py --json
+    python train.py -j
 else
     echo "Expected first argument to be either <streamlit> or <cli>"
 fi
