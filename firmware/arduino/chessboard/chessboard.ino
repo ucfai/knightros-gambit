@@ -56,6 +56,8 @@ int currPositionX, currPositionY;
 int maxPosition;
 
 // Sets direction of motor to move in the positive or negative direction regardless of axis
+// Since the origin is at the bottom left corner, left/downward movement is considered negative (NEG_DIR),
+// and right/upward movement is positive (POS_DIR)
 #define POS_DIR 0 
 #define NEG_DIR 1
 
@@ -113,7 +115,7 @@ void setup()
   // Max position in terms of eighth steps
   maxPosition = 8 * stepsPerUnitSpace * TOTAL_UNITSPACES;
 
-  // Homes the EM to the origin
+  // Homes the EM to the origin and sets currPositionX/Y to 0
   home();
 
   // Initializes global 2d array `pulsesPerSlope` which is used to define circle paths
