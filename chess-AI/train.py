@@ -249,7 +249,7 @@ def main():
     else:
         dataset = create_dataset(stocktrain_games, stocktrain_moves, stocktrain_value_approximator)
         # NOTE: Dataset should be given a more descriptive name, this is just temporary
-        torch.save(dataset, 'chess-AI/datasets/stockfish_data.pt')
+        torch.save(dataset, './datasets/stockfish_data.pt')
 
     # Train using the stockfish dataset
     train_on_dataset(dataset, nnet, learning_rate, momentum, weight_decay, stocktrain_epochs, batch_size, device,
