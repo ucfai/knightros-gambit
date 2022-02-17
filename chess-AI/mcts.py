@@ -115,7 +115,7 @@ class Mcts:
         # Return list of uci_moves and corresponding search probabilities
         return list(self.state_values[fen_string].keys()), search_probs, move
 
-    def search(self, board, nnet, device):
+    def search(self, board, nnet):
         """Descends on the search tree and expands unvisited states"""
         fen_string = board.fen()
 

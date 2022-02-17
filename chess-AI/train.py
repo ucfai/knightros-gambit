@@ -2,6 +2,7 @@
 Main training program
 """
 import chess
+import numpy as np
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -16,17 +17,18 @@ from stockfish_train import StockfishTrain
 class TrainOptions:
     """Stores settings for the training episodes
 
-        Attributes:
-            learning_rate: the learning rate for the optimizer
-            momentum: additional parameter for the optimizer
-            weight_decay: loss term encouraging smaller weights
-            epochs: number of epochs
-            batch_size: the batch size for SGD
-            games: number of games to run when creating dataset
-            device: the device being used to train (either CPU or GPU)
-            save_path: path for model checkpointing
-            num_saved_models: number of models to store
-        """
+    Attributes:
+        learning_rate: the learning rate for the optimizer
+        momentum: additional parameter for the optimizer
+        weight_decay: loss term encouraging smaller weights
+        epochs: number of epochs
+        batch_size: the batch size for SGD
+        games: number of games to run when creating dataset
+        device: the device being used to train (either CPU or GPU)
+        save_path: path for model checkpointing
+        num_saved_models: number of models to store
+    """
+
     def __init__(self, learning_rate, momentum, weight_decay, epochs, batch_size, games, device, save_path, num_saved_models, overwrite):
         self.learning_rate = learning_rate
         self.momentum = momentum
@@ -133,7 +135,7 @@ def create_dataset(games, move_approximator, val_approximator=None):
     # Convert all the fen strings into tensors that are used in the dataset
     input_state = torch.stack([get_cnn_input(chess.Board(state)) for game in game_data for state in game[0]])
     state_values = torch.tensor([state_val for game in game_data for state_val in game[1]]).float()
-    move_probs = torch.tensor([move_prob for game in game_data for move_prob in game[2]]).float()
+    move_probs = torch.tensor(np.array([move_prob for game in game_data for move_prob in game[2]])).float()
 
     # Create iterable dataset from game data
     dataset = TensorDataset(input_state, state_values, move_probs)
@@ -148,7 +150,7 @@ def train_on_dataset(dataset, nnet, options):
     Attributes:
         dataset: the dataset to use for training
         nnet: the neural network
-        options: settings/hyperparameters for training
+        options: Instance of TrainOptions containing settings/hyperparameters for training
     """
 
     # Stores the average losses which are used for graphing
@@ -264,23 +266,30 @@ def main():
     model_path = None
     dataset_path = None
 
-    num_saved_models = 5
-    overwrite = True
+    # Set general purpose parameters
+    num_saved_models, overwrite = 5, True
+    learning_rate, momentum, weight_decay = 0.1, 0.9, 0.001
 
     # Load in a model
     load_model(nnet, model_path, num_saved_models)
 
-    # Train network using stockfish evaluations
-    stockfish_options = TrainOptions(learning_rate=0.1, momentum=0.9, weight_decay=0.001, epochs=10, batch_size=8, games=1000,
-                                     device=device, save_path=model_path, num_saved_models=num_saved_models, overwrite=overwrite)
+    # Set stockfish specific parameters
+    stock_epochs, stock_batch_size, stock_games = 10, 8, 10
+    elo, depth = 1000, 3
 
-    train_on_stockfish(nnet, elo=1000, depth=3, dataset_path=dataset_path, options=stockfish_options)
+    # Train network using stockfish evaluations
+    stockfish_options = TrainOptions(learning_rate, momentum, weight_decay, stock_epochs, stock_batch_size, stock_games,
+                                     device, model_path, num_saved_models, overwrite)
+    train_on_stockfish(nnet, elo, depth, dataset_path, stockfish_options)
+
+    # Set MCTS specific parameters
+    mcts_epochs, mcts_batch_size, mcts_games = 100, 8, 100
+    exploration, training_episodes, mcts_simulations = 5, 5, 10
 
     # Train network using MCTS
-    mcts_options = TrainOptions(learning_rate=0.1, momentum=0.9, weight_decay=0.001, epochs=100, batch_size=8, games=100,
-                                device=device, save_path=model_path, num_saved_models=num_saved_models, overwrite=overwrite)
-
-    train_on_mcts(nnet, exploration=5, training_episodes=5, mcts_simulations=100, options=mcts_options)
+    mcts_options = TrainOptions(learning_rate, momentum, weight_decay, mcts_epochs, mcts_batch_size, mcts_games,
+                                device, model_path, num_saved_models, overwrite)
+    train_on_mcts(nnet, exploration, training_episodes, mcts_simulations, mcts_options)
 
 
 if __name__ == "__main__":
