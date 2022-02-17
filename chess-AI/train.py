@@ -260,7 +260,7 @@ def init_params(nnet, device):
     # Set up parameter initialization scheme, either from file, or from dashboard
     parser = argparse.ArgumentParser(
         description='Specifies whether to run train.py with streamlit or json.')
-    parser.add_argument('-j', '--json', 
+    parser.add_argument('-j', '--json',
                         dest='json',
                         action='store_const',
                         const=True,
