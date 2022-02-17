@@ -55,15 +55,15 @@ void makeCircle(int circle, int firstQuarter)
 
         // Set Y-direction
         if (quarter == QUARTER_TOP || quarter == QUARTER_LEFT)
-            digitalWrite(yMotor[DIR_PIN], DOWN);
+            digitalWrite(yMotor[DIR_PIN], NEG_DIR);
         else
-            digitalWrite(yMotor[DIR_PIN], UP);
+            digitalWrite(yMotor[DIR_PIN], POS_DIR);
 
         // Set X-direction
         if (quarter == QUARTER_TOP || quarter == QUARTER_RIGHT)
-            digitalWrite(xMotor[DIR_PIN], LEFT);
+            digitalWrite(xMotor[DIR_PIN], NEG_DIR);
         else
-            digitalWrite(xMotor[DIR_PIN], RIGHT);
+            digitalWrite(xMotor[DIR_PIN], POS_DIR);
 
         // Set starting point for the while loop
         if (quarter == QUARTER_TOP || quarter == QUARTER_BOTTOM)
@@ -289,7 +289,7 @@ void moveToFirstCircle()
     int i;
 
     setScale(yMotor, WHOLE_STEPS);  
-    digitalWrite(yMotor[DIR_PIN], UP);  
+    digitalWrite(yMotor[DIR_PIN], POS_DIR);  
     for (i = 0; i < circleRadius[0]; i++)
     {
         // Y-Step
@@ -314,15 +314,15 @@ void moveToNextCircle(int currentCircle, int quarter)
 
     // Set Y-direction
     if (quarter == QUARTER_TOP || quarter == QUARTER_LEFT)
-        digitalWrite(yMotor[DIR_PIN], DOWN);
+        digitalWrite(yMotor[DIR_PIN], NEG_DIR);
     else
-        digitalWrite(yMotor[DIR_PIN], UP);
+        digitalWrite(yMotor[DIR_PIN], POS_DIR);
 
     // Set X-direction
     if (quarter == QUARTER_TOP || quarter == QUARTER_RIGHT)
-        digitalWrite(xMotor[DIR_PIN], LEFT);
+        digitalWrite(xMotor[DIR_PIN], NEG_DIR);
     else
-        digitalWrite(xMotor[DIR_PIN], RIGHT);
+        digitalWrite(xMotor[DIR_PIN], POS_DIR);
 
     
     // Switching circles is decomposed into 2 movements.
