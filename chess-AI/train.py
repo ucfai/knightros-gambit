@@ -151,7 +151,6 @@ def train_on_dataset(dataset, nnet, learning_rate, momentum, weight_decay, epoch
     for epoch in range(epochs):
 
         # Variables used solely for monitoring training, not used for actually updating the model
-        start = time.time()
         value_losses = []
         policy_losses = []
         losses = []
@@ -183,6 +182,7 @@ def train_on_dataset(dataset, nnet, learning_rate, momentum, weight_decay, epoch
             pol_loss = ce_loss_fn(policy_batch, move_probs)
             val_loss = mse_loss_fn(value_batch, state_values)
             loss = pol_loss + val_loss
+            loss = loss
 
             # Add to list for graphing purposes
             policy_losses.append(pol_loss)
@@ -194,8 +194,6 @@ def train_on_dataset(dataset, nnet, learning_rate, momentum, weight_decay, epoch
             opt.step()
             opt.zero_grad()
 
-        end = time.time()
-
         # Calculate and store the average losses
         policy_loss = sum(policy_losses) / len(policy_losses)
         value_loss = sum(value_losses) / len(value_losses)
@@ -203,21 +201,8 @@ def train_on_dataset(dataset, nnet, learning_rate, momentum, weight_decay, epoch
         average_val_loss.append(value_loss.cpu().detach().numpy())
 
     # Saves model to specified file, or a new file if not specified.
-    # TODO: Figure frequency of model saving, right now it is after every epoch
-    # TODO: Determine better names for the models when saving
-    if save_path is not None:
-        save_model(nnet, save_path)
-    else:
-        # Iterate through the number of models saved
-        for i in range(num_saved_models):
-            if not (os.path.isfile(f'models/models-{i + 1}.pt')):
-                if overwrite_save and i != 0:
-                    save_model(nnet, f'models/models-{i}.pt')
-                    break
-                save_model(nnet, f'models/models-{i + 1}.pt')
-                break
-            if i == num_saved_models - 1:
-                save_model(nnet, f'models/models-{num_saved_models}.pt')
+    # TODO: Figure frequency of model saving, right now it is after a defined number of epochs.
+    save_model(nnet, save_path, num_saved_models, overwrite_save)
 
 
 def main():
@@ -228,11 +213,11 @@ def main():
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
     # Stockfish specific parameters
-    stocktrain_games, stocktrain_epochs = 1000, 10
+    stocktrain_games, stocktrain_epochs = 2, 2
 
     # MCTS specific parameters
-    mcts_games, mcts_epochs = 100, 100
-    mcts_amt, mcts_simulations, exploration = 5, 100, 0.5
+    mcts_games, mcts_epochs = 2, 2
+    mcts_amt, mcts_simulations, exploration = 2, 5, 0.5
 
     # General parameters
     batch_size, learning_rate, momentum, weight_decay = 8, 0.1, 0.9, 0.001
@@ -248,14 +233,7 @@ def main():
     dataset_path = None
 
     # Load in a model
-    if model_path is not None:
-        nnet = load_model(nnet, model_path)
-    else:
-        for i in range(num_saved_models):
-            if not (os.path.isfile(f'chess-AI/models-{i + 2}.pt')):
-                if i != 0:
-                    nnet = load_model(nnet, f'chess-AI/models-{i + 1}.pt')
-                break
+    load_model(nnet, model_path, num_saved_models)
 
     # Initialize stockfish training object
     elo, depth = 1000, 3
@@ -271,7 +249,7 @@ def main():
     else:
         dataset = create_dataset(stocktrain_games, stocktrain_moves, stocktrain_value_approximator)
         # NOTE: Dataset should be given a more descriptive name, this is just temporary
-        torch.save(dataset, 'datasets/stockfish_data.pt')
+        torch.save(dataset, './datasets/stockfish_data.pt')
 
     # Train using the stockfish dataset
     train_on_dataset(dataset, nnet, learning_rate, momentum, weight_decay, stocktrain_epochs, batch_size, device,
