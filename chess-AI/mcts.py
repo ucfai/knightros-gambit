@@ -19,7 +19,10 @@ class Mcts:
         p_values: Dictionary storing the search probabilities
         """
 
-    def __init__(self, exploration):
+    def __init__(self, exploration, device):
+        # Device to run network with
+        self.device = device
+
         # The states already visited from searching
         self.states_visited = []
 
@@ -125,7 +128,7 @@ class Mcts:
             self.states_visited.append(fen_string)
 
             # Get predictions and value from the nnet at the current state
-            policy, value = nnet(get_cnn_input(board))
+            policy, value = nnet(get_cnn_input(board).to(device=self.device))
             policy_legal = policy_converter.find_value_of_all_legal_moves(policy, board)
 
             # Update P with network's policy output
