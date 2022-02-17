@@ -6,8 +6,8 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
-from mcts import Mcts
 from ai_io import save_model, load_model
+from mcts import Mcts
 from nn_layout import PlayNetwork
 from output_representation import policy_converter
 from state_representation import get_cnn_input
