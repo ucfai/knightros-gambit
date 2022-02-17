@@ -1,9 +1,6 @@
 """
 Main training program
 """
-import os
-import time
-
 import chess
 import torch
 from torch.utils.data import DataLoader, TensorDataset
@@ -17,9 +14,20 @@ from stockfish_train import StockfishTrain
 
 
 class TrainOptions:
-    """This class stores settings for the training episodes"""
+    """Stores settings for the training episodes
 
-    def __init__(self, learning_rate, momentum, weight_decay, epochs, batch_size, games, device, save_path, num_saved_models, overwrite_save):
+        Attributes:
+            learning_rate: the learning rate for the optimizer
+            momentum: additional parameter for the optimizer
+            weight_decay: loss term encouraging smaller weights
+            epochs: number of epochs
+            batch_size: the batch size for SGD
+            games: number of games to run when creating dataset
+            device: the device being used to train (either CPU or GPU)
+            save_path: path for model checkpointing
+            num_saved_models: number of models to store
+        """
+    def __init__(self, learning_rate, momentum, weight_decay, epochs, batch_size, games, device, save_path, num_saved_models, overwrite):
         self.learning_rate = learning_rate
         self.momentum = momentum
         self.weight_decay = weight_decay
@@ -29,7 +37,7 @@ class TrainOptions:
         self.device = device
         self.save_path = save_path
         self.num_saved_models = num_saved_models
-        self.overwrite_save = overwrite_save
+        self.overwrite = overwrite
 
 
 def training_game(val_approximator, move_approximator):
@@ -140,14 +148,7 @@ def train_on_dataset(dataset, nnet, options):
     Attributes:
         dataset: the dataset to use for training
         nnet: the neural network
-        learning_rate: the learning rate for the optimizer
-        momentum: additional parameter for the optimizer
-        weight_decay: loss term encouraging smaller weights
-        epochs: number of epochs
-        batch_size: the batch size for SGD
-        device: the device being used to train (either CPU or GPU)
-        save_path: path for model checkpointing
-        num_saved_models: number of models to store
+        options: settings/hyperparameters for training
     """
 
     # Stores the average losses which are used for graphing
@@ -167,7 +168,6 @@ def train_on_dataset(dataset, nnet, options):
     for epoch in range(options.epochs):
 
         # Variables used solely for monitoring training, not used for actually updating the model
-        start = time.time()
         value_losses = []
         policy_losses = []
         losses = []
@@ -210,8 +210,6 @@ def train_on_dataset(dataset, nnet, options):
             opt.step()
             opt.zero_grad()
 
-        end = time.time()
-
         # Calculate and store the average losses
         policy_loss = sum(policy_losses) / len(policy_losses)
         value_loss = sum(value_losses) / len(value_losses)
@@ -219,58 +217,12 @@ def train_on_dataset(dataset, nnet, options):
         average_val_loss.append(value_loss.cpu().detach().numpy())
 
     # Saves model to specified file, or a new file if not specified.
-    # TODO: Figure frequency of model saving, right now it is after every epoch
-    # TODO: Determine better names for the models when saving
-    if options.save_path is not None:
-        save_model(nnet, options.save_path)
-    else:
-        # Iterate through the number of models saved
-        for i in range(options.num_saved_models):
-            if not (os.path.isfile(f'models/models-{i + 1}.pt')):
-                if options.overwrite_save and i != 0:
-                    save_model(nnet, f'models/models-{i}.pt')
-                    break
-                save_model(nnet, f'models/models-{i + 1}.pt')
-                break
-            if i == options.num_saved_models - 1:
-                save_model(nnet, f'models/models-{options.num_saved_models}.pt')
+    # TODO: Figure frequency of model saving, right now it is after a defined number of epochs.
+    save_model(nnet, options.save_path, options.num_saved_models, options.overwrite)
 
 
-def main():
-    """Main function that will be run when starting training
-    """
-
-    # Detect device to train on
-    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-
-    stockfish_options = TrainOptions(learning_rate=0.1, momentum=0.9, weight_decay=0.001, epochs=10, batch_size=8,
-                                     games=1000, device=device, save_path=None, num_saved_models=5, overwrite_save=True)
-
-    mcts_options = TrainOptions(learning_rate=0.1, momentum=0.9, weight_decay=0.001, epochs=100, batch_size=8,
-                                games=100, device=device, save_path=None, num_saved_models=5, overwrite_save=True)
-
-    mcts_amt, mcts_simulations, exploration = 5, 100, 0.5
-
-    nnet = PlayNetwork().to(device=device)
-
-    # Will get the paths to load models and datasets from
-    model_path = None
-    dataset_path = None
-
-    # Load in a model
-    if model_path is not None:
-        nnet = load_model(nnet, model_path)
-    else:
-        for i in range(num_saved_models):
-            if not (os.path.isfile(f'chess-AI/models-{i + 2}.pt')):
-                if i != 0:
-                    nnet = load_model(nnet, f'chess-AI/models-{i + 1}.pt')
-                break
-
-    # Gets stockfish training object, and sets parameters (elo,depth)
-    stockfish_path = "../../chess-engine/stockfish_14.1_win_x64_avx2.exe"
-    stockfish = StockfishTrain(stockfish_path, elo=1000, depth=3)
-
+def train_on_stockfish(nnet, elo, depth, dataset_path, options):
+    stockfish = StockfishTrain(elo, depth)
     # Value and move approximators from stockfish
     stocktrain_value_approximator = stockfish.get_value
     stocktrain_moves = lambda board: stockfish.get_move_probs(board, epsilon=0.3)
@@ -279,23 +231,56 @@ def main():
     if dataset_path:
         dataset = torch.load(dataset_path)
     else:
-        dataset = create_dataset(stockfish_options.games, stocktrain_moves, stocktrain_value_approximator)
+        dataset = create_dataset(options.games, stocktrain_moves, stocktrain_value_approximator)
         # NOTE: Dataset should be given a more descriptive name, this is just temporary
-        torch.save(dataset, 'datasets/stockfish_data.pt')
+        torch.save(dataset, './datasets/stockfish_data.pt')
 
     # Train using the stockfish dataset
-    train_on_dataset(dataset, nnet, stockfish_options)
+    train_on_dataset(dataset, nnet, options)
 
+
+def train_on_mcts(nnet, exploration, mcts_simulations, training_episodes, options):
     # Get MCTS object and parameters
     # TODO: Figure out how many times to perform self play (and better name for this variable)
     mcts = Mcts(exploration)
 
     # Will iterate through the number of training episodes
-    for _ in range(mcts_amt):
+    for _ in range(training_episodes):
         mcts_moves = lambda board: mcts.get_tree_results(mcts_simulations, nnet, board, temperature=5)
 
-        dataset = create_dataset(mcts_options.games, mcts_moves)
-        train_on_dataset(dataset, nnet, mcts_options)
+        dataset = create_dataset(options.games, mcts_moves)
+        train_on_dataset(dataset, nnet, options)
+
+
+def main():
+    """Main function that will be run when starting training
+    """
+
+    # Detect device to train on
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    nnet = PlayNetwork().to(device=device)
+
+    # Will get the paths to load models and datasets from
+    model_path = None
+    dataset_path = None
+
+    num_saved_models = 5
+    overwrite = True
+
+    # Load in a model
+    load_model(nnet, model_path, num_saved_models)
+
+    # Train network using stockfish evaluations
+    stockfish_options = TrainOptions(learning_rate=0.1, momentum=0.9, weight_decay=0.001, epochs=10, batch_size=8, games=1000,
+                                     device=device, save_path=model_path, num_saved_models=num_saved_models, overwrite=overwrite)
+
+    train_on_stockfish(nnet, elo=1000, depth=3, dataset_path=dataset_path, options=stockfish_options)
+
+    # Train network using MCTS
+    mcts_options = TrainOptions(learning_rate=0.1, momentum=0.9, weight_decay=0.001, epochs=100, batch_size=8, games=100,
+                                device=device, save_path=model_path, num_saved_models=num_saved_models, overwrite=overwrite)
+
+    train_on_mcts(nnet, exploration=5, training_episodes=5, mcts_simulations=100, options=mcts_options)
 
 
 if __name__ == "__main__":
