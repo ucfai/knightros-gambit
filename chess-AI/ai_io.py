@@ -2,8 +2,8 @@ import torch
 import os
 
 def save_model(nnet, save_path, num_saved_models, overwrite):
-    '''Save given model parameters to external file
-    '''
+    """Save given model parameters to external file
+    """
     if save_path is not None:
         torch.save(nnet.state_dict(), save_path)
     else:
@@ -18,9 +18,10 @@ def save_model(nnet, save_path, num_saved_models, overwrite):
             if i == num_saved_models - 1:
                 torch.save(nnet.state_dict(), f'chess-AI/models/models-{num_saved_models}.pt')
 
+
 def load_model(nnet, model_path, num_saved_models):
-    '''Load model parameters into given network from external file
-    '''
+    """Load model parameters into given network from external file
+    """
     if model_path is not None:
         nnet.load_state_dict(torch.load(model_path))
     else:
@@ -29,7 +30,7 @@ def load_model(nnet, model_path, num_saved_models):
                 if i != 0:
                     nnet.load_state_dict(torch.load(f'chess-AI/models-{i + 1}.pt'))
                 break
-    return nnet
+
 
 def main():
     pass
