@@ -242,7 +242,7 @@ def train_on_stockfish(nnet, elo, depth, dataset_path, options):
 def train_on_mcts(nnet, exploration, mcts_simulations, training_episodes, options):
     # Get MCTS object and parameters
     # TODO: Figure out how many times to perform self play (and better name for this variable)
-    mcts = Mcts(exploration)
+    mcts = Mcts(exploration, options.device)
 
     # Will iterate through the number of training episodes
     for _ in range(training_episodes):
