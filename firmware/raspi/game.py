@@ -1,12 +1,14 @@
 '''Entry point for the Knightr0's Gambit software that controls automatic chessboard.
 '''
 
+import argparse
 import random
 import time
 
 from boardinterface import Board
 from player import CLHumanPlayer, StockfishPlayer
 from status import ArduinoStatus
+from util import parse_test_file
 
 def assign_piece_color():
     '''
@@ -68,15 +70,63 @@ def player_wants_rematch():
     # TODO: implement
     return False
 
-def main():
-    '''Main driver loop for running Knightro's Gambit.
-    '''
-    random.seed()
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description='These allow us to select how we want the game to be played',
+        epilog='''The default is to run the chess engine using inputs from player moves detected'''
+               '''by computer vision.''')
+    parser.add_argument('-p', '--playstyle',
+                        dest='playstyle',
+                        default='cli',
+                        help='specifies how human will interact with board during normal play. '
+                             'valid options: cli, otb, web, speech')
 
-    print("Welcome to Knightro's Gambit")
+    parser.add_argument('-d', '--debug',
+                        dest='debug',
+                        action='store_const',
+                        const=True,
+                        default=False,
+                        help='if True, allow sending arbitrary commands to board')
 
+    parser.add_argument('-t', '--test',
+                        dest='test',
+                        default='',
+                        help='if file <TEST> (*.pgn or *.txt) provided, parse program commands '
+                             'from specified file')
+
+    parser.add_argument('-m', '--microcontroller',
+                        dest='microcontroller',
+                        action='store_const',
+                        const=True,
+                        default=False,
+                        help='if True, sends commands over UART to Arduino')
+
+    return parser.parse_args()
+
+# TODO: abstract main program logic in here
+def run_user_interaction_loop():
+    pass
+
+# TODO: abstract test file logic in here
+def run_test_file():
+    pass
+
+def init_parameters():
+    args = parse_args()
+    if args.test:
+        # Example testfile: 'testfiles/test1.txt'
+        test_messages = parse_test_file(args.test)
+
+    mode_of_interaction = args.playstyle
+    if mode_of_interaction == "cli":
+        print("Using CLI mode of interaction for human player")
     # TODO: update this to handle physical, web, speech interaction
-    mode_of_interaction = 'cli'
+    else:
+        raise ValueError("Other modes of interaction are unimplemented")
+
+    # TODO: update program to handle otb communication and play.
+    if args.microcontroller:
+        raise ValueError("Serial communication not yet implemented.")
 
     # Get desired piece color for human. Can be white, black, or random.
     is_human_turn = is_human_turn_at_start()
@@ -88,14 +138,19 @@ def main():
     # TODO: remove this after real Arduino communication is set up
     board.set_status_from_arduino(ArduinoStatus.IDLE, 0, None)
 
-    if mode_of_interaction == "cli":
-        print("Using CLI mode of interaction for human player")
-    else:
-        raise ValueError("Other modes of interaction are unimplemented")
-    # TODO: update this to handle physical, web, speech interaction
-
     ai_player = StockfishPlayer(elo_rating=1400)
 
+    return mode_of_interaction, is_human_turn, board, ai_player
+
+def main():
+    '''Main driver loop for running Knightro's Gambit.
+    '''
+    # Set random seed for program
+    random.seed()
+
+    print("Welcome to Knightro's Gambit")
+    mode_of_interaction, is_human_turn, board, ai_player = init_parameters()
+    
     # Main game loop
     while True:
         # TODO: Handle game end condition here, rematch, termination, etc.
