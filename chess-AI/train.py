@@ -6,6 +6,7 @@ import json
 
 import chess
 import numpy as np
+from streamlit_dashboard import Dashboard
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -44,8 +45,7 @@ class TrainOptions:
         self.num_saved_models = num_saved_models
         self.overwrite = overwrite
 
-
-def training_game(val_approximator, move_approximator):
+def training_game(val_approximator, move_approximator,i=0):
     """Run a full game, storing fen_strings, policies, and values
 
     Attributes:
@@ -57,6 +57,8 @@ def training_game(val_approximator, move_approximator):
         2) policy values for all legal moves
         3) state value predictions
     """
+
+     
 
     # Stores probability distributions and values from the approximators
     all_move_probs = []
@@ -92,6 +94,14 @@ def training_game(val_approximator, move_approximator):
         # TODO: Consider removing `board.can_claim_draw()` as it may be slow to check.
         # See https://python-chess.readthedocs.io/en/latest/core.html#chess.Board.can_claim_draw
         if board.is_game_over() or board.can_claim_draw():
+            if args.dashboard:
+                # Way to see how many games have been generated
+                
+                # Print board, to display at E-Week
+                print(board)
+                if (i+1)%10 == 0:
+                    msg = str(i+1) + " Games" + " Generated" 
+                    Dashboard.info_message("success",msg)
             break
 
     # value_approximator will be none for mcts
@@ -119,7 +129,6 @@ def assign_rewards(board, length):
 
     return state_values
 
-
 def create_dataset(games, move_approximator, val_approximator=None):
     """Builds a dataset with the size of (games)
 
@@ -132,8 +141,12 @@ def create_dataset(games, move_approximator, val_approximator=None):
     # Storing gradients for all forward passes in each training game is demanding. Instead,
     # ignore gradients for now and store only the gradients needed for a particular batch later on
     with torch.no_grad():
-        # Obtain data from training games
-        game_data = [training_game(val_approximator, move_approximator) for _ in range(games)]
+        
+        if args.dashboard:
+            # The dashboard should keep track of the number of games
+            game_data = [training_game(val_approximator, move_approximator,i) for i in range(games)]
+        else:
+            game_data = [training_game(val_approximator, move_approximator) for _ in range(games)]           
 
     # Convert all the fen strings into tensors that are used in the dataset
     input_state = torch.stack([get_cnn_input(chess.Board(state)) for game in game_data for state in game[0]])
@@ -142,7 +155,7 @@ def create_dataset(games, move_approximator, val_approximator=None):
 
     # Create iterable dataset from game data
     dataset = TensorDataset(input_state, state_values, move_probs)
-
+    
     # Return the dataset to be used
     return dataset
 
@@ -155,6 +168,8 @@ def train_on_dataset(dataset, nnet, options):
         nnet: the neural network
         options: Instance of TrainOptions containing settings/hyperparameters for training
     """
+
+    if args.dashboard: Dashboard.info_message("info","Training on Dataset")
 
     # Stores the average losses which are used for graphing
     average_pol_loss = []
@@ -221,12 +236,20 @@ def train_on_dataset(dataset, nnet, options):
         average_pol_loss.append(policy_loss.cpu().detach().numpy())
         average_val_loss.append(value_loss.cpu().detach().numpy())
 
+        if args.dashboard:
+            # Keep track of when each epoch is over
+            Dashboard.info_message("success","Epoch " + str(epoch) + " Finished" )
+
+    if args.dashboard:
+        # Chart and show all the losses
+        Dashboard.visualize_losses(average_pol_loss,average_val_loss)
+
     # Saves model to specified file, or a new file if not specified.
     # TODO: Figure frequency of model saving, right now it is after a defined number of epochs.
     save_model(nnet, options.save_path, options.num_saved_models, options.overwrite)
 
 
-def train_on_stockfish(nnet, elo, depth, dataset_path, options):
+def train_on_stockfish(nnet, elo, depth, dataset_path, options,args):
     stockfish = StockfishTrain(elo, depth)
     # Value and move approximators from stockfish
     stocktrain_value_approximator = stockfish.get_value
@@ -234,8 +257,10 @@ def train_on_stockfish(nnet, elo, depth, dataset_path, options):
 
     # Dataset needs to be either created or loaded
     if dataset_path:
+        if args.dashboard: Dashboard.info_message("success","Dataset Found!")
         dataset = torch.load(dataset_path)
     else:
+        if args.dashboard: Dashboard.info_message("error","No Dataset was found")
         dataset = create_dataset(options.games, stocktrain_moves, stocktrain_value_approximator)
         # NOTE: Dataset should be given a more descriptive name, this is just temporary
         torch.save(dataset, './datasets/stockfish_data.pt')
@@ -244,7 +269,7 @@ def train_on_stockfish(nnet, elo, depth, dataset_path, options):
     train_on_dataset(dataset, nnet, options)
 
 
-def train_on_mcts(nnet, exploration, mcts_simulations, training_episodes, options):
+def train_on_mcts(nnet, exploration, mcts_simulations, training_episodes, options,args):
     # Get MCTS object and parameters
     # TODO: Figure out how many times to perform self play (and better name for this variable)
     mcts = Mcts(exploration, options.device)
@@ -257,27 +282,11 @@ def train_on_mcts(nnet, exploration, mcts_simulations, training_episodes, option
         train_on_dataset(dataset, nnet, options)
 
 def init_params(nnet, device):
-    # Set up parameter initialization scheme, either from file, or from dashboard
-    parser = argparse.ArgumentParser(
-        description='Specifies whether to run train.py with streamlit or json.')
-    parser.add_argument('-j', '--json',
-                        dest='json',
-                        action='store_const',
-                        const=True,
-                        default=False,
-                        help='if specified, load params from file')
-    parser.add_argument('-d', '--dashboard',
-                        dest='dashboard',
-                        action='store_const',
-                        const=True,
-                        default=False,
-                        help='if specified, load params from dashboard')
 
-    args = parser.parse_args()
-    # Note: if --json is specified, it takes precedence over --dashboard.
     if args.json:
         with open('params.json') as f:
             params = json.load(f)
+
         model_path = params['saving']['model_path']
         dataset_path = params['saving']['dataset_path']
 
@@ -298,32 +307,28 @@ def init_params(nnet, device):
         exploration = params['mcts']['exploration']
         training_episodes = params['mcts']['training_episodes']
         mcts_simulations = params['mcts']['simulations']
+        start_train = True
+
+
     elif args.dashboard:
+
+        dashboard = Dashboard()
         # TODO: Have reasonable defaults in case certain hyperparams are not specified within the
         # streamlit dashboard. Can use the params in params.json
+        model_path,dataset_path = dashboard.load_files()
 
-        # TODO: Update this to set all these values through the streamlit dashboard instead
-        # model_path = params['saving']['model_path']
-        # dataset_path = params['saving']['dataset_path']
+        num_saved_models,overwrite,learning_rate, \
+        momentum, weight_decay = dashboard.nnet_params()
 
-        # num_saved_models = params['saving']['num_saved_models']
-        # overwrite = params['saving']['overwrite']
-        # learning_rate = params['misc_params']['lr']
-        # momentum = params['misc_params']['momentum']
-        # weight_decay = params['misc_params']['weight_decay']
+        elo,depth,stock_epochs,stock_games, \
+        stock_batch_size = dashboard.stockfish_params()
 
-        # stock_epochs = params['stockfish']['epochs']
-        # stock_batch_size = params['stockfish']['batch_size']
-        # stock_games = params['stockfish']['games']
-        # elo, depth = params['stockfish']['elo'], params['stockfish']['depth']
+        mcts_epochs,mcts_batch_size,mcts_games, \
+        exploration, training_episodes, \
+        mcts_simulations = dashboard.mcts_params()
 
-        # mcts_epochs = params['mcts']['epochs']
-        # mcts_batch_size = params['mcts']['batch_size']
-        # mcts_games = params['mcts']['games'] 
-        # exploration = params['mcts']['exploration']
-        # training_episodes = params['mcts']['training_episodes']
-        # mcts_simulations = params['mcts']['simulations']
-        raise ValueError("Unimplemented")
+        start_train = dashboard.train_button()
+
     else:
         raise ValueError("This program must be run with the `train.sh` script. See the script "
                          "for usage instructions.")
@@ -342,7 +347,34 @@ def init_params(nnet, device):
 
     # TODO: We might want to create MctsOptions and StockfishOptions to house some of these params
     return (nnet, elo, depth, dataset_path, stockfish_options, exploration, training_episodes,
-            mcts_simulations, mcts_options)
+            mcts_simulations, mcts_options,start_train)
+
+def parse_arguments():
+    '''
+    Functions to parse and return args from command line
+    '''
+
+    # Determine if using dashbaord or not
+    # Note: if --json is specified, it takes precedence over --dashboard.
+
+    parser = argparse.ArgumentParser(
+        description='Specifies whether to run train.py with streamlit or json.')
+    parser.add_argument('-j', '--json',
+                        dest='json',
+                        action='store_const',
+                        const=True,
+                        default=False,
+                        help='if specified, load params from file')
+    parser.add_argument('-d', '--dashboard',
+                        dest='dashboard',
+                        action='store_const',
+                        const=True,
+                        default=False,
+                        help='if specified, load params from dashboard')
+
+    args = parser.parse_args()
+    return args
+
 
 def main():
     """Main function that will be run when starting training
@@ -352,14 +384,23 @@ def main():
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     nnet = PlayNetwork().to(device=device)
 
+    # Args should be globally accessible
+    global args
+    args = parse_arguments()
+
     # TODO: this looks bad and would be better if we encapsulate more of these params
     nnet, elo, depth, dataset_path, stockfish_options, exploration, training_episodes, \
-        mcts_simulations, mcts_options = init_params(nnet, device)
+        mcts_simulations, mcts_options,start_train= init_params(nnet, device)
 
-    train_on_stockfish(nnet, elo, depth, dataset_path, stockfish_options)
+    if start_train:
 
-    # Train network using MCTS
-    train_on_mcts(nnet, exploration, training_episodes, mcts_simulations, mcts_options)
+        if args.dashboard: Dashboard.info_message("success","Stockfish Training Has Begun")
+        train_on_stockfish(nnet, elo, depth, dataset_path, stockfish_options,args)
+
+        # Train network using MCTS
+        if args.dashboard: Dashboard.info_message("success","MCTS Training has begun")
+        train_on_mcts(nnet, exploration, training_episodes, mcts_simulations, mcts_options,args)
+
 
 
 if __name__ == "__main__":

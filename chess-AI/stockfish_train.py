@@ -105,7 +105,6 @@ class StockfishTrain:
                 search_probs.append(move["Centipawn"] * player / 75)
 
         search_probs = torch.nn.functional.softmax(torch.tensor(search_probs).float(), dim=0)
-        print(search_probs)
 
         # Will choose the move to make from the list of moves
         move = StockfishTrain.choose_move(moves, epsilon)
