@@ -242,10 +242,11 @@ uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
     digitalWrite(motor[STEP_PIN], LOW);
     delay(1); // 1 milliSecond
     digitalWrite(motor[STEP_PIN], HIGH);
+  }
 
     // Updating current position per step
-    *currentMotorPos += eighthStepsPerPulse;
-  }
+    // Not incremented inside of while loop to save computation
+    *currentMotorPos += (eighthStepsPerPulse * numSteps);
 
   return SUCCESS;
 }
@@ -338,11 +339,12 @@ uint8_t moveDiagonal(int endCol, int endRow)
     delay(1);
     digitalWrite(xMotor[STEP_PIN], HIGH);
     digitalWrite(yMotor[STEP_PIN], HIGH);
+  }
 
     // Updates current position for both x and y
-    currPositionX += eighthStepsPerPulseX;
-    currPositionY += eighthStepsPerPulseY;
-  }
+    // Not incremented inside of while loop to save computation
+    currPositionX += (eighthStepsPerPulseX * numStepsX);
+    currPositionY += (eighthStepsPerPulseY * numStepsX);
 
   return SUCCESS;
 }
