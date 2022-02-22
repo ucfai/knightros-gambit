@@ -75,8 +75,8 @@ class Dashboard:
         self.col4.title("Stockfish Data")
         elo = self.col4.number_input("Elo rating", value=1000)
         depth = self.col4.number_input("Depth", value=2)
-        games = self.col4.number_input("Games", value=1000)
-        epochs = self.col4.number_input("Epochs", value=10)
+        games = self.col4.number_input("Games", value=2)
+        epochs = self.col4.number_input("Epochs", value=2)
         batch_size = self.col4.number_input("Batch Size", value=16)
 
         return elo, depth,epochs,games, batch_size
@@ -87,12 +87,12 @@ class Dashboard:
         Sets all the MCTS paramaters
         '''
         self.col3.title("MCTS Parameters")
-        epochs = self.col3.number_input("MCTS Epochs", value=10)
+        epochs = self.col3.number_input("MCTS Epochs", value=2)
         batch_size = self.col3.number_input("MCTS Batch Size", value=16)
-        games = self.col3.number_input("MCTS Games", value=1000)
+        games = self.col3.number_input("MCTS Games", value=2)
         exploration = self.col3.number_input("MCTS Exploration", value=0.02)
-        episodes = self.col3.number_input("MCTS Training Episodes", value=100)
-        simulations = self.col3.number_input("MCTS Simulations", value=100)
+        episodes = self.col3.number_input("MCTS Training Episodes", value=2)
+        simulations = self.col3.number_input("MCTS Simulations", value=2)
 
         return epochs,batch_size,games,exploration,episodes,simulations
 
