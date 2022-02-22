@@ -1,7 +1,0 @@
-% here is my comment describing file
-% more in depth comment
-
-
-% TEST STARTS HERE
-% this makes move e2e4
-~0HNLN1
