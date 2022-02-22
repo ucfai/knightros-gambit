@@ -92,7 +92,7 @@ def training_game(val_approximator, move_approximator, game_num=None):
         # TODO: Consider removing `board.can_claim_draw()` as it may be slow to check.
         # See https://python-chess.readthedocs.io/en/latest/core.html#chess.Board.can_claim_draw
         if board.is_game_over() or board.can_claim_draw():
-            if game_num is not None:
+            if game_num is not None and game_num % 10 == 0:  # Print every 10th game
                 # Print board and display message on streamlit dashboard
                 print(board, end="\n\n")
 
