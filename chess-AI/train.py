@@ -292,16 +292,17 @@ def init_params(nnet, device):
         device: A context manager that specifies torch.device to use for training.
     Returns:
         nnet: Initialized neural network with weights loaded from file.
-        elo: 
-        depth: 
-        dataset_path: 
-        stockfish_options: 
-        exploration: 
-        training_episodes: 
-        mcts_simulations: 
-        mcts_options: 
-        start_train: 
-        show_dash: 
+        elo: Int, elo to use for stockfish engine
+        depth: Int, depth to recurse when stockfish searches for best moves
+        dataset_path: String, path to dataset to be loaded; can be None
+        stockfish_options: TrainOptions, stores hyperparameters used for training
+        exploration: Float, hyperparameter used to control amount of random choice during training
+        training_episodes: Int, number of training episodes when running mcts
+        mcts_simulations: Int, number of mcts simulations
+        mcts_options: TrainOptions, stores hyperparameters used for training 
+        start_train: Bool, True by default if reading from file, else, set by train button on the
+            streamlit dashboard.
+        show_dash: Bool, specifies whether or not to show the dashboard.
     '''
     # 
     parser = argparse.ArgumentParser(
