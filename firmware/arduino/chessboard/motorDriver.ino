@@ -106,9 +106,6 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
     digitalWrite(motor[STEP_PIN], LOW);
     delay(1);
     digitalWrite(motor[STEP_PIN], HIGH);
-
-    // Updates current motor position
-    *currentMotorPos += eighthStepsPerPulse;
   }
 
   // Flips direction again to move motor away from max or 0 to prepare for fine-tuning
@@ -128,7 +125,6 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
     digitalWrite(motor[STEP_PIN], LOW);
     delay(1);
     digitalWrite(motor[STEP_PIN], HIGH);
-    *currentMotorPos += eighthStepsPerPulse;
   }
 
   // Moves motor towards max or 0 for fine-tuned alignment
@@ -149,7 +145,6 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
     digitalWrite(motor[STEP_PIN], LOW);
     delay(1);
     digitalWrite(motor[STEP_PIN], HIGH);
-    *currentMotorPos += eighthStepsPerPulse;
   }
 
   // Sets the motor position to either the max position or 0
@@ -242,10 +237,12 @@ uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
     digitalWrite(motor[STEP_PIN], LOW);
     delay(1); // 1 milliSecond
     digitalWrite(motor[STEP_PIN], HIGH);
-
-    // Updating current position per step
-    *currentMotorPos += eighthStepsPerPulse;
   }
+
+  // Updates current position of relevant motor
+  // Not incremented inside of loop to save runtime and unneeded computation
+  // If motor collides with endstop, alignAxis is triggered and fixes motor position
+  *currentMotorPos += (eighthStepsPerPulse * numSteps);
 
   return SUCCESS;
 }
@@ -338,11 +335,13 @@ uint8_t moveDiagonal(int endCol, int endRow)
     delay(1);
     digitalWrite(xMotor[STEP_PIN], HIGH);
     digitalWrite(yMotor[STEP_PIN], HIGH);
-
-    // Updates current position for both x and y
-    currPositionX += eighthStepsPerPulseX;
-    currPositionY += eighthStepsPerPulseY;
   }
+
+  // Updates current position for both X and Y motors
+  // Not incremented inside of loop to save runtime and unneeded computation
+  // If motor collides with endstop, alignAxis is triggered and fixes motor position
+  currPositionX += (eighthStepsPerPulseX * numStepsX);
+  currPositionY += (eighthStepsPerPulseY * numStepsX);
 
   return SUCCESS;
 }
