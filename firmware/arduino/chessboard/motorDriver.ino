@@ -239,10 +239,10 @@ uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
     digitalWrite(motor[STEP_PIN], HIGH);
   }
 
-    // Updates current position of relevant motor
-    // Not incremented inside of loop to save runtime, and isn't needed as endstop collision
-    // is only exception to end position result, which will be dealt with by calling alignAxis
-    *currentMotorPos += (eighthStepsPerPulse * numSteps);
+  // Updates current position of relevant motor
+  // Not incremented inside of loop to save runtime and unneeded computation
+  // If motor collides with endstop, alignAxis is triggered and fixes motor position
+  *currentMotorPos += (eighthStepsPerPulse * numSteps);
 
   return SUCCESS;
 }
@@ -337,11 +337,11 @@ uint8_t moveDiagonal(int endCol, int endRow)
     digitalWrite(yMotor[STEP_PIN], HIGH);
   }
 
-    // Updates current position for both X and Y motors
-    // Not incremented inside of loop to save runtime, and isn't needed as endstop collision
-    // is only exception to end position result, which will be dealt with by calling alignAxis
-    currPositionX += (eighthStepsPerPulseX * numStepsX);
-    currPositionY += (eighthStepsPerPulseY * numStepsX);
+  // Updates current position for both X and Y motors
+  // Not incremented inside of loop to save runtime and unneeded computation
+  // If motor collides with endstop, alignAxis is triggered and fixes motor position
+  currPositionX += (eighthStepsPerPulseX * numStepsX);
+  currPositionY += (eighthStepsPerPulseY * numStepsX);
 
   return SUCCESS;
 }
