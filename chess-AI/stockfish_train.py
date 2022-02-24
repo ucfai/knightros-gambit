@@ -70,11 +70,11 @@ class StockfishTrain:
 
         # Transform state value to be in the range [-1, 1]
         if sig:
-            state_value = 1 - 2 * util.sig(state_value, 1)
+            state_value = 2 * util.sig(state_value) - 1
 
         return state_value
 
-    def get_move_probs(self, board, epsilon=0.3):
+    def get_move_probs(self, board, epsilon=0.3, temperature=0.2):
         """Gets the move probabilities from a position using stockfish get_top_moves
         """
 
@@ -97,12 +97,9 @@ class StockfishTrain:
             # if x > 0 , that is a mate for white in x moves
             # if x < 0, that is a mate for black in x moves
             if move["Centipawn"] is None:
-                # large value * (1/move["mate"]) * player will arrange search probs
-                # based on best mate
-                search_probs.append(10000000 * (1 / move["Mate"]) * player)
+                search_probs.append(np.sign(move["mate"]) * player * (1 / temperature))
             else:
-                # TODO: CHANGE 75 TO HYPERPARAMETER
-                search_probs.append(move["Centipawn"] * player / 75)
+                search_probs.append((2 * util.sig(move["Centipawn"] * player) - 1) * (1 / temperature))
 
         search_probs = torch.nn.functional.softmax(torch.tensor(search_probs).float(), dim=0)
 
