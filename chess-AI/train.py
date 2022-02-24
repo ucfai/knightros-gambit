@@ -263,21 +263,33 @@ def main():
         mcts_simulations, mcts_options, start_train, show_dash = init_params(nnet, device)
 
     if start_train:
+        msg = "Stockfish Training Has Begun"
         if show_dash:
-            Dashboard.info_message("success", "Stockfish Training Has Begun")
+            Dashboard.info_message("success", msg)
+        else:
+            print(msg)
         train_on_stockfish(nnet, elo, depth, dataset_path, stockfish_options, show_dash)
 
+        msg = "Stockfish Training completed"
         if show_dash:
-            Dashboard.info_message("success", f"Stockfish Training completed")
+            Dashboard.info_message("success", msg)
+        else:
+            print(msg)
 
         # Train network using MCTS
+        msg = "MCTS Training has begun"
         if show_dash:
-            Dashboard.info_message("success", "MCTS Training has begun")
+            Dashboard.info_message("success", msg)
+        else:
+            print(msg)
         train_on_mcts(
             nnet, exploration, training_episodes, mcts_simulations, mcts_options, show_dash)
 
+        msg = "MCTS Training completed"
         if show_dash:
-            Dashboard.info_message("success", f"MCTS Training completed")
+            Dashboard.info_message("success", msg)
+        else:
+            print(msg)
 
 
 if __name__ == "__main__":
