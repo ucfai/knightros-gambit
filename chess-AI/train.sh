@@ -7,5 +7,5 @@ if [ "$1" = "streamlit" ]; then
 elif [ "$1" = "json" ]; then
     python train.py -j
 else
-    echo "Expected first argument to be either <streamlit> or <cli>"
+    echo "Expected first argument to be either <streamlit> or <json>"
 fi
