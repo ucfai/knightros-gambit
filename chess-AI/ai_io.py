@@ -7,7 +7,7 @@ import os
 
 import torch
 
-from options import *
+import options
 from streamlit_dashboard import Dashboard
 
 def save_model(nnet, save_path, num_saved_models, overwrite):
@@ -134,15 +134,14 @@ def init_params(nnet, device):
         load_model(nnet, model_path, num_saved_models)
 
     # Train network using stockfish evaluations
-    stockfish_options = StockfishOptions(learning_rate, momentum, weight_decay, stock_epochs,
-                                     stock_batch_size, stock_games, device, model_path,
-                                     num_saved_models, overwrite, elo, depth)
+    stockfish_options = options.StockfishOptions(learning_rate, momentum, weight_decay, stock_epochs,
+                                                 stock_batch_size, stock_games, device, model_path,
+                                                 num_saved_models, overwrite, elo, depth)
 
-    mcts_options = MCTSOptions(learning_rate, momentum, weight_decay, mcts_epochs,
-                                mcts_batch_size, mcts_games, device, model_path,
-                                num_saved_models, overwrite, exploration, mcts_simulations, training_episodes)
+    mcts_options = options.MCTSOptions(learning_rate, momentum, weight_decay, mcts_epochs,
+                                       mcts_batch_size, mcts_games, device, model_path,
+                                       num_saved_models, overwrite, exploration, mcts_simulations, training_episodes)
 
-    # TODO: Create MctsOptions and StockfishOptions to house these params that are related
     return (nnet, dataset_path, stockfish_options, mcts_options, start_train, args.dashboard)
 
 if __name__ == "__main__":
