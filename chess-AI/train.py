@@ -1,49 +1,18 @@
 """
 Main training program
 """
-import argparse
-import json
-
 import chess
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
-from ai_io import save_model, load_model
+from ai_io import init_params, load_model, save_model
 from mcts import Mcts
 from nn_layout import PlayNetwork
 from output_representation import policy_converter
 from state_representation import get_cnn_input
 from stockfish_train import StockfishTrain
 from streamlit_dashboard import Dashboard
-
-
-class TrainOptions:
-    """Stores settings for the training episodes
-
-    Attributes:
-        learning_rate: the learning rate for the optimizer
-        momentum: additional parameter for the optimizer
-        weight_decay: loss term encouraging smaller weights
-        epochs: number of epochs
-        batch_size: the batch size for SGD
-        games: number of games to run when creating dataset
-        device: the device being used to train (either CPU or GPU)
-        save_path: path for model checkpointing
-        num_saved_models: number of models to store
-    """
-
-    def __init__(self, learning_rate, momentum, weight_decay, epochs, batch_size, games, device, save_path, num_saved_models, overwrite):
-        self.learning_rate = learning_rate
-        self.momentum = momentum
-        self.weight_decay = weight_decay
-        self.epochs = epochs
-        self.batch_size = batch_size
-        self.games = games
-        self.device = device
-        self.save_path = save_path
-        self.num_saved_models = num_saved_models
-        self.overwrite = overwrite
 
 def training_game(val_approximator, move_approximator, game_num=None):
     """Run a full game, storing fen_strings, policies, and values
@@ -144,9 +113,11 @@ def create_dataset(games, move_approximator, val_approximator=None, show_dash=Fa
             game_data = [training_game(val_approximator, move_approximator) for _ in range(games)]
 
     # Convert all the fen strings into tensors that are used in the dataset
-    input_state = torch.stack([get_cnn_input(chess.Board(state)) for game in game_data for state in game[0]])
+    input_state = torch.stack(
+        [get_cnn_input(chess.Board(state)) for game in game_data for state in game[0]])
     state_values = torch.tensor([state_val for game in game_data for state_val in game[1]]).float()
-    move_probs = torch.tensor(np.array([move_prob for game in game_data for move_prob in game[2]])).float()
+    move_probs = torch.tensor(
+        np.array([move_prob for game in game_data for move_prob in game[2]])).float()
 
     # Create iterable dataset from game data
     dataset = TensorDataset(input_state, state_values, move_probs)
@@ -233,11 +204,11 @@ def train_on_dataset(dataset, nnet, options, show_dash=False):
 
         if show_dash:
             # Keep track of when each epoch is over
-            Dashboard.info_message("success","Epoch " + str(epoch) + " Finished" )
+            Dashboard.info_message("success", "Epoch " + str(epoch) + " Finished")
 
     if show_dash:
         # Chart and show all the losses
-        Dashboard.visualize_losses(average_pol_loss,average_val_loss)
+        Dashboard.visualize_losses(average_pol_loss, average_val_loss)
 
     # Saves model to specified file, or a new file if not specified.
     # TODO: Figure frequency of model saving, right now it is after a defined number of epochs.
@@ -268,125 +239,17 @@ def train_on_stockfish(nnet, elo, depth, dataset_path, options, show_dash=False)
     train_on_dataset(dataset, nnet, options)
 
 
-def train_on_mcts(nnet, exploration, mcts_simulations, training_episodes, options, args):
+def train_on_mcts(nnet, exploration, mcts_simulations, training_episodes, opt, show_dash=False):
     # Get MCTS object and parameters
     # TODO: Figure out how many times to perform self play (and better name for this variable)
-    mcts = Mcts(exploration, options.device)
+    mcts = Mcts(exploration, opt.device)
 
     # Will iterate through the number of training episodes
     for _ in range(training_episodes):
         mcts_moves = lambda board: mcts.get_tree_results(mcts_simulations, nnet, board, temperature=5)
 
-        dataset = create_dataset(options.games, mcts_moves)
-        train_on_dataset(dataset, nnet, options)
-
-def init_params(nnet, device):
-    '''Initialize parameters used for training.
-
-    Depending on value of flags passed to program, either set parameters from json file or from
-    the streamlit dashboard (see streamlit_dashboard.py).
-
-    Attributes:
-        nnet: Instance of neural net with randomly initialized weights; weights are loaded into
-            this model from file specified by user.
-        device: A context manager that specifies torch.device to use for training.
-    Returns:
-        nnet: Initialized neural network with weights loaded from file.
-        elo: Int, elo to use for stockfish engine
-        depth: Int, depth to recurse when stockfish searches for best moves
-        dataset_path: String, path to dataset to be loaded; can be None
-        stockfish_options: TrainOptions, stores hyperparameters used for training
-        exploration: Float, hyperparameter used to control amount of random choice during training
-        training_episodes: Int, number of training episodes when running mcts
-        mcts_simulations: Int, number of mcts simulations
-        mcts_options: TrainOptions, stores hyperparameters used for training 
-        start_train: Bool, True by default if reading from file, else, set by train button on the
-            streamlit dashboard.
-        show_dash: Bool, specifies whether or not to show the dashboard.
-    '''
-    # 
-    parser = argparse.ArgumentParser(
-        description='Specifies whether to run train.py with streamlit or json. Note: if --json is '
-                    'specified, it takes precedence over --dashboard.')
-    parser.add_argument('-j', '--json',
-                        dest='json',
-                        action='store_const',
-                        const=True,
-                        default=False,
-                        help='if specified, load params from file')
-    parser.add_argument('-d', '--dashboard',
-                        dest='dashboard',
-                        action='store_const',
-                        const=True,
-                        default=False,
-                        help='if specified, load params from dashboard')
-    args = parser.parse_args()
-
-    if args.json:
-        with open('params.json') as f:
-            params = json.load(f)
-
-        model_path = params['saving']['model_path']
-        dataset_path = params['saving']['dataset_path']
-
-        num_saved_models = params['saving']['num_saved_models']
-        overwrite = params['saving']['overwrite']
-        learning_rate = params['misc_params']['lr']
-        momentum = params['misc_params']['momentum']
-        weight_decay = params['misc_params']['weight_decay']
-
-        stock_epochs = params['stockfish']['epochs']
-        stock_batch_size = params['stockfish']['batch_size']
-        stock_games = params['stockfish']['games']
-        elo, depth = params['stockfish']['elo'], params['stockfish']['depth']
-
-        mcts_epochs = params['mcts']['epochs']
-        mcts_batch_size = params['mcts']['batch_size']
-        mcts_games = params['mcts']['games'] 
-        exploration = params['mcts']['exploration']
-        training_episodes = params['mcts']['training_episodes']
-        mcts_simulations = params['mcts']['simulations']
-
-        # If using dashboard, this is set by the start button; set to True when reading from file
-        start_train = True
-
-    elif args.dashboard:
-        dashboard = Dashboard()
-        # TODO: Have reasonable defaults in case certain hyperparams are not specified within the
-        # streamlit dashboard. Can use the params in params.json
-        model_path, dataset_path = dashboard.load_files()
-
-        num_saved_models, overwrite, learning_rate, \
-        momentum, weight_decay = dashboard.nnet_params()
-
-        elo, depth, stock_epochs, stock_games, stock_batch_size = dashboard.stockfish_params()
-
-        mcts_epochs, mcts_batch_size, mcts_games, exploration, training_episodes, \
-        mcts_simulations = dashboard.mcts_params()
-
-        start_train = dashboard.train_button()
-
-    else:
-        raise ValueError("This program must be run with the `train.sh` script. See the script "
-                         "for usage instructions.")
-
-    # Load in a model
-    if model_path is not None:
-        load_model(nnet, model_path, num_saved_models)
-
-    # Train network using stockfish evaluations
-    stockfish_options = TrainOptions(learning_rate, momentum, weight_decay, stock_epochs,
-                                     stock_batch_size, stock_games, device, model_path,
-                                     num_saved_models, overwrite)
-
-    mcts_options = TrainOptions(learning_rate, momentum, weight_decay, mcts_epochs,
-                                mcts_batch_size, mcts_games, device, model_path,
-                                num_saved_models, overwrite)
-
-    # TODO: Create MctsOptions and StockfishOptions to house these params that are related
-    return (nnet, elo, depth, dataset_path, stockfish_options, exploration, training_episodes,
-            mcts_simulations, mcts_options, start_train, args.dashboard)
-
+        dataset = create_dataset(opt.games, mcts_moves)
+        train_on_dataset(dataset, nnet, opt, show_dash)
 
 def main():
     """Main function that will be run when starting training.
