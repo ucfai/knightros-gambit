@@ -1,5 +1,6 @@
 """This file holds the StockfishTrain class, used to augment our self-play training approach.
 """
+import math
 import random
 
 import chess
@@ -80,7 +81,7 @@ class StockfishTrain:
 
         return state_value
 
-    def get_move_probs(self, board, epsilon=0.3, temperature=0.2):
+    def get_move_probs(self, board, epsilon=0.3, temperature=0.1):
         """Gets the move probabilities from a position using stockfish get_top_moves
         """
 
@@ -108,7 +109,11 @@ class StockfishTrain:
                 search_probs.append(self.centipawn_to_winprob(move["Centipawn"] * player))
 
         search_probs = torch.tensor(search_probs).float() ** (1/temperature)
-        search_probs = search_probs/torch.sum(search_probs)
+
+        if not torch.sum(search_probs).is_nonzero():
+            search_probs = torch.full(search_probs.size(), 1/search_probs.size(dim=0))
+        else:
+            search_probs = search_probs / torch.sum(search_probs)
 
         # Will choose the move to make from the list of moves
         move = StockfishTrain.choose_move(moves, epsilon)
