@@ -6,43 +6,15 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
+from ai_io import init_params, load_model, save_model
 from mcts import Mcts
-from ai_io import save_model, load_model
 from nn_layout import PlayNetwork
 from output_representation import policy_converter
 from state_representation import get_cnn_input
 from stockfish_train import StockfishTrain
+from streamlit_dashboard import Dashboard
 
-
-class TrainOptions:
-    """Stores settings for the training episodes
-
-    Attributes:
-        learning_rate: the learning rate for the optimizer
-        momentum: additional parameter for the optimizer
-        weight_decay: loss term encouraging smaller weights
-        epochs: number of epochs
-        batch_size: the batch size for SGD
-        games: number of games to run when creating dataset
-        device: the device being used to train (either CPU or GPU)
-        save_path: path for model checkpointing
-        num_saved_models: number of models to store
-    """
-
-    def __init__(self, learning_rate, momentum, weight_decay, epochs, batch_size, games, device, save_path, num_saved_models, overwrite):
-        self.learning_rate = learning_rate
-        self.momentum = momentum
-        self.weight_decay = weight_decay
-        self.epochs = epochs
-        self.batch_size = batch_size
-        self.games = games
-        self.device = device
-        self.save_path = save_path
-        self.num_saved_models = num_saved_models
-        self.overwrite = overwrite
-
-
-def training_game(val_approximator, move_approximator):
+def training_game(val_approximator, move_approximator, game_num=None):
     """Run a full game, storing fen_strings, policies, and values
 
     Attributes:
@@ -89,6 +61,11 @@ def training_game(val_approximator, move_approximator):
         # TODO: Consider removing `board.can_claim_draw()` as it may be slow to check.
         # See https://python-chess.readthedocs.io/en/latest/core.html#chess.Board.can_claim_draw
         if board.is_game_over() or board.can_claim_draw():
+            if game_num is not None and game_num % 10 == 0:  # Print every 10th game
+                # Print board and display message on streamlit dashboard
+                print(board, end="\n\n")
+
+                Dashboard.info_message("success", f"{game_num + 1} Games Generated")
             break
 
     # value_approximator will be none for mcts
@@ -116,8 +93,7 @@ def assign_rewards(board, length):
 
     return state_values
 
-
-def create_dataset(games, move_approximator, val_approximator=None):
+def create_dataset(games, move_approximator, val_approximator=None, show_dash=False):
     """Builds a dataset with the size of (games)
 
     Attributes:
@@ -129,13 +105,19 @@ def create_dataset(games, move_approximator, val_approximator=None):
     # Storing gradients for all forward passes in each training game is demanding. Instead,
     # ignore gradients for now and store only the gradients needed for a particular batch later on
     with torch.no_grad():
-        # Obtain data from training games
-        game_data = [training_game(val_approximator, move_approximator) for _ in range(games)]
+        if show_dash:
+            # Print every 10th game for visualization purposes
+            game_data = [training_game(val_approximator, move_approximator,
+                                       game_num=i) for i in range(games)]
+        else:
+            game_data = [training_game(val_approximator, move_approximator) for _ in range(games)]
 
     # Convert all the fen strings into tensors that are used in the dataset
-    input_state = torch.stack([get_cnn_input(chess.Board(state)) for game in game_data for state in game[0]])
+    input_state = torch.stack(
+        [get_cnn_input(chess.Board(state)) for game in game_data for state in game[0]])
     state_values = torch.tensor([state_val for game in game_data for state_val in game[1]]).float()
-    move_probs = torch.tensor(np.array([move_prob for game in game_data for move_prob in game[2]])).float()
+    move_probs = torch.tensor(
+        np.array([move_prob for game in game_data for move_prob in game[2]])).float()
 
     # Create iterable dataset from game data
     dataset = TensorDataset(input_state, state_values, move_probs)
@@ -144,7 +126,7 @@ def create_dataset(games, move_approximator, val_approximator=None):
     return dataset
 
 
-def train_on_dataset(dataset, nnet, options):
+def train_on_dataset(dataset, nnet, options, show_dash=False):
     """Train with the specified dataset
 
     Attributes:
@@ -152,6 +134,8 @@ def train_on_dataset(dataset, nnet, options):
         nnet: the neural network
         options: Instance of TrainOptions containing settings/hyperparameters for training
     """
+    if show_dash:
+        Dashboard.info_message("info", "Training on Dataset")
 
     # Stores the average losses which are used for graphing
     average_pol_loss = []
@@ -218,78 +202,94 @@ def train_on_dataset(dataset, nnet, options):
         average_pol_loss.append(policy_loss.cpu().detach().numpy())
         average_val_loss.append(value_loss.cpu().detach().numpy())
 
+        if show_dash:
+            # Keep track of when each epoch is over
+            Dashboard.info_message("success", "Epoch " + str(epoch) + " Finished")
+
+    if show_dash:
+        # Chart and show all the losses
+        Dashboard.visualize_losses(average_pol_loss, average_val_loss)
+
     # Saves model to specified file, or a new file if not specified.
     # TODO: Figure frequency of model saving, right now it is after a defined number of epochs.
     save_model(nnet, options.save_path, options.num_saved_models, options.overwrite)
 
 
-def train_on_stockfish(nnet, elo, depth, dataset_path, options):
+def train_on_stockfish(nnet, elo, depth, dataset_path, options, show_dash=False):
     stockfish = StockfishTrain(elo, depth)
     # Value and move approximators from stockfish
     stocktrain_value_approximator = stockfish.get_value
     stocktrain_moves = lambda board: stockfish.get_move_probs(board, epsilon=0.3)
 
     # Dataset needs to be either created or loaded
-    if dataset_path:
+    if dataset_path is not None:
+        if show_dash:
+            Dashboard.info_message("success", "Dataset Found!")
         dataset = torch.load(dataset_path)
     else:
-        dataset = create_dataset(options.games, stocktrain_moves, stocktrain_value_approximator)
-        # NOTE: Dataset should be given a more descriptive name, this is just temporary
+        dataset = create_dataset(
+            options.games, stocktrain_moves, stocktrain_value_approximator, show_dash)
+        if show_dash:
+            Dashboard.info_message("error", "No Dataset was found")
+        # TODO: Dataset should be given a more descriptive name, this is just temporary
+        # TODO: This should be in the ai_io file
         torch.save(dataset, './datasets/stockfish_data.pt')
 
     # Train using the stockfish dataset
     train_on_dataset(dataset, nnet, options)
 
 
-def train_on_mcts(nnet, exploration, mcts_simulations, training_episodes, options):
+def train_on_mcts(nnet, exploration, mcts_simulations, training_episodes, opt, show_dash=False):
     # Get MCTS object and parameters
     # TODO: Figure out how many times to perform self play (and better name for this variable)
-    mcts = Mcts(exploration, options.device)
+    mcts = Mcts(exploration, opt.device)
 
     # Will iterate through the number of training episodes
     for _ in range(training_episodes):
         mcts_moves = lambda board: mcts.get_tree_results(mcts_simulations, nnet, board, temperature=5)
 
-        dataset = create_dataset(options.games, mcts_moves)
-        train_on_dataset(dataset, nnet, options)
-
+        dataset = create_dataset(opt.games, mcts_moves)
+        train_on_dataset(dataset, nnet, opt, show_dash)
 
 def main():
-    """Main function that will be run when starting training
+    """Main function that will be run when starting training.
     """
-
     # Detect device to train on
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     nnet = PlayNetwork().to(device=device)
 
-    # Will get the paths to load models and datasets from
-    model_path = None
-    dataset_path = None
+    # TODO: this looks bad and would be better if we encapsulate more of these params
+    nnet, elo, depth, dataset_path, stockfish_options, exploration, training_episodes, \
+        mcts_simulations, mcts_options, start_train, show_dash = init_params(nnet, device)
 
-    # Set general purpose parameters
-    num_saved_models, overwrite = 5, True
-    learning_rate, momentum, weight_decay = 0.1, 0.9, 0.001
+    if start_train:
+        msg = "Stockfish Training Has Begun"
+        if show_dash:
+            Dashboard.info_message("success", msg)
+        else:
+            print(msg)
+        train_on_stockfish(nnet, elo, depth, dataset_path, stockfish_options, show_dash)
 
-    # Load in a model
-    load_model(nnet, model_path, num_saved_models)
+        msg = "Stockfish Training completed"
+        if show_dash:
+            Dashboard.info_message("success", msg)
+        else:
+            print(msg)
 
-    # Set stockfish specific parameters
-    stock_epochs, stock_batch_size, stock_games = 10, 8, 10
-    elo, depth = 1000, 3
+        # Train network using MCTS
+        msg = "MCTS Training has begun"
+        if show_dash:
+            Dashboard.info_message("success", msg)
+        else:
+            print(msg)
+        train_on_mcts(
+            nnet, exploration, training_episodes, mcts_simulations, mcts_options, show_dash)
 
-    # Train network using stockfish evaluations
-    stockfish_options = TrainOptions(learning_rate, momentum, weight_decay, stock_epochs, stock_batch_size, stock_games,
-                                     device, model_path, num_saved_models, overwrite)
-    train_on_stockfish(nnet, elo, depth, dataset_path, stockfish_options)
-
-    # Set MCTS specific parameters
-    mcts_epochs, mcts_batch_size, mcts_games = 100, 8, 100
-    exploration, training_episodes, mcts_simulations = 5, 5, 10
-
-    # Train network using MCTS
-    mcts_options = TrainOptions(learning_rate, momentum, weight_decay, mcts_epochs, mcts_batch_size, mcts_games,
-                                device, model_path, num_saved_models, overwrite)
-    train_on_mcts(nnet, exploration, training_episodes, mcts_simulations, mcts_options)
+        msg = "MCTS Training completed"
+        if show_dash:
+            Dashboard.info_message("success", msg)
+        else:
+            print(msg)
 
 
 if __name__ == "__main__":

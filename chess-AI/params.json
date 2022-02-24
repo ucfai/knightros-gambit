@@ -1,0 +1,40 @@
+{
+    "_comment": "PARAMS MUST BE ALPHABETIZED",
+
+    "saving":{
+        "dataset_path": null,
+        "model_path": null,
+        "num_saved_models": 5,
+        "overwrite": true
+    },
+
+    "misc_params": {
+        "lr": 0.1,
+        "momentum": 0.001,
+        "weight_decay": 0.9
+    },
+
+    "stockfish":{
+        "epochs": 10,
+        "batch_size": 8,
+        "games": 10,
+        "elo": 1000,
+        "depth": 5
+    },
+
+    "mcts":{
+        "epochs": 100,
+        "batch_size": 8,
+        "games": 100,
+        "exploration": 5,
+        "training_episodes": 5,
+        "simulations": 10
+    },
+
+    "currently_unused": {
+        "move_epsilon": 0.5,
+        "probability_scalar": 0.5,
+        "sigmoid_scalar": 0.1,
+        "temperature": 0.5
+    }
+}
