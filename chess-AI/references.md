@@ -44,5 +44,6 @@ Review in chess-engine
 ## Jupyter notebook 
 
 
-
+# Centipawn evaluation
+https://www.chessprogramming.org/Pawn_Advantage,_Win_Percentage,_and_Elo
 
