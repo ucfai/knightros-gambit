@@ -215,8 +215,9 @@ def train_on_dataset(dataset, nnet, options, show_dash=False):
     save_model(nnet, options.save_path, options.num_saved_models, options.overwrite)
 
 
-def train_on_stockfish(nnet, elo, depth, dataset_path, options, show_dash=False):
-    stockfish = StockfishTrain(elo, depth)
+def train_on_stockfish(nnet, dataset_path, options, show_dash=False):
+    stockfish = StockfishTrain(options.elo, options.depth)
+
     # Value and move approximators from stockfish
     stocktrain_value_approximator = stockfish.get_value
     stocktrain_moves = lambda board: stockfish.get_move_probs(board, epsilon=0.3)
@@ -239,17 +240,18 @@ def train_on_stockfish(nnet, elo, depth, dataset_path, options, show_dash=False)
     train_on_dataset(dataset, nnet, options)
 
 
-def train_on_mcts(nnet, exploration, mcts_simulations, training_episodes, opt, show_dash=False):
+def train_on_mcts(nnet, options, show_dash=False):
     # Get MCTS object and parameters
     # TODO: Figure out how many times to perform self play (and better name for this variable)
-    mcts = Mcts(exploration, opt.device)
+    mcts = Mcts(options.exploration, options.device)
 
     # Will iterate through the number of training episodes
-    for _ in range(training_episodes):
-        mcts_moves = lambda board: mcts.get_tree_results(mcts_simulations, nnet, board, temperature=5)
+    for _ in range(options.training_episodes):
+        mcts_moves = lambda board: mcts.get_tree_results(options.simulations, nnet, board, temperature=5)
 
-        dataset = create_dataset(opt.games, mcts_moves)
-        train_on_dataset(dataset, nnet, opt, show_dash)
+        dataset = create_dataset(options.games, mcts_moves)
+        train_on_dataset(dataset, nnet, options, show_dash)
+
 
 def main():
     """Main function that will be run when starting training.
@@ -259,8 +261,7 @@ def main():
     nnet = PlayNetwork().to(device=device)
 
     # TODO: this looks bad and would be better if we encapsulate more of these params
-    nnet, elo, depth, dataset_path, stockfish_options, exploration, training_episodes, \
-        mcts_simulations, mcts_options, start_train, show_dash = init_params(nnet, device)
+    nnet, dataset_path, stockfish_options, mcts_options, start_train, show_dash = init_params(nnet, device)
 
     if start_train:
         msg = "Stockfish Training Has Begun"
@@ -268,7 +269,7 @@ def main():
             Dashboard.info_message("success", msg)
         else:
             print(msg)
-        train_on_stockfish(nnet, elo, depth, dataset_path, stockfish_options, show_dash)
+        train_on_stockfish(nnet, dataset_path, stockfish_options, show_dash)
 
         msg = "Stockfish Training completed"
         if show_dash:
@@ -282,8 +283,7 @@ def main():
             Dashboard.info_message("success", msg)
         else:
             print(msg)
-        train_on_mcts(
-            nnet, exploration, training_episodes, mcts_simulations, mcts_options, show_dash)
+        train_on_mcts(nnet, mcts_options, show_dash)
 
         msg = "MCTS Training completed"
         if show_dash:

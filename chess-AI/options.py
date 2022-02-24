@@ -28,3 +28,26 @@ class TrainOptions:
         self.save_path = save_path
         self.num_saved_models = num_saved_models
         self.overwrite = overwrite
+
+
+class MCTSOptions(TrainOptions):
+
+    def __unit__(self, learning_rate, momentum, weight_decay, epochs, batch_size, games, device,
+                 save_path, num_saved_models, overwrite, exploration, simulations, training_episodes):
+        TrainOptions.__init__(learning_rate, momentum, weight_decay, epochs, batch_size, games, device,
+                              save_path, num_saved_models, overwrite)
+
+        self.exploration = exploration
+        self.simulations = simulations
+        self.training_episodes = training_episodes
+
+
+class StockfishOptions(TrainOptions):
+
+    def __unit__(self, learning_rate, momentum, weight_decay, epochs, batch_size, games, device,
+                 save_path, num_saved_models, overwrite, elo, depth):
+        TrainOptions.__init__(learning_rate, momentum, weight_decay, epochs, batch_size, games, device,
+                              save_path, num_saved_models, overwrite)
+
+        self.elo = elo
+        self.depth = depth
