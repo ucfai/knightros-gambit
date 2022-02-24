@@ -31,6 +31,12 @@ class StockfishTrain:
         self.stockfish.set_depth(depth)
 
     @staticmethod
+    def centipawn_to_winprob(centipawn):
+        """Transforms centipawn value to approximate probability of winning
+        """
+        return 1 / (1 + 10**(-centipawn/400))
+
+    @staticmethod
     def choose_move(moves, epsilon):
         """Choose the next move to make with an epsilon-greedy strategy.
 
@@ -70,7 +76,7 @@ class StockfishTrain:
 
         # Transform state value to be in the range [-1, 1]
         if sig:
-            state_value = 2 * util.sig(state_value) - 1
+            state_value = self.centipawn_to_winprob(state_value) * 2 - 1
 
         return state_value
 
@@ -97,11 +103,12 @@ class StockfishTrain:
             # if x > 0 , that is a mate for white in x moves
             # if x < 0, that is a mate for black in x moves
             if move["Centipawn"] is None:
-                search_probs.append(np.sign(move["mate"]) * player * (1 / temperature))
+                search_probs.append(np.sign(move["Mate"]) * player / 2 + 0.5)
             else:
-                search_probs.append((2 * util.sig(move["Centipawn"] * player) - 1) * (1 / temperature))
+                search_probs.append(self.centipawn_to_winprob(move["Centipawn"] * player))
 
-        search_probs = torch.nn.functional.softmax(torch.tensor(search_probs).float(), dim=0)
+        search_probs = torch.tensor(search_probs).float() ** (1/temperature)
+        search_probs = search_probs/torch.sum(search_probs)
 
         # Will choose the move to make from the list of moves
         move = StockfishTrain.choose_move(moves, epsilon)
