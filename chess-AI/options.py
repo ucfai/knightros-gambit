@@ -28,3 +28,39 @@ class TrainOptions:
         self.save_path = save_path
         self.num_saved_models = num_saved_models
         self.overwrite = overwrite
+
+
+class MCTSOptions(TrainOptions):
+    """Stores additional settings for training with MCTS
+
+    Attributes:
+        exploration: exploration constant for traversing the search tree
+        simulations: number of iterations of MCTS to do before returning result
+        training_episodes: how many times to generate and train on new dataset
+    """
+
+    def __init__(self, learning_rate, momentum, weight_decay, epochs, batch_size, games, device,
+                 save_path, num_saved_models, overwrite, exploration, simulations, training_episodes):
+        TrainOptions.__init__(self, learning_rate, momentum, weight_decay, epochs, batch_size, games, device,
+                              save_path, num_saved_models, overwrite)
+
+        self.exploration = exploration
+        self.simulations = simulations
+        self.training_episodes = training_episodes
+
+
+class StockfishOptions(TrainOptions):
+    """Stores additional settings for training with Stockfish
+
+        Attributes:
+            elo: elo for stockfish evals
+            depth: search depth for stockfish evals
+    """
+
+    def __init__(self, learning_rate, momentum, weight_decay, epochs, batch_size, games, device,
+                 save_path, num_saved_models, overwrite, elo, depth):
+        TrainOptions.__init__(self, learning_rate, momentum, weight_decay, epochs, batch_size, games, device,
+                              save_path, num_saved_models, overwrite)
+
+        self.elo = elo
+        self.depth = depth
