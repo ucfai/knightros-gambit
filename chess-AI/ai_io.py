@@ -10,6 +10,7 @@ import torch
 import options
 from streamlit_dashboard import Dashboard
 
+
 def save_model(nnet, save_path, num_saved_models, overwrite):
     """Save given model parameters to external file
     """
