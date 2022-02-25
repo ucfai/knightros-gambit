@@ -5,21 +5,25 @@
 // UART
 #define RX2 16
 #define TX2 17
+#define INCOMING_MESSAGE_LENGTH 6
 
 // UART input and flags
 char moveCount;
-volatile char currentState = '0';
 volatile char errorCode;
-volatile char charArray1[6];
-volatile char charArray2[6];
+
+// Create two message buffers, 1: incoming message and 2: last received message
+// tempCharPtr is used to swap between the two message buffers
+volatile char messageBuffer1[INCOMING_MESSAGE_LENGTH];
+volatile char messageBuffer2[INCOMING_MESSAGE_LENGTH];
 volatile char * tempCharPtr;
-volatile char * rxBufferPtr = charArray1;
-volatile char * receivedMessagePtr = charArray2;
+volatile char * rxBufferPtr = messageBuffer1;
+volatile char * receivedMessagePtr = messageBuffer2;
+
+// Flags are set asynchronously in uart.ino to begin processing their respective data
+// When receivedMessageValidFlag == true, rxBufferPtr holds a valid and unprocessed message from Pi
 volatile bool receivedMessageValidFlag = false;
-volatile unsigned long previous_activation_time = 0;
-volatile bool movementFlag = false; // Prevents END_TURN transmissions during movement function
-volatile bool buttonFlag = false; // Queues END_TURN transmission after movement function
-volatile bool errorFlag = false;
+volatile bool buttonFlag = false;  // Queues END_TURN transmission when the chess timer is pressed
+volatile bool errorFlag = false;  // Queues an error message transmission when an error occurs
 
 enum ArduinoState
 {
@@ -28,6 +32,7 @@ enum ArduinoState
   END_TURN = '2',
   ERROR = '3'
 };
+volatile char currentState = IDLE;
 
 enum MoveCommandType
 {
@@ -161,8 +166,8 @@ void setup()
 
 void loop()
 {
-  // Proccess the received message
-  if (receivedMessageValidFlag && !movementFlag)
+  // Process the received message
+  if (receivedMessageValidFlag)
   {
     receivedMessageValidFlag = false;
 
@@ -172,9 +177,7 @@ void loop()
         // Sends acknowledgement
         sendMessageToPi(currentState, receivedMessagePtr[5], errorCode);
 
-        movementFlag = true;
         makeMove(receivedMessagePtr);
-        movementFlag = false;
     }
     // Sends move success/error
     sendMessageToPi(currentState, receivedMessagePtr[5], errorCode);

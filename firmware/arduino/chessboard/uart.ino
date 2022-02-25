@@ -1,4 +1,5 @@
 char incomingByte;
+volatile unsigned long previousActivationTime = 0;
 
 int byteNum = -1; // -1 indicates that the start code hasn't been received
 
@@ -8,10 +9,10 @@ void chessTimerISR()
     unsigned long current_time = millis();
     
     // Check if the difference between button presses is longer than the debounce time
-    if (current_time - previous_activation_time > DEBOUNCE_TIME || 
-       (current_time < previous_activation_time && previous_activation_time - current_time > DEBOUNCE_TIME))
+    if (current_time - previousActivationTime > DEBOUNCE_TIME || 
+       (current_time < previousActivationTime && previousActivationTime - current_time > DEBOUNCE_TIME))
     {
-        previous_activation_time = current_time;
+        previousActivationTime = current_time;
         buttonFlag = true;
     }
 }
@@ -45,7 +46,7 @@ void serialEvent2()
         }
 
         // Check if the buffer is full, process input
-        if (byteNum  ==  6)
+        if (byteNum  ==  INCOMING_MESSAGE_LENGTH)
         {
             // Reset buffer position
             byteNum = -1;
