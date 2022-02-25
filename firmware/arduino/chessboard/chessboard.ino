@@ -175,12 +175,12 @@ void loop()
     if (validateMessageFromPi(receivedMessagePtr))
     { 
         // Sends acknowledgement
-        sendMessageToPi(currentState, receivedMessagePtr[5], errorCode);
+        sendMessageToPi(currentState, moveCount, errorCode);
 
         makeMove(receivedMessagePtr);
     }
     // Sends move success/error
-    sendMessageToPi(currentState, receivedMessagePtr[5], errorCode);
+    sendMessageToPi(currentState, moveCount, errorCode);
   }
 
   // Transmit button press
