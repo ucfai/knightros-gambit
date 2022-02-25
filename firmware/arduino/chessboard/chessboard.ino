@@ -20,10 +20,10 @@ volatile char * rxBufferPtr = messageBuffer1;
 volatile char * receivedMessagePtr = messageBuffer2;
 
 // Flags are set asynchronously in uart.ino to begin processing their respective data
-// When receivedMessageValidFlag == true, rxBufferPtr holds a valid and unprocessed message from Pi
+// When receivedMessageValidFlag == true, rxBufferPtr holds a complete and unprocessed message from Pi
 volatile bool receivedMessageValidFlag = false;
 volatile bool buttonFlag = false;  // Queues END_TURN transmission when the chess timer is pressed
-volatile bool errorFlag = false;  // Queues an error message transmission when an error occurs
+volatile bool uartMessageIncompleteFlag = false;  // Queues an error message when UART drops bytes
 
 enum ArduinoState
 {
@@ -184,14 +184,16 @@ void loop()
   }
 
   // Transmit button press
-  else if (buttonFlag)
+  if (buttonFlag)
   {
     sendMessageToPi(END_TURN, moveCount, 0);
     buttonFlag = false;
   }
-  else if (errorFlag)
+
+  // Transmit an error message if an incoming UART message is missing bytes
+  if (uartMessageIncompleteFlag)
   {
-    errorFlag = false;
+    uartMessageIncompleteFlag = false;
     sendMessageToPi(ERROR, moveCount, errorCode);
   }
 }

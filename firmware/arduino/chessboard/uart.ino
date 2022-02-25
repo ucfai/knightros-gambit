@@ -34,7 +34,7 @@ void serialEvent2()
             {
                 currentState = ERROR;
                 errorCode = INCOMPLETE_INSTRUCTION;
-                errorFlag = true;
+                uartMessageIncompleteFlag = true;
             }
 
             byteNum = 0;
