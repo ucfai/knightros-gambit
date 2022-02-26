@@ -5,6 +5,50 @@
 // UART
 #define RX2 16
 #define TX2 17
+#define INCOMING_MESSAGE_LENGTH 6
+
+// UART input and flags
+char moveCount;
+volatile char errorCode;
+
+// Create two message buffers, 1: incoming message and 2: last received message
+// tempCharPtr is used to swap between the two message buffers
+volatile char messageBuffer1[INCOMING_MESSAGE_LENGTH];
+volatile char messageBuffer2[INCOMING_MESSAGE_LENGTH];
+volatile char * tempCharPtr;
+volatile char * rxBufferPtr = messageBuffer1;
+volatile char * receivedMessagePtr = messageBuffer2;
+
+// Flags are set asynchronously in uart.ino to begin processing their respective data
+// When receivedMessageValidFlag == true, rxBufferPtr holds a complete and unprocessed message from Pi
+volatile bool receivedMessageValidFlag = false;
+volatile bool buttonFlag = false;  // Queues END_TURN transmission when the chess timer is pressed
+volatile bool uartMessageIncompleteFlag = false;  // Queues an error message when UART drops bytes
+
+enum ArduinoState
+{
+  IDLE = '0',
+  EXECUTING = '1',
+  END_TURN = '2',
+  ERROR = '3'
+};
+volatile char currentState = IDLE;
+
+enum MoveCommandType
+{
+  DIRECT = '0',
+  EDGES = '1',
+  ALIGN = '2'
+};
+
+enum ErrorCode
+{
+  NO_ERROR = '0',
+  INVALID_OP = '1',
+  INVALID_LOCATION = '2',
+  INCOMPLETE_INSTRUCTION = '3',
+  MOVEMENT_ERROR = '4'
+};
 
 // Electromagnet
 #define ELECTROMAGNET 23
@@ -129,6 +173,34 @@ void setup()
 
 void loop()
 {
-  
+  // Process the received message
+  if (receivedMessageValidFlag)
+  {
+    receivedMessageValidFlag = false;
 
+    currentState = EXECUTING;
+    if (validateMessageFromPi(receivedMessagePtr))
+    { 
+        // Sends acknowledgement
+        sendMessageToPi(currentState, moveCount, errorCode);
+
+        makeMove(receivedMessagePtr);
+    }
+    // Sends move success/error
+    sendMessageToPi(currentState, moveCount, errorCode);
+  }
+
+  // Transmit button press
+  if (buttonFlag)
+  {
+    sendMessageToPi(END_TURN, moveCount, 0);
+    buttonFlag = false;
+  }
+
+  // Transmit an error message if an incoming UART message is missing bytes
+  if (uartMessageIncompleteFlag)
+  {
+    uartMessageIncompleteFlag = false;
+    sendMessageToPi(ERROR, moveCount, errorCode);
+  }
 }
