@@ -51,13 +51,20 @@ enum ErrorCode
 };
 
 // Electromagnet
+// 127 is for 50% duty cycle, 255 is for 100% duty cycle
 #define ELECTROMAGNET 23
-#define PWM_HALF_SCALE 127 // 127 is for 50% duty cycle, 255 is for 100% duty cycle
+#define PWM_FULL 255
+#define PWM_HALF 127
+
+// PWM setup for EM
+#define EM_PWM_CHANNEL 0
+#define PWM_FREQUENCY 100
+#define PWM_RESOLUTION 8
 
 // Switches and buttons
-#define X_AXIS_MAX_ENDSTOP 18
-#define Y_AXIS_MAX_ENDSTOP 19
-#define X_AXIS_ZERO_ENDSTOP 34
+#define X_AXIS_MAX_ENDSTOP 36
+#define Y_AXIS_MAX_ENDSTOP 34
+#define X_AXIS_ZERO_ENDSTOP 39
 #define Y_AXIS_ZERO_ENDSTOP 35
 #define CHESS_TIMER_BUTTON 21
 
@@ -158,6 +165,10 @@ void setup()
 
   // Max position in terms of eighth steps
   maxPosition = 8 * stepsPerUnitSpace * TOTAL_UNITSPACES;
+
+  // Sets PWM constants and pin/channel assignments for ledcWrite use
+  ledcSetup(EM_PWM_CHANNEL, PWM_FREQUENCY, PWM_RESOLUTION);
+  ledcAttachPin(ELECTROMAGNET, EM_PWM_CHANNEL);
 
   // Homes the EM to the origin and sets currPositionX/Y to 0
   home();

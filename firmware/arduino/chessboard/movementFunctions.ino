@@ -22,7 +22,7 @@ void centerPiece()
     moveToFirstCircle();
 
     // Enable electromagnet
-    analogWrite(ELECTROMAGNET, PWM_HALF_SCALE);
+    ledcWrite(EM_PWM_CHANNEL, PWM_HALF);
 
     for (i = 0; i < NUM_CIRCLES; i++)
     {
