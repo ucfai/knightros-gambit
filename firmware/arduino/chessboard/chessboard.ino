@@ -51,13 +51,14 @@ enum ErrorCode
 };
 
 // Electromagnet
+// 127 is for 50% duty cycle, 255 is for 100% duty cycle
 #define ELECTROMAGNET 23
 #define PWM_FULL 255
-#define PWM_HALF 127 // 127 is for 50% duty cycle, 255 is for 100% duty cycle
+#define PWM_HALF 127
 
 // PWM setup for EM
-#define PWM_FREQUENCY 100
 #define EM_PWM_CHANNEL 0
+#define PWM_FREQUENCY 100
 #define PWM_RESOLUTION 8
 
 // Switches and buttons
