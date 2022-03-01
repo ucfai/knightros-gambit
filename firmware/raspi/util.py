@@ -170,6 +170,11 @@ def is_promotion(prev_board_fen, move):
            (move[3] in ('1', '8'))
 
 def parse_test_file(file):
+    """Parse provided test file and return a list of moves/messages depending on file type.
+
+    If file is ".pgn", returns a list of UCI moves. If file is ".txt", returns a list of `Message`.
+    If neither, raises ValueError.
+    """
     extension = os.path.splitext(file)[1]
     if extension not in (".pgn", ".txt"):
         raise ValueError(f"No support for files of type {extension}")
@@ -180,13 +185,14 @@ def parse_test_file(file):
     messages = []
     if extension == ".pgn":
         # Converts a pgn game string to a list of uci moves. 2nd line contains all moves.
-        uci_moves = [move for move in chess.pgn.read_game(io.StringIO(lines[1])).mainline_moves()]
-        # TODO: convert list of UCI moves to messages
+        messages = [
+            move.uci() for move in chess.pgn.read_game(io.StringIO(lines[1])).mainline_moves()
+        ]
     elif extension == ".txt":
         messages = [line for line in lines if ('%' not in line)]
         messages = [line.strip('\n') for line in messages if (line != '\n')]
 
-    return messages
+    return messages, extension
 
 def parse_args():
     parser = argparse.ArgumentParser(
