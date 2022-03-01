@@ -320,8 +320,9 @@ class Board:
         '''Prints board as 2d grid.
         '''
         # (0, 0) corresponds to a1, want to print s.t. a1 is bottom left, so reverse rows
-        chess_grid = self.engine.board_grids[-1]
-        chess_grid.reverse()
+        # Need to make an implicit copy so that we don't modify stored board grid
+        chess_grid = list(reversed(self.engine.board_grids[-1]))
+
         # 8 x 8 chess board
         for i in range(8):
             # Print row, then number indicating rank
