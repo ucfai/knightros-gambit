@@ -184,11 +184,12 @@ def parse_test_file(file):
 
     messages = []
     if extension == ".pgn":
-        # Converts a pgn game string to a list of uci moves. 2nd line contains all moves.
+        # Converts a pgn game string to a list of uci moves; 2nd line contains all moves
         messages = [
             move.uci() for move in chess.pgn.read_game(io.StringIO(lines[1])).mainline_moves()
         ]
     elif extension == ".txt":
+        # Converts a file of `Message` type moves with one message per line to a list
         messages = [line for line in lines if ('%' not in line)]
         messages = [line.strip('\n') for line in messages if (line != '\n')]
 
