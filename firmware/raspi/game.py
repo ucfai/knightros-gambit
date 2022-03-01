@@ -1,14 +1,12 @@
 '''Entry point for the Knightr0's Gambit software that controls automatic chessboard.
 '''
-
-import argparse
 import random
 import time
 
 from boardinterface import Board
 from player import CLHumanPlayer, StockfishPlayer
 from status import ArduinoStatus
-from util import parse_test_file
+from util import parse_test_file, parse_args
 
 def assign_piece_color():
     '''
@@ -69,39 +67,6 @@ def player_wants_rematch():
     '''
     # TODO: implement
     return False
-
-def parse_args():
-    parser = argparse.ArgumentParser(
-        description='These allow us to select how we want the game to be played',
-        epilog='''The default is to run the chess engine using inputs from player moves detected'''
-               '''by computer vision.''')
-    parser.add_argument('-p', '--playstyle',
-                        dest='playstyle',
-                        default='cli',
-                        help='specifies how human will interact with board during normal play. '
-                             'valid options: cli, otb, web, speech')
-
-    parser.add_argument('-d', '--debug',
-                        dest='debug',
-                        action='store_const',
-                        const=True,
-                        default=False,
-                        help='if True, allow sending arbitrary commands to board')
-
-    parser.add_argument('-t', '--test',
-                        dest='test',
-                        default='',
-                        help='if file <TEST> (*.pgn or *.txt) provided, parse program commands '
-                             'from specified file')
-
-    parser.add_argument('-m', '--microcontroller',
-                        dest='microcontroller',
-                        action='store_const',
-                        const=True,
-                        default=False,
-                        help='if True, sends commands over UART to Arduino')
-
-    return parser.parse_args()
 
 # TODO: abstract main program logic in here
 def run_user_interaction_loop():

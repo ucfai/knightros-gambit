@@ -1,5 +1,6 @@
 '''Helper file for miscellaneous utility classes and functions.
 '''
+import argparse
 import os
 import platform
 
@@ -183,3 +184,36 @@ def parse_test_file(file):
         print(extension)
 
     return messages
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description='These allow us to select how we want the game to be played',
+        epilog='''The default is to run the chess engine using inputs from player moves detected'''
+               '''by computer vision.''')
+    parser.add_argument('-p', '--playstyle',
+                        dest='playstyle',
+                        default='cli',
+                        help='specifies how human will interact with board during normal play. '
+                             'valid options: cli, otb, web, speech')
+
+    parser.add_argument('-d', '--debug',
+                        dest='debug',
+                        action='store_const',
+                        const=True,
+                        default=False,
+                        help='if True, allow sending arbitrary commands to board')
+
+    parser.add_argument('-t', '--test',
+                        dest='test',
+                        default='',
+                        help='if file <TEST> (*.pgn or *.txt) provided, parse program commands '
+                             'from specified file')
+
+    parser.add_argument('-m', '--microcontroller',
+                        dest='microcontroller',
+                        action='store_const',
+                        const=True,
+                        default=False,
+                        help='if True, sends commands over UART to Arduino')
+
+    return parser.parse_args()
