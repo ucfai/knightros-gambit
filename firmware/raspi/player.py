@@ -9,7 +9,7 @@ Note: To encapsulate player mechanics in Game class, all players accept a python
 # import torch
 
 # from mcts import MCTS
-from util import create_stockfish_wrapper
+from util import create_stockfish_wrapper, parse_test_file
 
 class StockfishPlayer:
     '''"AI" class that is a simple wrapper around the Stockfish engine.
@@ -70,7 +70,9 @@ class CLHumanPlayer:
 # class PhysicalHumanPlayer:
 #     def __init__(self):
 #         pass
-
+# TODO: think about handling backfill of promotion area if person made a promotion move.
+# If needed, backfill the promotion area (if possible).
+# board.backfill_promotion_area_from_graveyard(color, piece_type)
 
 # class WebHumanPlayer:
 #     def __init__(self):
@@ -110,14 +112,19 @@ class TestfilePlayer:
     # TODO: fix docstring
     '''"Human" class that allows playing with the chessboard through CLI.
     '''
-    def __init__(self):
-        self.uci_moves = []
-
-    def set_moves(self):
-        pass
+    def __init__(self, fname):
+        # Example testfile: 'testfiles/test1.txt'
+        self.messages, self.extension = parse_test_file(fname)
+        self.current_msg = 0
 
     def select_move(self, board):
-        pass
+        if self.current_msg >= len(self.messages):
+            return None
+
+        msg = self.messages[self.current_msg]
+        self.current_msg += 1
+
+        return msg
 
     def __str__(self):
         return "TestfilePlayer"

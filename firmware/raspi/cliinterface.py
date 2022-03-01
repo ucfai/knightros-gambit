@@ -33,7 +33,8 @@ def init_parameters():
         # Note: priority of modes of operation:
         # test > debug > cli == otb == web == speech
         if args.test:
-            return {"mode_of_interaction": "test", "fname": args.test, "players": [player.TestfilePlayer()]}
+            return {"mode_of_interaction": "test",
+                    "players": [player.TestfilePlayer(args.test)]}
 
         # Note: if args.debug specified, takes priority over other modes of operation.
         if args.debug:
@@ -57,41 +58,11 @@ def init_parameters():
                 "human_plays_white_pieces": human_plays_white_pieces,
                 "players": players}
 
-def add_test_file_messages_to_queue(params):
-    '''Add all messages from specified test file to the board move queue.
+def player_wants_rematch():
+    '''Skeleton method for querying player about rematch.
     '''
-    _, fname, board = params
-    # Example testfile: 'testfiles/test1.txt'
-    # Note: params[1] is filename of test file
-    messages, extension = parse_test_file(fname)
-    if extension == '.pgn':
-        # `messages` is a list of uci_moves
-        for uci_move in messages:
-            # Decompose each move into a `Message` type and add to board's message queue
-            board.send_move_to_board(uci_move)
-    elif extension == '.txt':
-        for message in messages:
-            board.add_message_to_queue(message)
-
-    return board
-
-def get_human_move(mode_of_interaction, board):
-    '''Handle human move based on specified mode of interaction.
-    '''
-    if mode_of_interaction == 'cli':
-        return CLHumanPlayer.select_move(board)
-    elif mode_of_interaction == 'over_the_board':
-        # TODO: think about handling backfill of promotion area if person made a promotion move.
-        # If needed, backfill the promotion area (if possible).
-        # board.backfill_promotion_area_from_graveyard(color, piece_type)
-        pass
-    else:
-        raise ValueError("Other modes of interaction are unimplemented")
-
-def get_ai_move(ai_player, board):
-    '''Handle AI move.
-    '''
-    return ai_player.select_move(board.engine.fen())
+    # TODO: implement
+    return False
 
 def main():
     '''Main driver loop for running Knightro's Gambit.
@@ -107,10 +78,8 @@ def main():
 
     if params["mode_of_interaction"] == "test":
         game = Game(params["mode_of_interaction"])
-        # board = add_test_file_messages_to_queue(params)
-        print(board.msg_queue)
         # TODO: Refactor to handle dispatching moves using the code in `process`.
-        raise ValueError("Test mode of interaction not yet implemented.")
+        # raise ValueError("Test mode of interaction not yet implemented.")
     elif params["mode_of_interaction"] == "debug":
         game = Game(params["mode_of_interaction"])
         # TODO: Implement debug mode of interaction
@@ -123,21 +92,45 @@ def main():
     # Main game loop
     current_player = 0
     players = params["players"]
+
+    # Show game at start before any moves are made
+    game.board.show_on_cli()
     while True:
+        # TODO: need to finish processing remainder of moves on the queue after last move
         made_move = game.process(players[current_player])
+
+        if made_move is None:
+            print("Finished parsing test file.")
+            return
 
         if made_move:
             # TODO: update this to use circular generator
             current_player = (current_player + 1) % len(players)
 
+            # Show game once after each move is made
+            game.board.show_on_cli()
+
         if game.is_game_over():
+            # Need to empty move queue to play out final captures, etc (if any) before ending
+            while game.board.msg_queue:
+                game.process(None)
+
+            print("\nGAME OVER: ", end="")
+            if game.winner() is None:
+                print("The game was a draw")
+            elif game.winner():
+                print("White won")
+            else:
+                print("Black won")
+
             if not player_wants_rematch():
                 print("Thanks for playing")
-                reset_board()
                 break  # Break out of main game loop
 
-            print("Ok, resetting board")
-            reset_board()
+            # TODO: Implement rematch capability
+            raise ValueError("Rematch not yet implemented")
+            # print("Ok, resetting board")
+            # reset_board()
 
 if __name__ == '__main__':
     main()
