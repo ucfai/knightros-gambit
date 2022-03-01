@@ -274,7 +274,7 @@ class Board:
         return self.engine.valid_moves_from_position()
 
     def send_message_to_arduino(self, msg):
-        '''Constructs and sends message according to pi-arduino message format doc.
+        '''Sends message according to pi-arduino message format doc.
         '''
         print(f"Sending message \"{str(msg)}\" to arduino")
 
