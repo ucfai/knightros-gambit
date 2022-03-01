@@ -481,6 +481,12 @@ class Board:
         instruction = Instruction(self.move_count, set_zero, op_code)
         self.msg_queue.append(instruction)
 
+    def add_message_to_queue(self, message, add_to_front=False):
+        if add_to_front:
+            self.msg_queue.appendleft(message)
+        else:
+            self.msg_queue.append(message)
+
     def backfill_promotion_area_from_graveyard(self, color, piece_type):
         '''
         color = 'w' or 'b'
