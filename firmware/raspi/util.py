@@ -1,7 +1,11 @@
 '''Helper file for miscellaneous utility classes and functions.
 '''
+import argparse
+import io
+import os
 import platform
 
+import chess.pgn
 from stockfish import Stockfish
 
 class BoardCell:
@@ -164,3 +168,62 @@ def is_promotion(prev_board_fen, move):
     # and vice versa for black.
     return (get_piece_info_from_square(move[:2], get_2d_board(prev_board_fen))[1] == 'p') and \
            (move[3] in ('1', '8'))
+
+def parse_test_file(file):
+    """Parse provided test file and return a list of moves/messages depending on file type.
+
+    If file is ".pgn", returns a list of UCI moves. If file is ".txt", returns a list of `Message`.
+    If neither, raises ValueError.
+    """
+    extension = os.path.splitext(file)[1]
+    if extension not in (".pgn", ".txt"):
+        raise ValueError(f"No support for files of type {extension}")
+
+    with open(file) as f:
+        lines = f.readlines()
+
+    messages = []
+    if extension == ".pgn":
+        # Converts a pgn game string to a list of uci moves; 2nd line contains all moves
+        messages = [
+            move.uci() for move in chess.pgn.read_game(io.StringIO(lines[1])).mainline_moves()
+        ]
+    elif extension == ".txt":
+        # Converts a file of `Message` type moves with one message per line to a list
+        messages = [line for line in lines if ('%' not in line)]
+        messages = [line.strip('\n') for line in messages if (line != '\n')]
+
+    return messages, extension
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description='These allow us to select how we want the game to be played',
+        epilog='''The default is to run the chess engine using inputs from player moves detected'''
+               '''by computer vision.''')
+    parser.add_argument('-p', '--playstyle',
+                        dest='playstyle',
+                        default='cli',
+                        help='specifies how human will interact with board during normal play. '
+                             'valid options: cli, otb, web, speech')
+
+    parser.add_argument('-d', '--debug',
+                        dest='debug',
+                        action='store_const',
+                        const=True,
+                        default=False,
+                        help='if True, allow sending arbitrary commands to board')
+
+    parser.add_argument('-t', '--test',
+                        dest='test',
+                        default='',
+                        help='if file <TEST> (*.pgn or *.txt) provided, parse program commands '
+                             'from specified file')
+
+    parser.add_argument('-m', '--microcontroller',
+                        dest='microcontroller',
+                        action='store_const',
+                        const=True,
+                        default=False,
+                        help='if True, sends commands over UART to Arduino')
+
+    return parser.parse_args()

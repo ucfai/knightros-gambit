@@ -274,7 +274,7 @@ class Board:
         return self.engine.valid_moves_from_position()
 
     def send_message_to_arduino(self, msg):
-        '''Constructs and sends message according to pi-arduino message format doc.
+        '''Sends message according to pi-arduino message format doc.
         '''
         print(f"Sending message \"{str(msg)}\" to arduino")
 
@@ -320,8 +320,9 @@ class Board:
         '''Prints board as 2d grid.
         '''
         # (0, 0) corresponds to a1, want to print s.t. a1 is bottom left, so reverse rows
-        chess_grid = self.engine.board_grids[-1]
-        chess_grid.reverse()
+        # Need to make an implicit copy so that we don't modify stored board grid
+        chess_grid = list(reversed(self.engine.board_grids[-1]))
+
         # 8 x 8 chess board
         for i in range(8):
             # Print row, then number indicating rank
@@ -479,6 +480,12 @@ class Board:
         self.move_count += 1
         instruction = Instruction(self.move_count, set_zero, op_code)
         self.msg_queue.append(instruction)
+
+    def add_message_to_queue(self, message, add_to_front=False):
+        if add_to_front:
+            self.msg_queue.appendleft(message)
+        else:
+            self.msg_queue.append(message)
 
     def backfill_promotion_area_from_graveyard(self, color, piece_type):
         '''

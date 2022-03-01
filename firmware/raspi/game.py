@@ -1,12 +1,12 @@
 '''Entry point for the Knightr0's Gambit software that controls automatic chessboard.
 '''
-
 import random
 import time
 
 from boardinterface import Board
 from player import CLHumanPlayer, StockfishPlayer
 from status import ArduinoStatus
+from util import parse_test_file, parse_args
 
 def assign_piece_color():
     '''
@@ -29,15 +29,11 @@ def is_human_turn_at_start():
             return True
         print("Please choose one of [w], [b], or [r].")
 
-def handle_human_move(mode_of_interaction, board):
+def get_human_move(mode_of_interaction, board):
     '''Handle human move based on specified mode of interaction.
     '''
     if mode_of_interaction == 'cli':
-        uci_move = CLHumanPlayer.select_move(board)
-        try:
-            board.send_move_to_board(uci_move)
-        except NotImplementedError as nie:
-            print(nie.__str__())
+        return CLHumanPlayer.select_move(board)
     elif mode_of_interaction == 'over_the_board':
         # TODO: think about handling backfill of promotion area if person made a promotion move.
         # If needed, backfill the promotion area (if possible).
@@ -46,13 +42,14 @@ def handle_human_move(mode_of_interaction, board):
     else:
         raise ValueError("Other modes of interaction are unimplemented")
 
-def handle_ai_move(ai_player, board):
+def get_ai_move(ai_player, board):
     '''Handle AI move.
     '''
-    uci_move = ai_player.select_move(board.engine.fen())
+    return ai_player.select_move(board.engine.fen())
+
+def send_move_to_board(uci_move, board):
     try:
         board.send_move_to_board(uci_move)
-        print(f"AI made move: {uci_move}")
     except NotImplementedError as nie:
         print(nie.__str__())
 
@@ -68,18 +65,96 @@ def player_wants_rematch():
     # TODO: implement
     return False
 
-def main():
-    '''Main driver loop for running Knightro's Gambit.
+# TODO: this makes implicit assumption that we do human vs. ai. Try to factor that out
+# TODO: convert to class based and store all passed parameters as class members
+def process(board, is_human_turn, mode_of_interaction, ai_player):
+    '''One iteration of main game loop.
+
+    Returns:
+        is_human_turn: boolean that is True if it is human turn. Return None if game is over.
     '''
-    random.seed()
+    # TODO: Handle game end condition here, rematch, termination, etc.
+    if board.engine.is_game_over():
+        # If game is over, return None for is_human_turn
+        return None
 
-    print("Welcome to Knightro's Gambit")
+    board_status = board.get_status_from_arduino()
+    print(f"Board Status: {board_status}")
 
-    # TODO: update this to handle physical, web, speech interaction
-    mode_of_interaction = 'cli'
+    if board_status.status == ArduinoStatus.EXECUTING_MOVE:
+        # Wait for move in progress to finish executing
+        time.sleep(1) # reduce the amount of polling while waiting for move to finish
 
-    # Get desired piece color for human. Can be white, black, or random.
-    is_human_turn = is_human_turn_at_start()
+        # TODO: This is just so we have game loop working, remove once we read from arduino
+        board.set_status_from_arduino(ArduinoStatus.IDLE,
+                                      board.msg_queue[0].move_count % 10,
+                                      None)
+        # Turn doesn't change, since we don't get next move if Arduino is still executing
+        return is_human_turn
+
+    if board_status.status == ArduinoStatus.ERROR:
+        # TODO: figure out edge/error cases and handle them here
+        raise ValueError("Unimplemented, need to handle errors")
+
+    if board_status.status == ArduinoStatus.IDLE:
+        if board.msg_queue:
+            # Arduino sends and receives move_count % 10, since it can only transmit one char for
+            # move count
+            if all([board_status.move_count == board.msg_queue[0].move_count % 10,
+                    board_status.status == ArduinoStatus.IDLE]):
+                board.msg_queue.popleft()
+
+        if board.msg_queue:
+            board.dispatch_msg_from_queue()
+            # If moves still in queue, we just try to empty queue, don't get any new move
+            return is_human_turn
+
+        board.show_on_cli()
+
+        if is_human_turn:
+            uci_move = get_human_move(mode_of_interaction, board)
+        else:
+            uci_move = get_ai_move(ai_player, board)
+
+        send_move_to_board(uci_move, board)
+
+        player = "Player" if is_human_turn else "AI"
+        print(f"{player} made move: {uci_move}")
+        # TODO: After every move, center piece that was just moved on its new square. Need to
+        # account for castles as well.
+
+        # Status.write_game_status_to_disk(board)
+
+        # If we got here, we added a new move to the move queue, so we flip turn
+        return not is_human_turn
+
+def add_test_file_messages_to_queue(params):
+    '''Add all messages from specified test file to the board move queue.
+    '''
+    _, fname, board = params
+    # Example testfile: 'testfiles/test1.txt'
+    # Note: params[1] is filename of test file
+    messages, extension = parse_test_file(fname)
+    if extension == '.pgn':
+        # `messages` is a list of uci_moves
+        for uci_move in messages:
+            # Decompose each move into a `Message` type and add to board's message queue
+            board.send_move_to_board(uci_move)
+    elif extension == '.txt':
+        for message in messages:
+            board.add_message_to_queue(message)
+
+    return board
+
+def init_parameters():
+    args = parse_args()
+
+    # TODO: Find better way to initialize board if running in test or debug mode.
+    if args.test or args.debug:
+        is_human_turn = True
+    else:
+        # Get desired piece color for human. Can be white, black, or random.
+        is_human_turn = is_human_turn_at_start()
 
     # TODO: Set up board with either white or black on human side.
     board = Board(human_plays_white_pieces=is_human_turn)
@@ -88,18 +163,59 @@ def main():
     # TODO: remove this after real Arduino communication is set up
     board.set_status_from_arduino(ArduinoStatus.IDLE, 0, None)
 
+    # Note: priority of modes of operation:
+    # test > debug > cli == otb == web == speech
+    if args.test:
+        return ("test", args.test, board)
+
+    # Note: if args.debug specified, takes priority over other modes of operation.
+    if args.debug:
+        return ("debug", board)
+
+    mode_of_interaction = args.playstyle
     if mode_of_interaction == "cli":
         print("Using CLI mode of interaction for human player")
+    # TODO: update this to handle physical, web, speech interaction
     else:
         raise ValueError("Other modes of interaction are unimplemented")
-    # TODO: update this to handle physical, web, speech interaction
 
     ai_player = StockfishPlayer(elo_rating=1400)
 
+    # TODO: update program to handle otb communication and play.
+    if args.microcontroller:
+        raise ValueError("Serial communication not yet implemented.")
+
+    return (mode_of_interaction, is_human_turn, board, ai_player)
+
+def main():
+    '''Main driver loop for running Knightro's Gambit.
+    '''
+    # Set random seed for program
+    random.seed()
+
+    print("Welcome to Knightro's Gambit")
+
+    params = init_parameters()
+    mode_of_interaction = params[0]
+    print(f"\nRUNNING IN {mode_of_interaction.upper()} MODE...\n")
+
+    if mode_of_interaction == "test":
+        board = add_test_file_messages_to_queue(params)
+        print(board.msg_queue)
+        # TODO: Refactor to handle dispatching moves using the code in `process`.
+        raise ValueError("Test mode of interaction not yet implemented.")
+    elif mode_of_interaction == "debug":
+        # TODO: Implement debug mode of interaction
+        # Should be able to use process with human as both players
+        raise ValueError("Debug mode of interaction not yet implemented.")
+    elif mode_of_interaction in ("cli", "otb", "web", "speech"):
+        _, is_human_turn, board, ai_player = params
+
     # Main game loop
-    while True:
-        # TODO: Handle game end condition here, rematch, termination, etc.
-        if board.engine.is_game_over():
+    while is_human_turn is not None:
+        is_human_turn = process(board, is_human_turn, mode_of_interaction, ai_player)
+
+        if is_human_turn is None:
             if not player_wants_rematch():
                 print("Thanks for playing")
                 reset_board()
@@ -107,47 +223,6 @@ def main():
 
             print("Ok, resetting board")
             reset_board()
-
-        board_status = board.get_status_from_arduino()
-        print(f"Board Status: {board_status}")
-
-        if board_status.status == ArduinoStatus.EXECUTING_MOVE:
-            # Wait for move in progress to finish executing
-            time.sleep(1) # reduce the amount of polling while waiting for move to finish
-
-            # TODO: This is just so we have game loop working, remove once we read from arduino
-            board.set_status_from_arduino(ArduinoStatus.IDLE,
-                                          board.msg_queue[0].move_count % 10,
-                                          None)
-            continue
-
-        if board_status.status == ArduinoStatus.ERROR:
-            # TODO: figure out edge/error cases and handle them here
-            raise ValueError("Unimplemented, need to handle errors")
-
-        if board_status.status == ArduinoStatus.IDLE:
-            if board.msg_queue:
-                # Arduino sends and receives move_count % 10, since it can only transmit one char for
-                # move count
-                if all([board_status.move_count == board.msg_queue[0].move_count % 10,
-                        board_status.status == ArduinoStatus.IDLE]):
-                    board.msg_queue.popleft()
-
-            if board.msg_queue:
-                board.dispatch_msg_from_queue()
-                continue
-
-            board.show_on_cli()
-
-            if is_human_turn:
-                handle_human_move(mode_of_interaction, board)
-            else:
-                handle_ai_move(ai_player, board)
-            # TODO: After every move, center piece that was just moved on its new square. Need to
-            # account for castles as well.
-
-            is_human_turn = not is_human_turn
-            # Status.write_game_status_to_disk(board)
 
 if __name__ == '__main__':
     main()
