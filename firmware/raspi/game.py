@@ -128,29 +128,33 @@ def process(board, is_human_turn, mode_of_interaction, ai_player):
         # If we got here, we added a new move to the move queue, so we flip turn
         return not is_human_turn
 
-# TODO: abstract test file logic in here
-def run_test_file():
-    pass
+def add_test_file_messages_to_queue(params):
+    '''Add all messages from specified test file to the board move queue.
+    '''
+    _, fname, board = params
+    # Example testfile: 'testfiles/test1.txt'
+    # Note: params[1] is filename of test file
+    messages, extension = parse_test_file(fname)
+    if extension == '.pgn':
+        # `messages` is a list of uci_moves
+        for uci_move in messages:
+            # Decompose each move into a `Message` type and add to board's message queue
+            board.send_move_to_board(uci_move)
+    elif extension == '.txt':
+        for message in messages:
+            board.add_message_to_queue(message)
+
+    return board
 
 def init_parameters():
     args = parse_args()
-    if args.test:
-        # Example testfile: 'testfiles/test1.txt'
-        test_messages = parse_test_file(args.test)
 
-    mode_of_interaction = args.playstyle
-    if mode_of_interaction == "cli":
-        print("Using CLI mode of interaction for human player")
-    # TODO: update this to handle physical, web, speech interaction
+    # TODO: Find better way to initialize board if running in test or debug mode.
+    if args.test or args.debug:
+        is_human_turn = True
     else:
-        raise ValueError("Other modes of interaction are unimplemented")
-
-    # TODO: update program to handle otb communication and play.
-    if args.microcontroller:
-        raise ValueError("Serial communication not yet implemented.")
-
-    # Get desired piece color for human. Can be white, black, or random.
-    is_human_turn = is_human_turn_at_start()
+        # Get desired piece color for human. Can be white, black, or random.
+        is_human_turn = is_human_turn_at_start()
 
     # TODO: Set up board with either white or black on human side.
     board = Board(human_plays_white_pieces=is_human_turn)
@@ -159,9 +163,29 @@ def init_parameters():
     # TODO: remove this after real Arduino communication is set up
     board.set_status_from_arduino(ArduinoStatus.IDLE, 0, None)
 
+    # Note: priority of modes of operation:
+    # test > debug > cli == otb == web == speech
+    if args.test:
+        return ("test", args.test, board)
+
+    # Note: if args.debug specified, takes priority over other modes of operation.
+    if args.debug:
+        return ("debug", board)
+
+    mode_of_interaction = args.playstyle
+    if mode_of_interaction == "cli":
+        print("Using CLI mode of interaction for human player")
+    # TODO: update this to handle physical, web, speech interaction
+    else:
+        raise ValueError("Other modes of interaction are unimplemented")
+
     ai_player = StockfishPlayer(elo_rating=1400)
 
-    return mode_of_interaction, is_human_turn, board, ai_player
+    # TODO: update program to handle otb communication and play.
+    if args.microcontroller:
+        raise ValueError("Serial communication not yet implemented.")
+
+    return (mode_of_interaction, is_human_turn, board, ai_player)
 
 def main():
     '''Main driver loop for running Knightro's Gambit.
@@ -170,8 +194,23 @@ def main():
     random.seed()
 
     print("Welcome to Knightro's Gambit")
-    mode_of_interaction, is_human_turn, board, ai_player = init_parameters()
-    
+
+    params = init_parameters()
+    mode_of_interaction = params[0]
+    print(f"\nRUNNING IN {mode_of_interaction.upper()} MODE...\n")
+
+    if mode_of_interaction == "test":
+        board = add_test_file_messages_to_queue(params)
+        print(board.msg_queue)
+        # TODO: Refactor to handle dispatching moves using the code in `process`.
+        raise ValueError("Test mode of interaction not yet implemented.")
+    elif mode_of_interaction == "debug":
+        # TODO: Implement debug mode of interaction
+        # Should be able to use process with human as both players
+        raise ValueError("Debug mode of interaction not yet implemented.")
+    elif mode_of_interaction in ("cli", "otb", "web", "speech"):
+        _, is_human_turn, board, ai_player = params
+
     # Main game loop
     while is_human_turn is not None:
         is_human_turn = process(board, is_human_turn, mode_of_interaction, ai_player)
