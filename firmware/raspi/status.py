@@ -7,6 +7,7 @@ class ArduinoStatus:
     EXECUTING_MOVE = '1'
     END_TURN_BUTTON_PRESSED = '2'
     ERROR = '3'
+    MESSAGE_LENGTH = 4
 
     def __init__(self, status, move_count, extra):
         self.status = status
@@ -88,6 +89,8 @@ class OpCode:
         ALIGN_AXIS,
         SET_ELECTROMAGNET,
         RETRANSMIT_LAST_MSG)
+
+    MESSAGE_LENGTH = 7
 
 class ArduinoException(Exception):
     '''Helper class for custom Arduino exceptions.
