@@ -69,6 +69,11 @@ class Engine:
         '''
         return self.chess_board.fen()
 
+    def is_white_turn(self):
+        '''Return True if it is white's turn, False otherwise.
+        '''
+        return self.chess_board.turn
+
     @staticmethod
     def is_promotion(uci_move):
         '''Returns boolean indicating if uci_move is a promotion.

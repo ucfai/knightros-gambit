@@ -16,6 +16,19 @@ class Game:
         # TODO: remove this after real Arduino communication is set up
         self.board.set_status_from_arduino(ArduinoStatus.IDLE, 0, None)
 
+    def current_fen(self):
+        return self.board.engine.fen()
+
+    def is_white_turn(self):
+        '''Return True if it is white's turn, False otherwise.
+        '''
+        return self.board.engine.is_white_turn()
+
+    def last_made_move(self):
+        if len(self.board.engine.move_stack):
+            return None
+        return self.board.engine.peek().uci()
+
     def is_game_over(self):
         return self.board.engine.is_game_over()
 
