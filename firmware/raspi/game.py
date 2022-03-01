@@ -65,6 +65,7 @@ def player_wants_rematch():
     # TODO: implement
     return False
 
+# TODO: this makes implicit assumption that we do human vs. ai. Try to factor that out
 # TODO: convert to class based and store all passed parameters as class members
 def process(board, is_human_turn, mode_of_interaction, ai_player):
     '''One iteration of main game loop.
