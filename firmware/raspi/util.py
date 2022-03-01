@@ -1,9 +1,11 @@
 '''Helper file for miscellaneous utility classes and functions.
 '''
 import argparse
+import io
 import os
 import platform
 
+import chess.pgn
 from stockfish import Stockfish
 
 class BoardCell:
@@ -168,20 +170,21 @@ def is_promotion(prev_board_fen, move):
            (move[3] in ('1', '8'))
 
 def parse_test_file(file):
+    extension = os.path.splitext(file)[1]
+    if extension not in (".pgn", ".txt"):
+        raise ValueError(f"No support for files of type {extension}")
+
     with open(file) as f:
         lines = f.readlines()
 
     messages = []
-    extension = os.path.splitext(file)[1]
     if extension == ".pgn":
-        # TODO: need to generate list of `Message`s to make
-        print("pgn")
+        # Converts a pgn game string to a list of uci moves. 2nd line contains all moves.
+        uci_moves = [move for move in chess.pgn.read_game(io.StringIO(lines[1])).mainline_moves()]
+        # TODO: convert list of UCI moves to messages
     elif extension == ".txt":
-        print("txt")
         messages = [line for line in lines if ('%' not in line)]
         messages = [line.strip('\n') for line in messages if (line != '\n')]
-    else:
-        print(extension)
 
     return messages
 
