@@ -193,17 +193,6 @@ class Board:
         self.msg_queue = deque()
         self.human_plays_white_pieces = human_plays_white_pieces
 
-    def send_move_to_board(self, uci_move):
-        '''Validate move and send to board interface.
-        '''
-        if self.is_valid_move(uci_move):
-            self.make_move(uci_move)
-        else:
-            # TODO: do error handling
-            raise NotImplementedError("Need to handle case of invalid move input. "
-                                      "Should we loop until move is valid? What if "
-                                      "the board is messed up? Need to revisit.")
-
     # TODO: Figure out mechanics of how this works. Want the message retransmitted before we do
     # anything else, but don't necessarily want to have this count as a "Move".
     def retransmit_last_msg(self):
