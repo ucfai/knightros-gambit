@@ -1,5 +1,6 @@
 '''Helper file for miscellaneous utility classes and functions.
 '''
+import os
 import platform
 
 from stockfish import Stockfish
@@ -164,3 +165,21 @@ def is_promotion(prev_board_fen, move):
     # and vice versa for black.
     return (get_piece_info_from_square(move[:2], get_2d_board(prev_board_fen))[1] == 'p') and \
            (move[3] in ('1', '8'))
+
+def parse_test_file(file):
+    with open(file) as f:
+        lines = f.readlines()
+
+    messages = []
+    extension = os.path.splitext(file)[1]
+    if extension == ".pgn":
+        # TODO: need to generate list of `Message`s to make
+        print("pgn")
+    elif extension == ".txt":
+        print("txt")
+        messages = [line for line in lines if ('%' not in line)]
+        messages = [line.strip('\n') for line in messages if (line != '\n')]
+    else:
+        print(extension)
+
+    return messages
