@@ -104,11 +104,35 @@ class Engine:
         # If human plays white pieces, then the middle of square "a1" corresponds to BoardCell
         # (5, 5) and the middle of "h8" corresponds to BoardCell (19, 19). Vice versa for black
         # pieces. Below logic converts chess coordinates to board coordinates.
+        
+        # TODO: remove magic numbers
         if self.human_plays_white_pieces:
-            return util.BoardCell((sq_to_xy.row * 2) + 5, (sq_to_xy.col * 2) + 5)
+            return util.BoardCell(19 - (sq_to_xy.row * 2), 19 - (sq_to_xy.col * 2))
 
-        return util.BoardCell(19 - (sq_to_xy.row * 2), 19 - (sq_to_xy.col * 2))
+        return util.BoardCell((sq_to_xy.row * 2) + 5, (sq_to_xy.col * 2) + 5)
 
+    def get_chess_sq_from_boardcell(self, boardcell):
+        '''Returns string representing chess sq from board cell.
+
+        If either of boardcell.row or boardcell.col are not odd (which corresponds to center of a
+            chess square, raises a value error.
+        '''
+        if (boardcell.row % 2 == 0) or (boardcell.col % 2 == 0):
+            raise ValueError("Expected a boardcell corresponding to center of chess sq, but got "
+                            f"{boardcell}")
+
+        # TODO: remove magic numbers
+        if self.human_plays_white_pieces:
+            row = int((19 - boardcell.row) / 2)
+            col = int((19 - boardcell.col) / 2)
+        else:
+            row = int((boardcell.row - 5) / 2)
+            col = int((boardcell.col - 5) / 2)
+
+        print(boardcell.col, boardcell.row)
+        print(col, row)
+        return chr(col + ord('a')) + chr(row + ord('1'))
+        
     @staticmethod
     def get_chess_coords_from_uci_move(uci_move):
         '''Returns tuple of BoardCells w.r.t. 8x8 chess grid.
@@ -191,7 +215,10 @@ class Board:
 
         self.graveyard = Graveyard()
         self.msg_queue = deque()
-        self.human_plays_white_pieces = human_plays_white_pieces
+        if human_plays_white_pieces is None:
+            self.human_plays_white_pieces = True
+        else:
+            self.human_plays_white_pieces = human_plays_white_pieces
 
     # TODO: Figure out mechanics of how this works. Want the message retransmitted before we do
     # anything else, but don't necessarily want to have this count as a "Move".
@@ -465,14 +492,13 @@ class Board:
         '''Increment move count and add Move to self.msg_queue.
         '''
         self.move_count += 1
-        move = Move(self.move_count, source, dest, op_code)
+        move = Move(self.move_count % 2, source, dest, op_code)
         self.msg_queue.append(move)
 
-    def add_instruction_to_queue(self, op_code, set_zero=False):
-        '''Increment move count and add Instruction to self.msg_queue.
+    def add_instruction_to_queue(self, op_type, op_code, set_zero=False):
+        '''Add Instruction to self.msg_queue.
         '''
-        self.move_count += 1
-        instruction = Instruction(self.move_count, set_zero, op_code)
+        instruction = Instruction(op_type, set_zero, op_code)
         self.msg_queue.append(instruction)
 
     def add_message_to_queue(self, message, add_to_front=False):
@@ -544,7 +570,7 @@ class Message:
     Should create an instance of Move or Instruction as needed.
 
     Attributes:
-        move_count: int specifying move number in current game. Note, a single chess move may
+        move_count: char specifying move number in current game. Note, a single chess move may
             be composed of multiple Move objects. For example, a capture is one Move to send
             the captured piece to the graveyard, and another to move the capturing piece to
             the new square.
@@ -577,7 +603,7 @@ class Move(Message):
         # converted back on the Arduino side.
         source_str = chr(self.source.row + ord('A')) + chr(self.source.col + ord('A'))
         dest_str = chr(self.dest.row + ord('A')) + chr(self.dest.col + ord('A'))
-        return f"~{self.op_code}{source_str}{dest_str}{self.move_count % 10}"
+        return f"~{self.op_code}{source_str}{dest_str}{self.move_count}"
 
 class Instruction(Message):
     """Wrapper class for instruction type messages.
@@ -588,10 +614,11 @@ class Instruction(Message):
         set_zero: bool flag used for ALIGN_AXIS and SET_ELECTROMAGNET. See OpCode for more info.
         op_code: OpCode specifying how piece should be moved.
     """
-    def __init__(self, move_count, set_zero, op_code):
-        super().__init__(move_count, op_code)
+    def __init__(self, op_type, set_zero, op_code):
+        super().__init__(move_count=op_type, op_code=op_code)
         self.set_zero = set_zero
 
     def __str__(self):
         set_zero = "0" if self.set_zero else "1"
-        return f"~{self.op_code}{set_zero}000{self.move_count % 10}"
+        # Note: move_count is not an integer, it is a char describing type of instruction.
+        return f"~{self.op_code}{set_zero}000{self.move_count}"

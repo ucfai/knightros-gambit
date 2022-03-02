@@ -2,9 +2,10 @@
 '''
 import time
 
-from boardinterface import Board
+from boardinterface import Board, Instruction, Move
 from player import CLHumanPlayer, StockfishPlayer
-from status import ArduinoStatus, OpCode
+from status import ArduinoStatus, OpCode, OpType
+import util
 
 class Game:
     def __init__(self, mode_of_interaction, human_plays_white_pieces=None):    
@@ -41,6 +42,18 @@ class Game:
         # TODO: implement
         print("Resetting board")
 
+    def send_uci_move_to_board(self, uci_move):
+        if self.board.is_valid_move(uci_move):
+            try:
+                self.board.make_move(uci_move)
+            except NotImplementedError as nie:
+                # TODO: update this to do some actual error handling
+                raise NotImplementedError(nie.__str__())
+        else:
+            raise NotImplementedError("Need to handle case of invalid move input. "
+                                      "Should we loop until move is valid? What if "
+                                      "the board is messed up? Need to revisit.")
+
     # TODO: this makes implicit assumption that we do human vs. ai. Try to factor that out
     # TODO: convert to class based and store all passed parameters as class members
     def process(self, player):
@@ -62,7 +75,7 @@ class Game:
 
             # TODO: This is just so we have game loop working, remove once we read from arduino
             self.board.set_status_from_arduino(ArduinoStatus.IDLE,
-                                               self.board.msg_queue[0].move_count % 10,
+                                               self.board.msg_queue[0].move_count,
                                                None)
             # Turn doesn't change, since we don't get next move if Arduino is still executing
             return False
@@ -73,9 +86,21 @@ class Game:
 
         if board_status.status == ArduinoStatus.IDLE:
             if self.board.msg_queue:
-                # Arduino sends and receives move_count % 10, since it can only transmit one char for
-                # move count
-                if all([board_status.move_count == self.board.msg_queue[0].move_count % 10,
+                # Arduino sends and receives move_count % 2, for normal move type messages, since
+                # it only needs move_count as a form of acknowledgement.
+                # Note: debug messages (such as retransmit) are added to message queue as a string.
+                # If the move count returned in ArduinoStatus is debug type, just check last char
+                # of most recent msg on queue for equality. Otherwise, check that the move count
+                # matches move count % 2 (as this is the outgoing format for move count)
+
+                # TODO: Update this to handle adding arbitrary string messages to queue.
+                # Probably need to update the Message class to handle being created from a string.
+
+                # if any([
+                #     all([board_status.move_count in ArduinoStatus.DEBUG_IDENTIFIERS,
+                #          board_status.move_count == self.board.msg_queue[0].move_count]),
+                #     board_status.move_count == self.board.msg_queue[0].move_count % 2]):
+                if all([board_status.move_count == self.board.msg_queue[0].move_count,
                         board_status.status == ArduinoStatus.IDLE]):
                     self.board.msg_queue.popleft()
                     print("Removed message from queue")
@@ -88,34 +113,48 @@ class Game:
                 return False
 
             # TODO: verify this works with different modes of interaction
-            message = player.select_move(self.board.engine)
+            msg = player.select_move(self.board.engine)
 
-            if message is None:
-                # If message is None, we have run out of moves in our test file, returning None
+            if msg is None:
+                # If msg is None, we have run out of moves in our test file, returning None
                 # indicates this is the case.
                 return None
-            # message can be a UCI move, or it can be a fully formatted `Message` string
-            if len(message) in (4, 5):
-                if self.board.is_valid_move(message):
-                    try:
-                        self.board.make_move(message)
-                    except NotImplementedError as nie:
-                        # TODO: update this to do some actual error handling
-                        raise NotImplementedError(nie.__str__())
+            # msg can be a UCI move, or it can be a fully formatted `Message` string
+            if len(msg) in (4, 5):
+                self.send_uci_move_to_board(msg)
+            elif len(msg) == OpCode.MESSAGE_LENGTH:
+                # Decompose each move into a `Message` type and add to board's msg queue
+                op_code = msg[1]
+                if op_code in OpCode.UCI_MOVE_OPCODES:
+                    # TODO: need to handle promotions here; maybe also needs to be updated
+                    # in general for the opcodes. This section has to be more fleshed out.
+                    start_bc = util.BoardCell(ord(msg[2]) - ord('A'), ord(msg[3]) - ord('A'))
+                    end_bc = util.BoardCell(ord(msg[4]) - ord('A'), ord(msg[5]) - ord('A'))
+                    # If black pieces are facing player, need to transpose board cells.
+                    if not self.board.human_plays_white_pieces:
+                        start_bc = util.transpose_boardcell(start_bc)
+                        end_bc = util.transpose_boardcell(end_bc)
+                    # TODO: if human_plays_white_pieces is false, need to flip boardcell diagonally
+                    self.board.add_move_to_queue(start_bc, end_bc, op_code)
+                    return False
+                elif op_code == OpCode.INSTRUCTION:
+                    # Note: Instruction type opcodes are added to front of queue as they take
+                    # priority. Ex: want to request home axis before sending any other msgs.
+                    self.board.add_message_to_queue(Instruction(op_type=msg[-1],
+                                                                set_zero=msg[2],
+                                                                op_code=op_code),
+                                                    add_to_front=True)
+                    return False
                 else:
-                    raise NotImplementedError("Need to handle case of invalid move input. "
-                                              "Should we loop until move is valid? What if "
-                                              "the board is messed up? Need to revisit.")
-            elif len(message) == OpCode.MESSAGE_LENGTH:
-                # Decompose each move into a `Message` type and add to board's message queue
-                self.board.add_message_to_queue(message)
+                    raise ValueError(f"Couldn't parse message {msg}")
+
             else:
-                raise ValueError(f"Received invalid message {message}")
+                raise ValueError(f"Received invalid message {msg}")
 
             # TODO: After every move, center piece that was just moved on its new square. Need to
             # account for castles as well.
 
-            print(f"{player} made move: {message}")
+            print(f"{player} made move: {msg}")
 
             # Status.write_game_status_to_disk(board)
 
