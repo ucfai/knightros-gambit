@@ -189,6 +189,9 @@ def parse_test_file(file):
             move.uci() for move in chess.pgn.read_game(io.StringIO(lines[1])).mainline_moves()
         ]
     elif extension == ".txt":
+        print("Note: When sending debug messages to board or using a test file that is comprised "
+              "of `Message` type messages, updating and maintaining game state is not supported.\n"
+              "It is required that all messages in a .txt testfile are valid.")
         # Converts a file of `Message` type moves with one message per line to a list
         messages = [line for line in lines if ('%' not in line)]
         messages = [line.strip('\n') for line in messages if (line != '\n')]
@@ -227,3 +230,12 @@ def parse_args():
                         help='if True, sends commands over UART to Arduino')
 
     return parser.parse_args()
+
+def transpose_board_cell(boardcell, human_plays_white_pieces):
+    """Transpose board cell from white pieces on human side (default) to black on human side.
+
+    If you transpose a board cell twice, you get the original location.
+    Treating this function as `f(x)`, can show that `f^-1(x) == f(x)`. So to go from one
+    to the other, can just call this function again (e.g. f(f^-1(x)) == x).
+    """
+    return BoardCell(24 - boardcell.row, 24 - boardcell.col)
