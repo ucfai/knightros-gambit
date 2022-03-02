@@ -71,26 +71,27 @@ class OpCode:
         MOVE_PIECE_ALONG_SQUARE_EDGES,
         ALIGN_PIECE_ON_SQUARE)
 
+    # OpCode that specifies Arduino should perform a non-UCI move action
+    INSTRUCTION = '3'
+
+    MESSAGE_LENGTH = 7
+
+class OpType:
     # This code indicates Arduino should align an axis
     # Setting first info bit (e.g. msg[2]) to '0' indicates aligning to zero, '1' indicates
     # aligning to max
-    ALIGN_AXIS = '3'
+    ALIGN_AXIS = '1'
 
     # This code indicates Arduino should set the state of the electromagnet
     # Setting first info bit (e.g. msg[2]) to '0' indicates OFF, '1' indicates ON
-    SET_ELECTROMAGNET = '4'
+    SET_ELECTROMAGNET = '2'
 
     # This code indicates Arduino should retransmit last message
     # This code used when a corrupted or misaligned message is received
-    RETRANSMIT_LAST_MSG = '5'
+    RETRANSMIT_LAST_MSG = '3'
 
-    # OpCodes that specify Arduino should perform a non-UCI move action
-    INSTRUCTION_OPCODES = (
-        ALIGN_AXIS,
-        SET_ELECTROMAGNET,
-        RETRANSMIT_LAST_MSG)
-
-    MESSAGE_LENGTH = 7
+    # Tuple of all OpTypes, used for checking membership
+    VALID_OPS = (ALIGN_AXIS, SET_ELECTROMAGNET, RETRANSMIT_LAST_MSG)
 
 class ArduinoException(Exception):
     '''Helper class for custom Arduino exceptions.
