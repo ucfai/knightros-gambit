@@ -1,8 +1,10 @@
+'''CLI entry point for the Knightr0's Gambit software that controls automatic chessboard.
+'''
 import random
 
 from game import Game
 import player
-from util import parse_test_file, parse_args
+from util import parse_args
 
 # TODO: make this function have a better name; it doesn't just return bool, it also assigns color.
 def is_human_turn_at_start():
@@ -20,6 +22,15 @@ def is_human_turn_at_start():
         print("Please choose one of [w], [b], or [r].")
 
 def init_parameters():
+    """Initialize parameters needed to create Game object.
+
+    Return value depends on mode of operation. All return values are dictionaries.
+    All return values include:
+        mode_of_interaction: Used in initializing Game object.
+        players: Main program loop iterates over this array and processes each player in turn.
+    If neither of args.test or args.debug are specified, dict also includes:
+        human_plays_white_pieces: bool used to specify orientation of board.
+    """
     args = parse_args()
 
     # TODO: update program to handle otb communication and play.
@@ -51,12 +62,14 @@ def init_parameters():
             raise ValueError("Other modes of interaction are unimplemented")
 
         players = [player.CLHumanPlayer(), player.StockfishPlayer(elo_rating=1400)]
-        if not is_human_turn_at_start:
+        if not human_plays_white_pieces:
             players.reverse()
 
         return {"mode_of_interaction": mode_of_interaction,
-                "human_plays_white_pieces": human_plays_white_pieces,
-                "players": players}
+                "players": players,
+                "human_plays_white_pieces": human_plays_white_pieces}
+
+    raise ValueError("Error parsing parameters...")
 
 def player_wants_rematch():
     '''Skeleton method for querying player about rematch.

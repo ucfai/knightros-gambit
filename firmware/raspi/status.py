@@ -1,3 +1,6 @@
+"""Helper class storing status messages used in Arduino/Raspi communication.
+"""
+
 class ArduinoStatus:
     '''Wrapper around messages received from Arduino.
     # TODO: add in some more documentation here w.r.t. message formatting.
@@ -34,6 +37,8 @@ class ArduinoStatus:
         return ""
 
     def is_valid_code(self, code):
+        """Returns True if provided code is a valid ArduinoStatus code, else False.
+        """
         return code in (ArduinoStatus.IDLE,
                         ArduinoStatus.EXECUTING_MOVE,
                         ArduinoStatus.END_TURN_BUTTON_PRESSED,
@@ -77,6 +82,8 @@ class OpCode:
     MESSAGE_LENGTH = 7
 
 class OpType:
+    '''Enum of op types used to provide information about OpCode.INSTRUCTION types.
+    '''
     # This code indicates Arduino should align an axis
     # Setting first info bit (e.g. msg[2]) to '0' indicates aligning to zero, '1' indicates
     # aligning to max

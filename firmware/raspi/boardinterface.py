@@ -7,7 +7,7 @@ from collections import deque
 
 import chess
 
-from status import ArduinoException, ArduinoStatus, OpCode
+from status import ArduinoException, ArduinoStatus, OpCode, OpType
 import util
 # import serial
 
@@ -119,7 +119,7 @@ class Engine:
         '''
         if (boardcell.row % 2 == 0) or (boardcell.col % 2 == 0):
             raise ValueError("Expected a boardcell corresponding to center of chess sq, but got "
-                            f"{boardcell}")
+                             f"{boardcell}")
 
         # TODO: remove magic numbers
         if self.human_plays_white_pieces:
@@ -132,7 +132,7 @@ class Engine:
         print(boardcell.col, boardcell.row)
         print(col, row)
         return chr(col + ord('a')) + chr(row + ord('1'))
-        
+
     @staticmethod
     def get_chess_coords_from_uci_move(uci_move):
         '''Returns tuple of BoardCells w.r.t. 8x8 chess grid.
@@ -225,7 +225,7 @@ class Board:
     def retransmit_last_msg(self):
         """Create message to request Arduino retransmit last message and add to msg_queue.
         """
-        self.add_instruction_to_queue(OpCode.RETRANSMIT_LAST_MSG)
+        self.add_instruction_to_queue(OpType.RETRANSMIT_LAST_MSG, OpCode.INSTRUCTION)
 
     def set_electromagnet(self, off):
         """Create message to set state of electromagnet and add to msg_queue.
@@ -233,7 +233,7 @@ class Board:
         Attributes:
             off: boolean, if True, turns electromagnet off, else on.
         """
-        self.add_instruction_to_queue(OpCode.SET_ELECTROMAGNET, off)
+        self.add_instruction_to_queue(OpType.SET_ELECTROMAGNET, OpCode.INSTRUCTION, off)
 
     def align_axis(self, align_to_zero):
         """Create message to align axis and add to msg_queue.
@@ -241,7 +241,7 @@ class Board:
         Attributes:
             off: boolean, if True, aligns axis to zero, else to max position.
         """
-        self.add_instruction_to_queue(OpCode.ALIGN_AXIS, align_to_zero)
+        self.add_instruction_to_queue(OpType.ALIGN_AXIS, OpCode.INSTRUCTION, align_to_zero)
 
     def make_move(self, uci_move):
         ''' This function assumes that is_valid_move has been called for the uci_move.
@@ -502,6 +502,10 @@ class Board:
         self.msg_queue.append(instruction)
 
     def add_message_to_queue(self, message, add_to_front=False):
+        """Add a message directly to the queue.
+
+        Can specify whether to add to the left (at front of queue), or right (at end).
+        """
         if add_to_front:
             self.msg_queue.appendleft(message)
         else:

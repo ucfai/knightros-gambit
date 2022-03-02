@@ -118,6 +118,9 @@ class TestfilePlayer:
         self.current_msg = 0
 
     def select_move(self, board):
+        """Iterates through `messages` array and returns next move.
+        """
+        # TODO: Update this to use a generator.
         if self.current_msg >= len(self.messages):
             return None
 

@@ -1,14 +1,21 @@
-'''Entry point for the Knightr0's Gambit software that controls automatic chessboard.
+'''Main game class that serves as backend for controlling automatic chessboard.
+
+Can be used with multiple different front end options, `cliinterface.py`, many others still being
+developed (web, speech, otb).
 '''
 import time
 
-from boardinterface import Board, Instruction, Move
-from player import CLHumanPlayer, StockfishPlayer
-from status import ArduinoStatus, OpCode, OpType
+from boardinterface import Board, Instruction
+from status import ArduinoStatus, OpCode
 import util
 
 class Game:
-    def __init__(self, mode_of_interaction, human_plays_white_pieces=None):    
+    """Main game class. All frontends should have an instance of this class.
+
+    The main program logic is in the `process` function. `process` should be called in a loop in
+    the frontend code.
+    """
+    def __init__(self, mode_of_interaction, human_plays_white_pieces=None):
         self.mode_of_interaction = mode_of_interaction
         # TODO: Set up board with either white or black on human side.
         self.board = Board(human_plays_white_pieces)
@@ -18,9 +25,13 @@ class Game:
         self.board.set_status_from_arduino(ArduinoStatus.IDLE, 0, None)
 
     def winner(self):
+        """Returns None if draw or still in progress, True if white won, False if black won.
+        """
         return self.board.engine.outcome()
 
     def current_fen(self):
+        """Returns current board fen string.
+        """
         return self.board.engine.fen()
 
     def is_white_turn(self):
@@ -29,20 +40,26 @@ class Game:
         return self.board.engine.is_white_turn()
 
     def last_made_move(self):
-        if len(self.board.engine.move_stack):
+        """Returns the last made move, if applicable. If no moves have been made, returns None.
+        """
+        if self.board.engine.chess_board.move_stack:
             return None
-        return self.board.engine.peek().uci()
+        return self.board.engine.chess_board.peek().uci()
 
     def is_game_over(self):
-        return self.board.engine.is_game_over()
+        """Returns True if the game is over.
+        """
+        return self.board.engine.chess_board.is_game_over()
 
-    def reset_board():
+    def reset_board(self):
         '''Skeleton method for resetting board after play.
         '''
         # TODO: implement
         print("Resetting board")
 
     def send_uci_move_to_board(self, uci_move):
+        """Validates uci move, and sends to board if valid.
+        """
         if self.board.is_valid_move(uci_move):
             try:
                 self.board.make_move(uci_move)
@@ -137,7 +154,7 @@ class Game:
                     # TODO: if human_plays_white_pieces is false, need to flip boardcell diagonally
                     self.board.add_move_to_queue(start_bc, end_bc, op_code)
                     return False
-                elif op_code == OpCode.INSTRUCTION:
+                if op_code == OpCode.INSTRUCTION:
                     # Note: Instruction type opcodes are added to front of queue as they take
                     # priority. Ex: want to request home axis before sending any other msgs.
                     self.board.add_message_to_queue(Instruction(op_type=msg[-1],
@@ -145,8 +162,7 @@ class Game:
                                                                 op_code=op_code),
                                                     add_to_front=True)
                     return False
-                else:
-                    raise ValueError(f"Couldn't parse message {msg}")
+                raise ValueError(f"Couldn't parse message {msg}")
 
             else:
                 raise ValueError(f"Received invalid message {msg}")
@@ -160,6 +176,8 @@ class Game:
 
             # If we got here, we added a new move to the move queue, so we flip turn
             return True
+
+        raise ValueError("We shouldn't reach this point in the function.")
 
 if __name__ == '__main__':
     print("No main for this file, please use `cliinterface.py`")

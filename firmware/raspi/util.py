@@ -169,18 +169,18 @@ def is_promotion(prev_board_fen, move):
     return (get_piece_info_from_square(move[:2], get_2d_board(prev_board_fen))[1] == 'p') and \
            (move[3] in ('1', '8'))
 
-def parse_test_file(file):
+def parse_test_file(fname):
     """Parse provided test file and return a list of moves/messages depending on file type.
 
-    If file is ".pgn", returns a list of UCI moves. If file is ".txt", returns a list of `Message`.
-    If neither, raises ValueError.
+    If file type is ".pgn", returns a list of UCI moves. If file type is ".txt", returns a list
+    of `Message`. If neither, raises ValueError.
     """
-    extension = os.path.splitext(file)[1]
+    extension = os.path.splitext(fname)[1]
     if extension not in (".pgn", ".txt"):
         raise ValueError(f"No support for files of type {extension}")
 
-    with open(file) as f:
-        lines = f.readlines()
+    with open(fname) as file:
+        lines = file.readlines()
 
     messages = []
     if extension == ".pgn":
@@ -193,12 +193,17 @@ def parse_test_file(file):
               "of `Message` type messages, updating and maintaining game state is not supported.\n"
               "It is required that all messages in a .txt testfile are valid.")
         # Converts a file of `Message` type moves with one message per line to a list
-        messages = [line for line in lines if ('%' not in line)]
-        messages = [line.strip('\n') for line in messages if (line != '\n')]
+        messages = [line for line in lines if '%' not in line]
+        messages = [line.strip('\n') for line in messages if line != '\n']
 
     return messages, extension
 
 def parse_args():
+    """Parse command line arguments.
+
+    Note about priority of modes of operation:
+        test > debug > cli == otb == web == speech
+    """
     parser = argparse.ArgumentParser(
         description='These allow us to select how we want the game to be played',
         epilog='''The default is to run the chess engine using inputs from player moves detected'''
@@ -231,7 +236,7 @@ def parse_args():
 
     return parser.parse_args()
 
-def transpose_board_cell(boardcell, human_plays_white_pieces):
+def transpose_board_cell(boardcell):
     """Transpose board cell from white pieces on human side (default) to black on human side.
 
     If you transpose a board cell twice, you get the original location.
