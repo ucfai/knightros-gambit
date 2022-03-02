@@ -97,7 +97,7 @@ def main():
         game = Game(params["mode_of_interaction"])
         # TODO: Implement debug mode of interaction
         # Should be able to use process with human as both players
-        raise ValueError("Debug mode of interaction not yet implemented.")
+        # raise ValueError("Debug mode of interaction not yet implemented.")
     elif params["mode_of_interaction"] in ("cli", "otb", "web", "speech"):
         game = Game(params["mode_of_interaction"], params["human_plays_white_pieces"])
         # _, human_plays_white_pieces, board, ai_player = params

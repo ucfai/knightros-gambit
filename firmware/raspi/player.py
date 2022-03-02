@@ -9,6 +9,7 @@ Note: To encapsulate player mechanics in Game class, all players accept a python
 # import torch
 
 # from mcts import MCTS
+from status import OpCode
 from util import create_stockfish_wrapper, parse_test_file
 
 class StockfishPlayer:
@@ -95,15 +96,19 @@ class CLDebugPlayer:
 
         '''Prompts user to select a move.
         '''
+        msg = None
         # uci_move = None
-        # while uci_move is None:
-        #     input_move = input("Please input your move (xyxy): ").lower()
-        #     if board.is_valid_move(input_move):
-        #         uci_move = input_move
-        #     else:
-        #         print(f"The move {input_move} is invalid; please use format (xyxy) e.g., d2d4")
-        # return uci_move
-        pass
+        while msg is None:
+            input_move = input("Please input your move (xyxy): ").lower()
+            if len(input_move) in (4, 5) and board.is_valid_move(input_move):
+                msg = input_move
+                break
+            elif len(input_move) == OpCode.MESSAGE_LENGTH:
+                msg = input_move
+                break
+            print(f"The move {input_move} is invalid. Please enter a uci move (xyxy) or an "
+                   "opcode type message (~<OPCODE>xxxx<MOVE_COUNT>).")
+        return msg
 
     def __str__(self):
         return "CLDebugPlayer"
