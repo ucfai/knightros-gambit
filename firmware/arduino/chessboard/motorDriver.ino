@@ -172,9 +172,6 @@ uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
   int *currentMotorPos;
   int startCol, startRow;
 
-  // Assigned at the end of each movement function to be checked for error handling
-  uint8_t statusCodeResult;
-
   // Checks if the EM is aligned properly
   if ((currPositionX % stepsPerUnitSpace) || (currPositionY % stepsPerUnitSpace))
   {
@@ -248,14 +245,6 @@ uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
   *currentMotorPos += (eighthStepsPerPulse * numSteps);
 
   return SUCCESS;
-
-  // Error code handling
-  statusCodeResult = moveStraight(motor, endRow, endCol);
-
-  if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
-  {
-    return false;
-  }
 }
 
 // Moves the magnet from the "start" point to the "end" point
@@ -270,7 +259,6 @@ uint8_t moveDiagonal(int endCol, int endRow)
   int eighthStepsPerPulseX, eighthStepsPerPulseY;
   int i;
   int startRow, startCol;
-  uint8_t statusCodeResult;
 
   // Checks if the EM is aligned properly
   if ((currPositionX % stepsPerUnitSpace) || (currPositionY % stepsPerUnitSpace))
@@ -356,12 +344,4 @@ uint8_t moveDiagonal(int endCol, int endRow)
   currPositionY += (eighthStepsPerPulseY * numStepsX);
 
   return SUCCESS;
-
-  // Error code handling
-  statusCodeResult = moveDiagonal(endRow, endCol);
-
-  if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
-  {
-    return false;
-  }
 }

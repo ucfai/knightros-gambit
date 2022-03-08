@@ -38,36 +38,35 @@ void centerPiece()
     digitalWrite(ELECTROMAGNET, LOW);
 }
 
-// The handler function that acts on different error codes output by movement primitives
+// Handles error codes passed in and predecated by the returns of relevant movement functions
+// Must take in an error code to work properly, returns true by default
 bool statusCodeHandler(uint8_t status)
 {
     if (status == HIT_POS_X_ENDSTOP)
     {
         alignAxis(xMotor, MAX_POSITION);
-        return true;
     }
     else if (status == HIT_POS_Y_ENDSTOP)
     {
         alignAxis(yMotor, MAX_POSITION);
-        return true;
     }
     else if (status == HIT_NEG_X_ENDSTOP)
     {
         alignAxis(xMotor, ZERO_POSITION);
-        return true;
     }
     else if (status == HIT_NEG_Y_ENDSTOP)
     {
         alignAxis(yMotor, ZERO_POSITION);
-        return true;
     }
     else if (status == INVALID_ALIGNMENT)
     {
         home();
-        return true;
     }
     else if (status == INVALID_ARGS)
     {
         return false;
     }
+
+    return true;
+
 }
