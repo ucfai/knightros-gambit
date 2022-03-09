@@ -38,7 +38,7 @@ void centerPiece()
     digitalWrite(ELECTROMAGNET, LOW);
 }
 
-// Handles error codes passed in and predecated by the returns of relevant movement functions
+// Handles error codes passed in by the returns of relevant movement functions
 // Must take in an error code to work properly, returns true by default
 bool statusCodeHandler(uint8_t status)
 {
