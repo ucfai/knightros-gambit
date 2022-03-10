@@ -62,11 +62,11 @@ bool statusCodeHandler(uint8_t status)
     {
         home();
     }
-    else if (status == INVALID_ARGS)
+    // Returns false if status code not one of those handled above, e.g. INVALID_ARGS, or if status code is invalid
+    else
     {
         return false;
     }
-
+    
     return true;
-
 }
