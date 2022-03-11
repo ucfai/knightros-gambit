@@ -37,3 +37,36 @@ void centerPiece()
     // Turn electromagnet off
     digitalWrite(ELECTROMAGNET, LOW);
 }
+
+// Handles error codes passed in by the returns of relevant movement functions
+// Must take in an error code to work properly, returns true by default
+bool statusCodeHandler(uint8_t status)
+{
+    if (status == HIT_POS_X_ENDSTOP)
+    {
+        alignAxis(xMotor, MAX_POSITION);
+    }
+    else if (status == HIT_POS_Y_ENDSTOP)
+    {
+        alignAxis(yMotor, MAX_POSITION);
+    }
+    else if (status == HIT_NEG_X_ENDSTOP)
+    {
+        alignAxis(xMotor, ZERO_POSITION);
+    }
+    else if (status == HIT_NEG_Y_ENDSTOP)
+    {
+        alignAxis(yMotor, ZERO_POSITION);
+    }
+    else if (status == INVALID_ALIGNMENT)
+    {
+        home();
+    }
+    // Returns false if status code not one of those handled above, e.g. INVALID_ARGS, or if status code is invalid
+    else
+    {
+        return false;
+    }
+    
+    return true;
+}
