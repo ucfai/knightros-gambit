@@ -1,14 +1,19 @@
-% this file corresponds to test1.pgn
+% this file corresponds to test1.pgn with some added instructions for turning electromagnet on and
+% off and requesting message retransmission
 
 % TEST STARTS HERE
 % TestfilePlayer made move: e2e4
 ~0HNLN1
 % TestfilePlayer made move: e7e5
 ~0RNNN0
+% Toggle EM on
+~310002
 % TestfilePlayer made move: f1c4
 ~0FPLJ1
 % TestfilePlayer made move: g8f6
 ~1TRPP0
+% Toggle EM off
+~310002
 % TestfilePlayer made move: d1f3
 ~0FLJP1
 % TestfilePlayer made move: f6e4

@@ -1,3 +1,6 @@
+"""Helper class storing status messages used in Arduino/Raspi communication.
+"""
+
 class ArduinoStatus:
     '''Wrapper around messages received from Arduino.
     # TODO: add in some more documentation here w.r.t. message formatting.
@@ -7,6 +10,7 @@ class ArduinoStatus:
     EXECUTING_MOVE = '1'
     END_TURN_BUTTON_PRESSED = '2'
     ERROR = '3'
+    MESSAGE_LENGTH = 4
 
     def __init__(self, status, move_count, extra):
         self.status = status
@@ -33,6 +37,8 @@ class ArduinoStatus:
         return ""
 
     def is_valid_code(self, code):
+        """Returns True if provided code is a valid ArduinoStatus code, else False.
+        """
         return code in (ArduinoStatus.IDLE,
                         ArduinoStatus.EXECUTING_MOVE,
                         ArduinoStatus.END_TURN_BUTTON_PRESSED,
@@ -70,24 +76,29 @@ class OpCode:
         MOVE_PIECE_ALONG_SQUARE_EDGES,
         ALIGN_PIECE_ON_SQUARE)
 
+    # OpCode that specifies Arduino should perform a non-UCI move action
+    INSTRUCTION = '3'
+
+    MESSAGE_LENGTH = 7
+
+class OpType:
+    '''Enum of op types used to provide information about OpCode.INSTRUCTION types.
+    '''
     # This code indicates Arduino should align an axis
     # Setting first info bit (e.g. msg[2]) to '0' indicates aligning to zero, '1' indicates
     # aligning to max
-    ALIGN_AXIS = '3'
+    ALIGN_AXIS = '1'
 
     # This code indicates Arduino should set the state of the electromagnet
     # Setting first info bit (e.g. msg[2]) to '0' indicates OFF, '1' indicates ON
-    SET_ELECTROMAGNET = '4'
+    SET_ELECTROMAGNET = '2'
 
     # This code indicates Arduino should retransmit last message
     # This code used when a corrupted or misaligned message is received
-    RETRANSMIT_LAST_MSG = '5'
+    RETRANSMIT_LAST_MSG = '3'
 
-    # OpCodes that specify Arduino should perform a non-UCI move action
-    INSTRUCTION_OPCODES = (
-        ALIGN_AXIS,
-        SET_ELECTROMAGNET,
-        RETRANSMIT_LAST_MSG)
+    # Tuple of all OpTypes, used for checking membership
+    VALID_OPS = (ALIGN_AXIS, SET_ELECTROMAGNET, RETRANSMIT_LAST_MSG)
 
 class ArduinoException(Exception):
     '''Helper class for custom Arduino exceptions.
