@@ -10,7 +10,7 @@ class ButtonInfo:
         self.col = col
 
 class GUI:
-    def __init__(self, size=23, offset_size=3):
+    def __init__(self, size=23, offset_size=4):
         self.root = tkinter.Tk()
         self.root.title("OpCode Message generator")
         self.root.option_add("*font", 'Sans 15')
@@ -26,7 +26,7 @@ class GUI:
 
         # title label
         self.title_area = tkinter.Frame(self.root)
-        self.title = tkinter.Label(self.title_area, text="Hello Tkinter!")
+        self.title = tkinter.Label(self.title_area, text="")
         self.title.pack()
 
         # button grid
@@ -42,11 +42,11 @@ class GUI:
             button_row = []
             for j, col in enumerate(self.cols):
                 msg = f"{row}{col}"
-                if offset_size <= i < size - offset_size and offset_size <= j < size - offset_size:
+                if all([offset_size <= i < size - offset_size, i % 2 == 0, offset_size <= j < size - offset_size, j % 2 == 0]):
                     color = 'yellow'
                 else:
                     color = 'white'
-                buttonij = tkinter.Button(self.button_area, text=msg, bg=color, command=lambda tmp=msg, row=i, col=j: self.callable(tmp, row, col, self.button_grid))
+                buttonij = tkinter.Button(self.button_area, bg=color, command=lambda tmp=msg, row=i, col=j: self.callable(tmp, row, col, self.button_grid))
                 buttonij.grid(row=i, column=j)
                 # buttonij.bind("<Enter>", self.on_enter)
                 # buttonij.bind("<Leave>", self.on_leave)
@@ -93,7 +93,8 @@ class GUI:
         currop = self.variable.get()
         idx = self.opcodes.index(currop)
         if idx in (0, 1):
-            text = "Select two squares; an opcode will be generated from the first to the second square."
+            text = "Select two squares; an opcode will be generated from the first to the second square.\n" \
+                   "Note: the highlighted buttons represent the centers of chess squares."
         elif idx == 2:
             text = "Select a single square; an opcode will be generated to center the piece on that square."
         elif idx == 3:
