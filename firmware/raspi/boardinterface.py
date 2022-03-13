@@ -225,23 +225,37 @@ class Board:
     def retransmit_last_msg(self):
         """Create message to request Arduino retransmit last message and add to msg_queue.
         """
-        self.add_instruction_to_queue(OpType.RETRANSMIT_LAST_MSG, OpCode.INSTRUCTION)
+        self.add_instruction_to_queue(OpType.RETRANSMIT_LAST_MSG)
 
-    def set_electromagnet(self, off):
+    def set_electromagnet(self, turn_on):
         """Create message to set state of electromagnet and add to msg_queue.
 
         Attributes:
-            off: boolean, if True, turns electromagnet off, else on.
-        """
-        self.add_instruction_to_queue(OpType.SET_ELECTROMAGNET, OpCode.INSTRUCTION, off)
+            turn_on: char, if '0', turns electromagnet off, elif '1', on.
 
-    def align_axis(self, align_to_zero):
+        Raises:
+            ValueError if turn_on not in ('0', '1')
+        """
+        if turn_on not in ('0', '1'):
+            raise ValueError("Received unexpected code", turn_on)
+
+        self.add_instruction_to_queue(OpType.SET_ELECTROMAGNET, turn_on)
+
+    def align_axis(self, alignment_code):
         """Create message to align axis and add to msg_queue.
 
         Attributes:
-            off: boolean, if True, aligns axis to zero, else to max position.
+            alignment_code: char, '0' indicates aligning x axis to zero, '1' indicates aligning y
+                axis to zero, '2' indicates aligning x axis to max, '3' indicates aligning y axis
+                to max.
+
+        Raises:
+            ValueError if alignment_code not in ('0', '1', '2', '3')
         """
-        self.add_instruction_to_queue(OpType.ALIGN_AXIS, OpCode.INSTRUCTION, align_to_zero)
+        if alignment_code not in ('0', '1', '2', '3'):
+            raise ValueError("Received unexpected alignment_code", alignment_code)
+
+        self.add_instruction_to_queue(OpType.ALIGN_AXIS, alignment_code)
 
     def make_move(self, uci_move):
         ''' This function assumes that is_valid_move has been called for the uci_move.
@@ -495,11 +509,11 @@ class Board:
         move = Move(self.move_count % 2, source, dest, op_code)
         self.msg_queue.append(move)
 
-    def add_instruction_to_queue(self, op_type, op_code, set_zero=False):
+    def add_instruction_to_queue(self, op_type, extra='0'):
         '''Add Instruction to self.msg_queue.
         '''
-        instruction = Instruction(op_type, set_zero, op_code)
-        self.msg_queue.append(instruction)
+        instruction = Instruction(op_type, extra)
+        self.add_message_to_queue(instruction, add_to_front=True)
 
     def add_message_to_queue(self, message, add_to_front=False):
         """Add a message directly to the queue.
@@ -567,24 +581,7 @@ class Graveyard:
         else:
             raise ValueError("Cannot modify graveyard in increments greater than 1")
 
-class Message:
-    """Abstract base class for different message types sent to Arduino.
-
-    Note: This class should not be used directly!
-    Should create an instance of Move or Instruction as needed.
-
-    Attributes:
-        move_count: char specifying move number in current game. Note, a single chess move may
-            be composed of multiple Move objects. For example, a capture is one Move to send
-            the captured piece to the graveyard, and another to move the capturing piece to
-            the new square.
-        op_code: OpCode specifying how piece should be moved.
-    """
-    def __init__(self, move_count, op_code):
-        self.move_count = move_count
-        self.op_code = op_code
-
-class Move(Message):
+class Move:
     """Wrapper class for moves from specified source to dest.
 
     Attributes:
@@ -597,7 +594,9 @@ class Move(Message):
         op_code: OpCode specifying how piece should be moved.
     """
     def __init__(self, move_count, source, dest, op_code):
-        super().__init__(move_count, op_code)
+        # super().__init__(move_count, op_code)
+        self.move_count = move_count
+        self.op_code = op_code
         self.source = source
         self.dest = dest
 
@@ -609,20 +608,17 @@ class Move(Message):
         dest_str = chr(self.dest.row + ord('A')) + chr(self.dest.col + ord('A'))
         return f"~{self.op_code}{source_str}{dest_str}{self.move_count}"
 
-class Instruction(Message):
+class Instruction:
     """Wrapper class for instruction type messages.
 
     Attributes:
-        move_count: int specifying move number in current game. Each instruction increments the
-            number of moves in the game.
-        set_zero: bool flag used for ALIGN_AXIS and SET_ELECTROMAGNET. See OpCode for more info.
-        op_code: OpCode specifying how piece should be moved.
+        op_type: char describing type of instruction. See status.OpType.
+        extra: str field used for ALIGN_AXIS and SET_ELECTROMAGNET. See status.OpType.
     """
-    def __init__(self, op_type, set_zero, op_code):
-        super().__init__(move_count=op_type, op_code=op_code)
-        self.set_zero = set_zero
+    def __init__(self, op_type, extra='0'):
+        # super().__init__(move_count=op_type, op_code=op_code)
+        self.op_type = op_type
+        self.extra = extra
 
     def __str__(self):
-        set_zero = "0" if self.set_zero else "1"
-        # Note: move_count is not an integer, it is a char describing type of instruction.
-        return f"~{self.op_code}{set_zero}000{self.move_count}"
+        return f"~{OpCode.INSTRUCTION}{self.extra}000{self.op_type}"
