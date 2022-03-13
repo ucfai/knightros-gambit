@@ -48,8 +48,6 @@ class GUI:
                     color = 'white'
                 buttonij = tkinter.Button(self.button_area, bg=color, command=lambda tmp=msg, row=i, col=j: self.callable(tmp, row, col, self.button_grid))
                 buttonij.grid(row=i, column=j)
-                # buttonij.bind("<Enter>", self.on_enter)
-                # buttonij.bind("<Leave>", self.on_leave)
                 button_row.append(buttonij)
             self.button_grid.append(button_row)
 
@@ -102,7 +100,6 @@ class GUI:
             text = "Select an optype."
 
         self.title.configure(text=text)
-        # print("You changed the selection. The new selection is %s." % self.variable.get())
 
     def callable(self, msg, row, col, button_grid):
         # print(row, col)
