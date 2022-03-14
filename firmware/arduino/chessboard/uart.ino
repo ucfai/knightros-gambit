@@ -84,6 +84,15 @@ bool validateMessageFromPi(volatile char * message)
             return false;
         }
     }
+    else if (message[0] == INSTRUCTION)
+    {
+        if (message[2] < ALIGN_AXIS || message[2] > RETRANSMIT)
+        {
+            errorCode = INVALID_LOCATION;
+            currentState = ERROR;
+            return false;
+        }
+    }
     else
     {
         // Invalid opcode
@@ -131,6 +140,22 @@ bool makeMove(volatile char * message)
             return false;
         }
     }
+    // Move type 3 - special instructions
+    else if (message[0] == INSTRUCTION)
+    {
+        if (message[2] == ALIGN)
+        {
+
+        }
+        else if (message[2] == SET_ELECTROMAGNET)
+        {
+
+        }
+        else if (message[2] == RETRANSMIT)
+        {
+            sendMessageToPi(sentMessage);
+        }
+    }
     else
     {
         // Invalid opcode
@@ -145,12 +170,12 @@ bool makeMove(volatile char * message)
     return true;
 }
 
-void sendMessageToPi(volatile char status, char moveCount, char errorMessage)
+void sendMessageToPi(volatile char * message)
 {
     Serial2.write('~');
-    Serial2.write(status);
-    Serial2.write(errorMessage);
-    Serial2.write(moveCount);
+    Serial2.write(message[0]);
+    Serial2.write(message[2]);
+    Serial2.write(message[1]);
 }
 
 bool isInvalidCoord (volatile char c)
