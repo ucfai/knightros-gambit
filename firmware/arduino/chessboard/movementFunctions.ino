@@ -5,6 +5,67 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow)
 
 bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
 {
+    // There are 4 points total, but only 3 total for each x/y component
+    uint8_t rows[3], cols[3];
+    uint8_t dirX, dirY;
+    uint8_t statusCodeResult;
+
+    // Make initial move to first position. Move diagonally since it's faster.
+    statusCodeResult = moveDiagonal(startCol, startRow);
+    if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
+        return false;
+
+    // This type of move will always have a set of 4 moves:
+    // ====================================================
+    // 1. Move to edge from center of square
+    // 2. Move along X axis
+    // 3. Move along Y axis
+    // 4. Move to center of square from edge
+
+    // Calculate directions for x and y
+    dirX = (endCol > startCol) ? POS_DIR : NEG_DIR;
+    dirY = (endRow > startRow) ? POS_DIR : NEG_DIR;
+
+    // Calculate the points for each of the 4 moves listed above
+    // We use previously calculated points to calculate the next points, since they're on the same path
+    // Move 1
+    cols[0] = startCol + (dirX == POS_DIR) ? 1 : -1;
+    rows[0] = startRow + (dirY == POS_DIR) ? 1 : -1;
+
+    // Move 2
+    // Subtract two to account for moves 1 and 4 both moving one unitspace
+    cols[1] = cols[0] + (endCol - startCol - 2);
+
+    // Move 3
+    // Subtract two to account for moves 1 and 4 both moving one unitspace
+    rows[1] = rows[0] + (endRow - startRow - 2);
+
+    // Move 4
+    cols[2] = cols[1] + (dirX == POS_DIR) ? 1 : -1;
+    rows[2] = rows[1] + (dirY == POS_DIR) ? 1 : -1;
+
+    
+    // Use the calculated points and call the according movement functions
+    // Move 1
+    statusCodeResult = moveDiagonal(cols[0], rows[0]);
+    if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
+        return false;
+
+    // Move 2
+    statusCodeResult = moveStraight(xMotor, cols[1], rows[0]);
+    if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
+        return false;
+
+    // Move 3
+    statusCodeResult = moveStraight(yMotor, cols[1], rows[1]);
+    if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
+        return false;
+
+    // Move 3
+    statusCodeResult = moveDiagonal(cols[2], rows[2]);
+    if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
+        return false;
+
     return true;
 }
 
