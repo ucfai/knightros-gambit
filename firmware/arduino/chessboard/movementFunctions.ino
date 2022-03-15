@@ -1,5 +1,9 @@
 bool moveDirect(int startCol, int startRow, int endCol, int endRow)
 {
+    // TODO:
+    // Must account for diagonal and straight movement cases
+    // Must also return true if the current position is the target position 
+    // (Since no change is needed)
     return true;
 }
 
@@ -7,30 +11,38 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
 {
     // There are 4 points total, but only 3 total for each x/y component
     uint8_t rows[3], cols[3];
-    uint8_t dirX, dirY;
+    int8_t dirX, dirY;
     uint8_t statusCodeResult;
+    uint8_t curCol, curRow;
 
+    curCol = currPositionX / (stepsPerUnitSpace * 8);
+    curRow = currPositionY / (stepsPerUnitSpace * 8);
+
+    // If target point is equal to the start point
+    if (endCol == startCol  &&  endRow == startRow)
+        return true;
+    
     // Make initial move to first position. Move diagonally since it's faster.
-    statusCodeResult = moveDiagonal(startCol, startRow);
-    if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
+    if (!moveDirect(curCol, curRow, startCol, startRow))
         return false;
 
     // This type of move will always have a set of 4 moves:
     // ====================================================
     // 1. Move to edge from center of square
-    // 2. Move along X axis
-    // 3. Move along Y axis
+    // 2. Move along X axis (optional)
+    // 3. Move along Y axis (optional)
     // 4. Move to center of square from edge
+    // Steps 2 and 3 are considered optional because those moves may not exist
 
     // Calculate directions for x and y
-    dirX = (endCol > startCol) ? POS_DIR : NEG_DIR;
-    dirY = (endRow > startRow) ? POS_DIR : NEG_DIR;
+    dirX = (endCol > startCol) ? 1 : -1;
+    dirY = (endRow > startRow) ? 1 : -1;
 
     // Calculate the points for each of the 4 moves listed above
     // We use previously calculated points to calculate the next points, since they're on the same path
     // Move 1
-    cols[0] = startCol + (dirX == POS_DIR) ? 1 : -1;
-    rows[0] = startRow + (dirY == POS_DIR) ? 1 : -1;
+    cols[0] = startCol + dirX;
+    rows[0] = startRow + dirY;
 
     // Move 2
     // Subtract two to account for moves 1 and 4 both moving one unitspace
@@ -41,8 +53,8 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
     rows[1] = rows[0] + (endRow - startRow - 2);
 
     // Move 4
-    cols[2] = cols[1] + (dirX == POS_DIR) ? 1 : -1;
-    rows[2] = rows[1] + (dirY == POS_DIR) ? 1 : -1;
+    cols[2] = cols[1] + dirX;
+    rows[2] = rows[1] + dirY;
 
     
     // Use the calculated points and call the according movement functions
