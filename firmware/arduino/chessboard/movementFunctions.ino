@@ -10,9 +10,9 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow)
 bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
 {
     // There are 4 points total, but only 3 total for each x/y component
-    uint8_t rows[3], cols[3];
+    uint8_t rows[5], cols[5];
     int8_t dirX, dirY;
-    uint8_t statusCodeResult;
+    uint8_t i, statusCodeResult;
     uint8_t curCol, curRow;
 
     curCol = currPositionX / (stepsPerUnitSpace * 8);
@@ -39,22 +39,28 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
     dirY = (endRow > startRow) ? 1 : -1;
 
     // Calculate the points for each of the 4 moves listed above
-    // We use previously calculated points to calculate the next points, since they're on the same path
+    // We use previous points to calculate subsequent points, since they're on the same path
+    // Initial position
+    cols[0] = startCol;
+    rows[0] = startRow; 
+    
     // Move 1
-    cols[0] = startCol + dirX;
-    rows[0] = startRow + dirY;
+    cols[1] = cols[0] + dirX;
+    rows[1] = rows[0] + dirY;
 
     // Move 2
-    // Subtract two to account for moves 1 and 4 both moving one unitspace
-    cols[1] = cols[0] + (endCol - startCol - 2);
+    // Sutract two to account for moves 1 and 4 both moving one unitspace
+    cols[2] = cols[1] + (endCol - startCol - 2);
+    rows[2] = rows[1];
 
     // Move 3
     // Subtract two to account for moves 1 and 4 both moving one unitspace
-    rows[1] = rows[0] + (endRow - startRow - 2);
+    rows[3] = rows[2] + (endRow - startRow - 2);
+    cols[3] = cols[2];
 
     // Move 4
-    cols[2] = cols[1] + dirX;
-    rows[2] = rows[1] + dirY;
+    cols[4] = cols[3] + dirX;
+    rows[4] = rows[3] + dirY;
 
     
     // Use the calculated points and call the according movement functions
@@ -77,6 +83,25 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
     statusCodeResult = moveDiagonal(cols[2], rows[2]);
     if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
         return false;
+
+    // TODO:
+    // Remove magic number here
+    for (i = 1; i < 5; i++)
+    {
+        // TODO:
+        // This is where we can account for edge cases, by testing distance for example
+        // We should also make checks for when i == 2 or i == 3 specifically, since that's where we'll
+        // encounter either the horizontal or vertical travel being 0
+
+        // Note: rows[0] and cols[0] collectively store the start point requested by the function
+        // That allows us to modularly make the calls in a nice for-loop    
+        if (rows[i] == rows[i-1])
+            moveStraight(yMotor, cols[i], rows[i]);
+        else if (cols[i] == cols[i-1])
+            moveStraight(xMotor, cols[i], rows[i]);
+        else
+            moveDiagonal(cols[i], rows[i]);
+    }
 
     return true;
 }
