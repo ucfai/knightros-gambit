@@ -143,14 +143,29 @@ bool makeMove(volatile char * message)
     // Move type 3 - special instructions
     else if (message[0] == INSTRUCTION)
     {
+        // Align Axis
         if (message[2] == ALIGN)
         {
-
+          if (message[3] == '0')
+            alignAxis(xMotor, ZERO_POSITION);
+          else if (message[3] == '1')
+            alignAxis(yMotor, ZERO_POSITION);
+          else if (message[3] == '2')
+            alignAxis(xMotor, MAX_POSITION);
+          else if (message[3] == '3')
+            alignAxis(yMotor, MAX_POSITION);
         }
+
+        // Enable/Disable Electromagnet
         else if (message[2] == SET_ELECTROMAGNET)
         {
-
+          if (message[3] == '0')
+            digitalWrite(ELECTROMAGNET, LOW);
+          else if (message[3] == '1')
+            ledcWrite(EM_PWM_CHANNEL, PWM_HALF);
         }
+
+        // Retransmit last message
         else if (message[2] == RETRANSMIT)
         {
             sendMessageToPi(sentMessage);
