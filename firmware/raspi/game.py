@@ -5,7 +5,7 @@ developed (web, speech, otb).
 '''
 import time
 
-from boardinterface import Board, Instruction
+from boardinterface import Board
 from status import ArduinoStatus, OpCode
 import util
 
@@ -157,10 +157,7 @@ class Game:
                 if op_code == OpCode.INSTRUCTION:
                     # Note: Instruction type opcodes are added to front of queue as they take
                     # priority. Ex: want to request home axis before sending any other msgs.
-                    self.board.add_message_to_queue(Instruction(op_type=msg[-1],
-                                                                set_zero=msg[2],
-                                                                op_code=op_code),
-                                                    add_to_front=True)
+                    self.board.add_instruction_to_queue(op_type=msg[-1], extra=msg[2])
                     return False
                 raise ValueError(f"Couldn't parse message {msg}")
 
