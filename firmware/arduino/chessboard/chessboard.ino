@@ -52,7 +52,7 @@ enum ErrorCode
   MOVEMENT_ERROR = '4'
 };
 
-enum InstructionTypes
+enum InstructionType
 {
   ALIGN_AXIS = '1',
   SET_ELECTROMAGNET = '2',
