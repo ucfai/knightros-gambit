@@ -25,7 +25,7 @@ class BoardCell:
 
     def __str__(self):
         # TODO: Update this to have a clearer naming scheme for the indexing.
-        return f"{chr(self.row+ord('a'))}{chr(self.col+ord('a'))}"
+        return f"{chr(self.row + ord('a'))}{chr(self.col + ord('a'))}"
 
     def get_coords(self):
         '''Returns tuple of row and col indices.
@@ -77,23 +77,25 @@ def init_dead_piece_counts():
 def init_dead_piece_graveyards():
     '''Creates and returns a dictionary of BoardCell for each dead piece type.
     '''
+    # TODO: Initialization of the graveyard depends on orientation of the board. If human plays
+    # black pieces, this initialization needs to reflect that board configuration.
     dead_piece_graveyards = {}
-    dead_piece_graveyards["wq"] = [BoardCell(5, 21), BoardCell(9, 21), BoardCell(9, 23)]
-    dead_piece_graveyards["wb"] = [BoardCell(5, 23), BoardCell(11, 21), BoardCell(11, 23)]
-    dead_piece_graveyards["wn"] = [BoardCell(7, 21), BoardCell(13, 21), BoardCell(13, 23)]
-    dead_piece_graveyards["wr"] = [BoardCell(7, 23), BoardCell(15, 21), BoardCell(15, 23)]
+    dead_piece_graveyards["wq"] = [BoardCell(4, 20), BoardCell(8, 20), BoardCell(8, 22)]
+    dead_piece_graveyards["wb"] = [BoardCell(4, 22), BoardCell(10, 20), BoardCell(10, 22)]
+    dead_piece_graveyards["wn"] = [BoardCell(6, 20), BoardCell(12, 20), BoardCell(12, 22)]
+    dead_piece_graveyards["wr"] = [BoardCell(6, 22), BoardCell(14, 20), BoardCell(14, 22)]
     dead_piece_graveyards["wp"] = [
-        BoardCell(17, 21), BoardCell(17, 23), BoardCell(19, 21), BoardCell(19, 23),
-        BoardCell(21, 21), BoardCell(21, 23), BoardCell(23, 21), BoardCell(23, 23),
+        BoardCell(16, 20), BoardCell(16, 22), BoardCell(18, 20), BoardCell(18, 22),
+        BoardCell(20, 20), BoardCell(20, 22), BoardCell(22, 20), BoardCell(22, 22),
     ]
 
-    dead_piece_graveyards["bq"] = [BoardCell(5, 1), BoardCell(9, 1), BoardCell(9, 3)]
-    dead_piece_graveyards["bb"] = [BoardCell(5, 3), BoardCell(11, 1), BoardCell(11, 3)]
-    dead_piece_graveyards["bn"] = [BoardCell(7, 1), BoardCell(13, 1), BoardCell(13, 3)]
-    dead_piece_graveyards["br"] = [BoardCell(7, 3), BoardCell(15, 1), BoardCell(15, 3)]
+    dead_piece_graveyards["bq"] = [BoardCell(4, 0), BoardCell(8, 0), BoardCell(8, 2)]
+    dead_piece_graveyards["bb"] = [BoardCell(4, 2), BoardCell(10, 0), BoardCell(10, 2)]
+    dead_piece_graveyards["bn"] = [BoardCell(6, 0), BoardCell(12, 0), BoardCell(12, 2)]
+    dead_piece_graveyards["br"] = [BoardCell(6, 2), BoardCell(14, 0), BoardCell(14, 2)]
     dead_piece_graveyards["bp"] = [
-        BoardCell(17, 1), BoardCell(17, 3), BoardCell(19, 1), BoardCell(19, 3),
-        BoardCell(21, 1), BoardCell(21, 3), BoardCell(23, 1), BoardCell(23, 3),
+        BoardCell(16, 0), BoardCell(16, 2), BoardCell(18, 0), BoardCell(18, 2),
+        BoardCell(20, 0), BoardCell(20, 2), BoardCell(22, 0), BoardCell(22, 2),
     ]
 
     return dead_piece_graveyards
@@ -101,8 +103,8 @@ def init_dead_piece_graveyards():
 def init_capture_squares():
     '''Creates and returns two BoardCell objects corresponding to capture squares.
     '''
-    w_capture_sq = BoardCell(3, 3)
-    b_capture_sq = BoardCell(3, 21)
+    w_capture_sq = BoardCell(2, 2)
+    b_capture_sq = BoardCell(2, 20)
 
     return w_capture_sq, b_capture_sq
 
@@ -243,4 +245,10 @@ def transpose_board_cell(boardcell):
     Treating this function as `f(x)`, can show that `f^-1(x) == f(x)`. So to go from one
     to the other, can just call this function again (e.g. f(f^-1(x)) == x).
     """
-    return BoardCell(24 - boardcell.row, 24 - boardcell.col)
+    return BoardCell(Const.BOARD_SIZE - boardcell.row, Const.BOARD_SIZE - boardcell.col)
+
+class Const:
+    CELLS_PER_SQ = 2
+    OFFSET_SIZE = 4
+    BOARD_SIZE = 22
+    UPPER_RIGHT_OFFSET = BOARD_SIZE - OFFSET_SIZE

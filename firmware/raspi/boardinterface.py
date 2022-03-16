@@ -102,14 +102,19 @@ class Engine:
         # allows accessing the corners and edges of squares. This scheme is needed in order to
         # implement the cache_captured_piece function.
         # If human plays white pieces, then the middle of square "a1" corresponds to BoardCell
-        # (5, 5) and the middle of "h8" corresponds to BoardCell (19, 19). Vice versa for black
-        # pieces. Below logic converts chess coordinates to board coordinates.
+        # (util.Const.OFFSET_SIZE, util.Const.OFFSET_SIZE) and the middle of "h8" corresponds to
+        # BoardCell (util.Const.UPPER_RIGHT_OFFSET, util.Const.UPPER_RIGHT_OFFSET). Vice versa for
+        # black pieces. Below logic converts chess coordinates to board coordinates.
         
         # TODO: remove magic numbers
         if self.human_plays_white_pieces:
-            return util.BoardCell(19 - (sq_to_xy.row * 2), 19 - (sq_to_xy.col * 2))
+            return util.BoardCell(
+                (sq_to_xy.row * util.Const.CELLS_PER_SQ) + util.Const.OFFSET_SIZE,
+                (sq_to_xy.col * util.Const.CELLS_PER_SQ) + util.Const.OFFSET_SIZE)
 
-        return util.BoardCell((sq_to_xy.row * 2) + 5, (sq_to_xy.col * 2) + 5)
+        return util.BoardCell(
+            util.Const.UPPER_RIGHT_OFFSET - (sq_to_xy.row * util.Const.CELLS_PER_SQ),
+            util.Const.UPPER_RIGHT_OFFSET - (sq_to_xy.col * util.Const.CELLS_PER_SQ))
 
     def get_chess_sq_from_boardcell(self, boardcell):
         '''Returns string representing chess sq from board cell.
@@ -117,17 +122,17 @@ class Engine:
         If either of boardcell.row or boardcell.col are not odd (which corresponds to center of a
             chess square, raises a value error.
         '''
-        if (boardcell.row % 2 == 0) or (boardcell.col % 2 == 0):
+        if (boardcell.row % 2) or (boardcell.col % 2):
             raise ValueError("Expected a boardcell corresponding to center of chess sq, but got "
                              f"{boardcell}")
 
         # TODO: remove magic numbers
         if self.human_plays_white_pieces:
-            row = int((19 - boardcell.row) / 2)
-            col = int((19 - boardcell.col) / 2)
+            row = (util.Const.UPPER_RIGHT_OFFSET - boardcell.row) // util.Const.CELLS_PER_SQ
+            col = (util.Const.UPPER_RIGHT_OFFSET - boardcell.col) // util.Const.CELLS_PER_SQ
         else:
-            row = int((boardcell.row - 5) / 2)
-            col = int((boardcell.col - 5) / 2)
+            row = (boardcell.row - util.Const.OFFSET_SIZE) // util.Const.CELLS_PER_SQ
+            col = (boardcell.col - util.Const.OFFSET_SIZE) // util.Const.CELLS_PER_SQ
 
         print(boardcell.col, boardcell.row)
         print(col, row)
@@ -335,6 +340,7 @@ class Board:
     def show_w_graveyard_on_cli(self):
         '''Prints 2d grid of board, also showing which graveyard squares are occupied/empty.
         '''
+        # TODO: Implement this function
         print("Need to implement")
 
     def show_on_cli(self):
@@ -356,6 +362,8 @@ class Board:
             print(char, end='')
             print(" ", end='')
         print()
+
+        # TODO: update this to render upside down (e.g. black on user's side) if not human_plays_w
 
     # def setup_board(self, is_human_turn):
     #     ''' Set up board with black or white on human side, depending on value of is_human_turn.
