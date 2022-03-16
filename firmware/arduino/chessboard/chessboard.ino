@@ -203,16 +203,16 @@ void loop()
     { 
         // Sends acknowledgement
         sentMessage[0] = currentState;
-        sentMessage[1] = moveCount;
-        sentMessage[2] = errorCode;
+        sentMessage[1] = errorCode;
+        sentMessage[2] = moveCount;
         sendMessageToPi(sentMessage);
 
         makeMove(receivedMessagePtr);
     }
     // Sends move success/error
     sentMessage[0] = currentState;
-    sentMessage[1] = moveCount;
-    sentMessage[2] = errorCode;
+    sentMessage[1] = errorCode;
+    sentMessage[2] = moveCount;
     sendMessageToPi(sentMessage);
   }
 
@@ -220,8 +220,8 @@ void loop()
   if (buttonFlag)
   {
     sentMessage[0] = currentState;
-    sentMessage[1] = moveCount;
-    sentMessage[2] = errorCode;
+    sentMessage[1] = errorCode;
+    sentMessage[2] = moveCount;
     sendMessageToPi(sentMessage);
     buttonFlag = false;
   }
@@ -231,8 +231,8 @@ void loop()
   {
     uartMessageIncompleteFlag = false;
     sentMessage[0] = currentState;
-    sentMessage[1] = moveCount;
-    sentMessage[2] = errorCode;
+    sentMessage[1] = errorCode;
+    sentMessage[2] = moveCount;
     sendMessageToPi(sentMessage);
   }
 }

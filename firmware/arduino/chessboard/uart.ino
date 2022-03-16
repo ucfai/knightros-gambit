@@ -189,8 +189,8 @@ void sendMessageToPi(volatile char * message)
 {
     Serial2.write('~');
     Serial2.write(message[0]);
-    Serial2.write(message[2]);
     Serial2.write(message[1]);
+    Serial2.write(message[2]);
 }
 
 bool isInvalidCoord (volatile char c)
