@@ -86,7 +86,7 @@ bool validateMessageFromPi(volatile char * message)
     }
     else if (message[0] == INSTRUCTION)
     {
-        if (message[2] < ALIGN_AXIS || message[2] > RETRANSMIT)
+        if (message[5] < ALIGN_AXIS || message[5] > RETRANSMIT)
         {
             errorCode = INVALID_LOCATION;
             currentState = ERROR;
@@ -144,29 +144,29 @@ bool makeMove(volatile char * message)
     else if (message[0] == INSTRUCTION)
     {
         // Align Axis
-        if (message[2] == ALIGN)
+        if (message[5] == ALIGN)
         {
-          if (message[3] == '0')
+          if (message[1] == '0')
             alignAxis(xMotor, ZERO_POSITION);
-          else if (message[3] == '1')
+          else if (message[1] == '1')
             alignAxis(yMotor, ZERO_POSITION);
-          else if (message[3] == '2')
+          else if (message[1] == '2')
             alignAxis(xMotor, MAX_POSITION);
-          else if (message[3] == '3')
+          else if (message[1] == '3')
             alignAxis(yMotor, MAX_POSITION);
         }
 
         // Enable/Disable Electromagnet
-        else if (message[2] == SET_ELECTROMAGNET)
+        else if (message[5] == SET_ELECTROMAGNET)
         {
-          if (message[3] == '0')
+          if (message[1] == '0')
             digitalWrite(ELECTROMAGNET, LOW);
-          else if (message[3] == '1')
+          else if (message[1] == '1')
             ledcWrite(EM_PWM_CHANNEL, PWM_HALF);
         }
 
         // Retransmit last message
-        else if (message[2] == RETRANSMIT)
+        else if (message[5] == RETRANSMIT)
         {
             sendMessageToPi(sentMessage);
         }
