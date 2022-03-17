@@ -105,6 +105,14 @@ body {
   max-height: 90%;
   opacity: 80%; 
 }
+.grid-container3 {
+  display: inline-grid;
+  grid-gap: 20px;
+  padding: 10px;
+  margin-left: 230px;
+  margin-right: 20px;
+  grid-template-columns: fit-content(33%) fit-content(33%) fit-content(33%);
+}
 /* Container w/main body of text and images */
 .container {
   overflow-y: scroll;

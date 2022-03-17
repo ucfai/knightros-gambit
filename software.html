@@ -12,15 +12,18 @@
         <div id= "site-header-subtitle">A UCF AI/UCF IEEE Collaboration</div>
     </header>
     <div class="sidebar">
-      <a href="https://www.ucf.edu" onclick="window.open(this.href,'');return false;"><img src="images/ucflogo.png"/></a>
+      <a href="https://www.ucf.edu" target="_blank" rel="noopener noreferrer"><img src="images/ucflogo.png"/></a>
       <a href="index.html">Home</a>
-      <a href="https://github.com/ucfai/knightros-gambit" onclick="window.open(this.href,'');return false;">Github</a>
+      <a href="https://github.com/ucfai/knightros-gambit" target="_blank" rel="noopener noreferrer">Github</a>
       <a href="hardware.html">Hardware</a>
       <a href="software.html">Software</a>
       <a href="members.html">Members</a>
     </div>
     <div class = "container">
-      <div id="intro">Software</div>
+      <div id="intro">Software</div><br/><br/>
+      <div class="grid-container2">
+        <div class="grid-img"><img src="images/msd.png"><br>Mock System Diagram</div>
+      </div>
       <div id="background">Hardware Interface Software</div>
       <div id="text">Our plan is to implement a software system using two processing units, a Raspberry Pi and an ESP32 microcontroller. 
         The Raspberry Pi will run a game loop to keep track of game state (whose turn it is, past moves, etc.), compute moves using our 
@@ -65,7 +68,7 @@
         <div class="grid-text"><div id="grid-sub">Board</div><br>The Board class is the interface point between the Arduino and the Raspberry Pi. Board is used to send and 
           receive messages through the Board interface (see <a href="#ard">ArduinoStatus</a> and <a href="#opCode">OpCode</a>), validate 
           moves, and handle captures/promotions.<br><div id="grid-sub">Engine</div><br>We construct a simple wrapper around <a href="https://python-chess.readthedocs.io/" 
-          onclick="window.open(this.href,'');return false;">python-chess</a> and add some helper functions to keep track of board state.<br><div id="grid-sub">
+          target="_blank" rel="noopener noreferrer">python-chess</a> and add some helper functions to keep track of board state.<br><div id="grid-sub">
           <a id="grave">Graveyard</a></div><br>We formulate the Graveyard to avoid the need to use computer vision to keep track of captures and promotions. 
           By having a capture square, we can determine from the state of the board which piece was captured, and automatically move it to 
           a specified position in the graveyard. When the user wants to promote their pawn to a new piece, they select the replacement 
@@ -78,8 +81,8 @@
         <li>Physical interface: User moves physical pieces on the chessboard</li>
         <li>Command line interface (CLI): User specifies pieces to move in grid algebraic notation (GAN) format (e.g. e2e4)</li>
         <li>Web graphical user interface (GUI): User specifies pieces to move by dragging and dropping (similar to <a 
-          href="https://lichess.org/" onclick="window.open(this.href,'');return false;">Lichess</a> or <a href="https://www.chess.com/" 
-          onclick="window.open(this.href,'');return false;">chess.com</a>)</li>
+          href="https://lichess.org/" target="_blank" rel="noopener noreferrer">Lichess</a> or <a href="https://www.chess.com/" 
+          target="_blank" rel="noopener noreferrer">chess.com</a>)</li>
         <li>Voice interface: User specifies pieces to move using voice commands (see <a href="#speechRecognition">Speech Recognition</a>)</li>
       </ol>
       <div id="subBackground"><a id="opCode">OpCode</a></div>
@@ -173,14 +176,14 @@
           isolate each square.<br>To avoid using computer vision to keep track of the Graveyard state (see <a href="#grave">Graveyard</a>), we 
           have a capture square and designated promotion spaces in the graveyard so that we only need computer vision for the main part of the board.</div><br><br><br>
         <div id="background2"><a id="speechRecognition">Speech Recognition</a></div>
-        <div id="text">The <a href="https://www.youtube.com/watch?v=IwjZ1J2b8UY" onclick="window.open(this.href,'');return false;">Harry Potter scene</a> 
+        <div id="text">The <a href="https://www.youtube.com/watch?v=IwjZ1J2b8UY" target="_blank" rel="noopener noreferrer">Harry Potter scene</a> 
           where Harry and Ron give commands to move pieces using their voice alone while playing Wizard's Chess inspired us to implement something similar 
-          for this project. We use a <a href="https://pypi.org/project/SpeechRecognition/" onclick="window.open(this.href,'');return false;">python wrapper</a> 
+          for this project. We use a <a href="https://pypi.org/project/SpeechRecognition/" target="_blank" rel="noopener noreferrer">python wrapper</a> 
           of Google's speech recognition API to convert audio input to a representation that is compatible with our chess engine.</div>
         <div id="background"><a id="webApp">Web Application</a></div>
         <div id="text">Our web application will consist of a front end web app built using Javascript that uses the 
-          <a href="https://github.com/jhlywa/chess.js/blob/master/README.md" onclick="window.open(this.href,'');return false;">chess.js</a> and 
-          <a href="https://chessboardjs.com/" onclick="window.open(this.href,'');return false;">chessboard.js</a> libraries. To communicate with the 
+          <a href="https://github.com/jhlywa/chess.js/blob/master/README.md" target="_blank" rel="noopener noreferrer">chess.js</a> and 
+          <a href="https://chessboardjs.com/" target="_blank" rel="noopener noreferrer">chessboard.js</a> libraries. To communicate with the 
           chessboard, we need two way communication. One option we are considering is to use a flask backend that updates a database when moves are made; 
           this can then be polled by the frontend and game loop to get the most recent move. Another option is to use web sockets to allow direct two way 
           communication without the need to poll a database. In either case, we need to set up authentication of some sort to ensure that only authorized 
