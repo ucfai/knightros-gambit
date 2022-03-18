@@ -18,7 +18,7 @@ volatile char messageBuffer2[INCOMING_MESSAGE_LENGTH];
 volatile char * tempCharPtr;
 volatile char * rxBufferPtr = messageBuffer1;
 volatile char * receivedMessagePtr = messageBuffer2;
-volatile char sentMessage[3];
+volatile char sentMessage[3]; // sentMessage[] holds status, errorCode, and moveCount (in that order)
 
 // Flags are set asynchronously in uart.ino to begin processing their respective data
 // When receivedMessageValidFlag == true, rxBufferPtr holds a complete and unprocessed message from Pi
