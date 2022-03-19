@@ -64,25 +64,6 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
 
   
   // Use the calculated points and call the according movement functions
-  // Move 1
-  statusCodeResult = moveDiagonal(cols[0], rows[0]);
-  if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
-    return false;
-
-  // Move 2
-  statusCodeResult = moveStraight(xMotor, cols[1], rows[0]);
-  if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
-    return false;
-
-  // Move 3
-  statusCodeResult = moveStraight(yMotor, cols[1], rows[1]);
-  if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
-    return false;
-
-  // Move 3
-  statusCodeResult = moveDiagonal(cols[2], rows[2]);
-  if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
-    return false;
 
   // TODO:
   // Remove magic number here
