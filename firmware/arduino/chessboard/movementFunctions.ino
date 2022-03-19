@@ -25,9 +25,6 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
   uint8_t curCol, curRow;
   uint8_t numPoints = 0;
 
-  curCol = currPositionX / (stepsPerUnitSpace * 8);
-  curRow = currPositionY / (stepsPerUnitSpace * 8);
-
   // Find the signed difference between the finial and initial points
   deltaX = endCol - startCol;
   deltaY = endRow - startRow;
@@ -47,7 +44,10 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
   // If target point is equal to the start point
   if (deltaX == 0  &&  deltaY == 0)
     return true;
-  
+    
+  curCol = currPositionX / (stepsPerUnitSpace * 8);
+  curRow = currPositionY / (stepsPerUnitSpace * 8);
+
   // Make initial move to first position. Move diagonally since it's faster.
   if (!moveDirect(curCol, curRow, startCol, startRow))
     return false;
@@ -127,13 +127,9 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
   else if ((absDeltaX == 4  &&  absDeltaY == 2)  ||  (absDeltaX == 2  &&  absDeltaY == 4))
   {
     if (absDeltaX == 2)
-    {
       subDeltaX = 0;
-    }
     else
-    {
       subDeltaY = 0;
-    }
 
     // Add diagonal movement
     cols[1] = cols[0] + subDeltaX;
@@ -181,11 +177,19 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
     // Note: rows[0] and cols[0] collectively store the start point requested by the function
     // That allows us to modularly make the calls in a nice for-loop  
     if (rows[i] == rows[i-1])
-      moveStraight(yMotor, cols[i], rows[i]);
+    {
+      statusCodeResult = moveStraight(yMotor, cols[i], rows[i]);
+      if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
+        return false;
+    }
     else if (cols[i] == cols[i-1])
-      moveStraight(xMotor, cols[i], rows[i]);
+      statusCodeResult = moveStraight(xMotor, cols[i], rows[i]);
+      if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
+        return false;
     else
-      moveDiagonal(cols[i], rows[i]);
+      statusCodeResult = moveDiagonal(cols[i], rows[i]);
+      if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
+        return false;
   }
 
   return true;
