@@ -95,7 +95,7 @@ uint8_t yMotor[6] = {Y_MOTOR_STEP, Y_MOTOR_DIR, Y_MOTOR_MS1, Y_MOTOR_MS2, Y_AXIS
 #define MILLIMETERS_PER_UNITSPACE 32
 #define STEPS_PER_MILLIMETER 5  // Whole steps per millimeter
 #define HOME_CALIBRATION_OFFSET 100
-#define TOTAL_UNITSPACES 24
+#define TOTAL_UNITSPACES 22
 
 // Number of whole steps per unit space
 int stepsPerUnitSpace;

@@ -7,67 +7,113 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow)
   return true;
 }
 
+// This type of move is typically decomposed into a set of 4 moves:
+// ================================================================
+// 1. Move to edge from center of square
+// 2. Move along X axis (optional)
+// 3. Move along Y axis (optional)
+// 4. Move to center of square from edge
+
+// Some of these moves may not happen, which is accounted for below
 bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
 {
   // There are 4 points total, but only 3 total for each x/y component
   uint8_t rows[5], cols[5];
-  int8_t dirX, dirY;
+  int8_t diagDirX, diagDirY;
+  int8_t deltaX, deltaY, subDeltaX, subDeltaY, absDeltaX, absDeltaY;
   uint8_t i, statusCodeResult;
   uint8_t curCol, curRow;
+  uint8_t numPoints = 0;
 
   curCol = currPositionX / (stepsPerUnitSpace * 8);
   curRow = currPositionY / (stepsPerUnitSpace * 8);
 
+  // Find the signed difference between the finial and initial points
+  deltaX = endCol - startCol;
+  deltaY = endRow - startRow;
+
+  // We only need the magnitude of deltaX and deltaY after this point 
+  absDeltaX = abs(deltaX);
+  absDeltaY = abs(deltaY);
+
+  // Calculate the direction of the diagonals
+  diagDirX = (deltaX > 0) ? 1 : -1;
+  diagDirY = (deltaY > 0) ? 1 : -1;
+
   // If target point is equal to the start point
-  if (endCol == startCol  &&  endRow == startRow)
+  if (deltaX == 0  &&  deltaY == 0)
     return true;
   
   // Make initial move to first position. Move diagonally since it's faster.
   if (!moveDirect(curCol, curRow, startCol, startRow))
     return false;
 
-  // This type of move will always have a set of 4 moves:
-  // ====================================================
-  // 1. Move to edge from center of square
-  // 2. Move along X axis (optional)
-  // 3. Move along Y axis (optional)
-  // 4. Move to center of square from edge
-  // Steps 2 and 3 are considered optional because those moves may not exist
-
-  // Calculate directions for x and y
-  dirX = (endCol > startCol) ? 1 : -1;
-  dirY = (endRow > startRow) ? 1 : -1;
-
-  // Calculate the points for each of the 4 moves listed above
+  // Calculate a list of up to 4 new points (including the start point) 
   // We use previous points to calculate subsequent points, since they're on the same path
   // Initial position
   cols[0] = startCol;
-  rows[0] = startRow; 
-  
-  // Move 1
-  cols[1] = cols[0] + dirX;
-  rows[1] = rows[0] + dirY;
+  rows[0] = startRow;
 
-  // Move 2
-  // Sutract two to account for moves 1 and 4 both moving one unitspace
-  cols[2] = cols[1] + (endCol - startCol - 2);
-  rows[2] = rows[1];
+  // Case where we should call moveDirect, since pathing can be simplified to that
+  if (absDeltaX <= 2  &&  absDeltaY <= 2)
+    return moveDirect(startCol, startRow, endCol, endRow);
 
-  // Move 3
-  // Subtract two to account for moves 1 and 4 both moving one unitspace
-  rows[3] = rows[2] + (endRow - startRow - 2);
-  cols[3] = cols[2];
+  // Because of the checks above, we know absDeltaX and absDeltaY can't both be 0 at the same time
+  // Case where we have a strictly vertical or horizontal movement along edges
+  if (absDeltaX == 0  ||  absDeltaY == 0)
+  {
+    uint8_t diagDirX2, diagDirY2;
 
-  // Move 4
-  cols[4] = cols[3] + dirX;
-  rows[4] = rows[3] + dirY;
+    if (absDeltaX == 0)
+    {
+      // Handle edge case where start position is on the edge of the board, so you must move inward
+      dirX = (startCol == (TOTAL_UNITSPACES - 1)) ? -1 : 1;
+
+      subDeltaX = 0;
+      subDeltaY = deltaY - (2 * diagDirY);  
+      diagDirX2 = -diagDirX;
+    }
+    else
+    {
+      // Handle edge case where start position is on the edge of the board, so you must move inward
+      dirY = (startRow == (TOTAL_UNITSPACES - 1)) ? -1 : 1;
+
+      subDeltaX = deltaX - (2 * diagDirX);
+      subDeltaY = 0; 
+      diagDirY2 = -diagDirY;
+    }
+
+    // Add diagonal movement
+    cols[1] = cols[0] + diagDirX;
+    rows[1] = rows[0] + diagDirY;
+
+    // Add straight movement
+    cols[2] = cols[1] + subDeltaX;
+    rows[2] = rows[1] + subDeltaY;
+
+    // Add diagonal movement, with flipped direction
+    cols[3] = cols[2] + diagDirX2;
+    rows[3] = rows[2] + diagDirY2;
+
+    // 3 added points, plus the initial point
+    numPoints = 4;
+  }
+
+  /*
+  // Calculate directions for x and y
+  diagDirX = (deltaX > 0) ? 1 : -1;
+  diagDirY = (deltaY > 0) ? 1 : -1;
+
+  subDeltaX = deltaX - (2 * diagDirX);
+  subDeltaY = deltaY - (2 * diagDirY);
+  */
 
   
   // Use the calculated points and call the according movement functions
 
   // TODO:
   // Remove magic number here
-  for (i = 1; i < 5; i++)
+  for (i = 1; i < numPoints; i++)
   {
     // TODO:
     // This is where we can account for edge cases, by testing distance for example
