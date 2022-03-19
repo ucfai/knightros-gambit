@@ -36,6 +36,10 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
   absDeltaX = abs(deltaX);
   absDeltaY = abs(deltaY);
 
+  // Calculate the sub-distances for X and Y movement. They can be overridden as necessary
+  subDeltaX = deltaX - (2 * diagDirX);
+  subDeltaY = deltaY - (2 * diagDirY);
+
   // Calculate the direction of the diagonals
   diagDirX = (deltaX > 0) ? 1 : -1;
   diagDirY = (deltaY > 0) ? 1 : -1;
@@ -67,7 +71,7 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
     if (absDeltaX == 0)
     {
       // Handle edge case where start position is on the edge of the board, so you must move inward
-      dirX = (startCol == (TOTAL_UNITSPACES - 1)) ? -1 : 1;
+      diagDirX = (startCol == (TOTAL_UNITSPACES - 1)) ? -1 : 1;
 
       subDeltaX = 0;
       subDeltaY = deltaY - (2 * diagDirY);  
@@ -76,7 +80,7 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
     else
     {
       // Handle edge case where start position is on the edge of the board, so you must move inward
-      dirY = (startRow == (TOTAL_UNITSPACES - 1)) ? -1 : 1;
+      diagDirY = (startRow == (TOTAL_UNITSPACES - 1)) ? -1 : 1;
 
       subDeltaX = deltaX - (2 * diagDirX);
       subDeltaY = 0; 
@@ -98,28 +102,82 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
     // 3 added points, plus the initial point
     numPoints = 4;
   }
+  // Case where we're moving a cached piece to the graveyard from a capture
+  else if (startCol % 2 == 1  ||  startRow % 2 == 1)
+  {
+    subDeltaX = deltaX - diagDirX; 
+    subDeltaY = deltaY - diagDirY;
 
-  /*
-  // Calculate directions for x and y
-  diagDirX = (deltaX > 0) ? 1 : -1;
-  diagDirY = (deltaY > 0) ? 1 : -1;
+    // Add straight X movement
+    cols[1] = cols[0] + subDeltaX;
+    rows[1] = rows[0];
 
-  subDeltaX = deltaX - (2 * diagDirX);
-  subDeltaY = deltaY - (2 * diagDirY);
-  */
+    // Add straight Y movement
+    cols[2] = cols[1];
+    rows[2] = rows[1] + subDeltaY;
 
+    // Add diagonal movement
+    cols[3] = cols[2] + diagDirX;
+    rows[3] = rows[2] + diagDirY;
+
+    // 3 added points, plus the initial point
+    numPoints = 4;
+  }
+  // Case where we have a knight or graveyard movement
+  else if ((absDeltaX == 4  &&  absDeltaY == 2)  ||  (absDeltaX == 2  &&  absDeltaY == 4))
+  {
+    if (absDeltaX == 2)
+    {
+      subDeltaX = 0;
+    }
+    else
+    {
+      subDeltaY = 0;
+    }
+
+    // Add diagonal movement
+    cols[1] = cols[0] + subDeltaX;
+    rows[1] = rows[0] + subDeltaY;
+
+    // Add straight Y movement
+    cols[2] = cols[1] + subDeltaX;
+    rows[2] = rows[1] + subDeltaY;
+
+    // Add diagonal movement
+    cols[3] = cols[2] + diagDirX;
+    rows[3] = rows[2] + diagDirY;
+
+    // 3 added points, plus the initial point
+    numPoints = 4;
+  }
+  // Default case, where all other movements should 
+  else
+  {
+    // Add diagonal movement
+    cols[1] = cols[0] + diagDirX;
+    rows[1] = rows[0] + diagDirY;
+
+    // Add straight X movement
+    cols[2] = cols[1] + subDeltaX;
+    rows[2] = rows[1];
+
+    // Add straight Y movement
+    cols[3] = cols[2];
+    rows[3] = rows[2] + subDeltaY;
+
+    // Add diagonal movement
+    cols[4] = cols[3] + diagDirX;
+    rows[4] = rows[3] + diagDirY;
+
+    // 4 added points, plus the initial point
+    numPoints = 5;
+  }
   
-  // Use the calculated points and call the according movement functions
 
-  // TODO:
-  // Remove magic number here
+  // Loop through each of the calculated points and call the according movement function
+  // Start from 1 since 0 is the start point and we always refer back to it
   for (i = 1; i < numPoints; i++)
   {
-    // TODO:
-    // This is where we can account for edge cases, by testing distance for example
-    // We should also make checks for when i == 2 or i == 3 specifically, since that's where we'll
-    // encounter either the horizontal or vertical travel being 0
-
     // Note: rows[0] and cols[0] collectively store the start point requested by the function
     // That allows us to modularly make the calls in a nice for-loop  
     if (rows[i] == rows[i-1])
