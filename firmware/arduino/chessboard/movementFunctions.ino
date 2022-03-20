@@ -13,11 +13,10 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow)
 // 2. Move along X axis (optional)
 // 3. Move along Y axis (optional)
 // 4. Move to center of square from edge
-
-// Some of these moves may not happen, which is accounted for below
 bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
 {
-  // There are 4 points total, but only 3 total for each x/y component
+  // There are 5 possible points total, where the first is always the passed start point and 
+  // the rest can be made from the list above.
   uint8_t rows[5], cols[5];
   int8_t diagDirX, diagDirY;
   int8_t deltaX, deltaY, subDeltaX, subDeltaY, absDeltaX, absDeltaY;
@@ -25,15 +24,16 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
   uint8_t curCol, curRow;
   uint8_t numPoints = 0;
 
-  // Find the signed difference between the finial and initial points
+  // Find the signed difference between the final and initial points
   deltaX = endCol - startCol;
   deltaY = endRow - startRow;
 
-  // We only need the magnitude of deltaX and deltaY after this point 
+  // We need the magnitude of deltaX and deltaY for edge case checks, so we'll store them for later 
   absDeltaX = abs(deltaX);
   absDeltaY = abs(deltaY);
 
-  // Calculate the sub-distances for X and Y movement. They can be overridden as necessary
+  // Calculate the sub-distances for X and Y movement along chess square edges
+  // They can be overridden as necessary
   subDeltaX = deltaX - (2 * diagDirX);
   subDeltaY = deltaY - (2 * diagDirY);
 
@@ -45,6 +45,10 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
   if (deltaX == 0  &&  deltaY == 0)
     return true;
     
+  // Checks if the EM is aligned properly
+  if ((currPositionX % stepsPerUnitSpace) || (currPositionY % stepsPerUnitSpace))
+    return false;
+
   curCol = currPositionX / (stepsPerUnitSpace * 8);
   curRow = currPositionY / (stepsPerUnitSpace * 8);
 
@@ -54,13 +58,14 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
 
   // Calculate a list of up to 4 new points (including the start point) 
   // We use previous points to calculate subsequent points, since they're on the same path
-  // Initial position
-  cols[0] = startCol;
-  rows[0] = startRow;
 
   // Case where we should call moveDirect, since pathing can be simplified to that
   if (absDeltaX <= 2  &&  absDeltaY <= 2)
     return moveDirect(startCol, startRow, endCol, endRow);
+
+  // Initial position
+  cols[0] = startCol;
+  rows[0] = startRow;
 
   // Because of the checks above, we know absDeltaX and absDeltaY can't both be 0 at the same time
   // Case where we have a strictly vertical or horizontal movement along edges
@@ -70,19 +75,21 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
 
     if (absDeltaX == 0)
     {
-      // Handle edge case where start position is on the edge of the board, so you must move inward
+      // Handle edge case where start position is on the rightmost edge of the board,
+      // so you must move left for the first diagonal motion. Move right for first
+      // diagonal in all other cases of strictly vertical motion.
       diagDirX = (startCol == (TOTAL_UNITSPACES - 1)) ? -1 : 1;
 
       subDeltaX = 0;
-      subDeltaY = deltaY - (2 * diagDirY);  
       diagDirX2 = -diagDirX;
     }
     else
     {
-      // Handle edge case where start position is on the edge of the board, so you must move inward
+      // Handle edge case where start position is on the topmost edge of the board,
+      // so you must move down for the first diagonal motion. Move up for first
+      // diagonal in all other cases of strictly horizontal motion.
       diagDirY = (startRow == (TOTAL_UNITSPACES - 1)) ? -1 : 1;
 
-      subDeltaX = deltaX - (2 * diagDirX);
       subDeltaY = 0; 
       diagDirY2 = -diagDirY;
     }
@@ -103,11 +110,12 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
     numPoints = 4;
   }
   // Case where we're moving a cached piece to the graveyard from a capture
-  else if (startCol % 2 == 1  ||  startRow % 2 == 1)
+  else if (startCol % 2  ||  startRow % 2)
   {
     subDeltaX = deltaX - diagDirX; 
     subDeltaY = deltaY - diagDirY;
 
+    // Note: at least one of subDeltaX or subDeltaY is equal to 0
     // Add straight X movement
     cols[1] = cols[0] + subDeltaX;
     rows[1] = rows[0];
@@ -124,7 +132,7 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
     numPoints = 4;
   }
   // Case where we have a knight or graveyard movement
-  else if ((absDeltaX == 4  &&  absDeltaY == 2)  ||  (absDeltaX == 2  &&  absDeltaY == 4))
+  else if (absDeltaX == 2  ||  absDeltaY == 2)
   {
     if (absDeltaX == 2)
       subDeltaX = 0;
@@ -132,8 +140,8 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
       subDeltaY = 0;
 
     // Add diagonal movement
-    cols[1] = cols[0] + subDeltaX;
-    rows[1] = rows[0] + subDeltaY;
+    cols[1] = cols[0] + diagDirX;
+    rows[1] = rows[0] + diagDirY;
 
     // Add straight Y movement
     cols[2] = cols[1] + subDeltaX;
@@ -146,14 +154,15 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
     // 3 added points, plus the initial point
     numPoints = 4;
   }
-  // Default case, where all other movements should 
+  // Case where we have all of the 4 sub-movements mentioned before the function signature
   else
   {
     // Add diagonal movement
     cols[1] = cols[0] + diagDirX;
     rows[1] = rows[0] + diagDirY;
 
-    // Add straight X movement
+    // Note: at least one of subDeltaX or subDeltaY is equal to 0
+    // Add straight X movement 
     cols[2] = cols[1] + subDeltaX;
     rows[2] = rows[1];
 
@@ -170,6 +179,9 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
   }
   
 
+  // Enable electromagnet
+  ledcWrite(EM_PWM_CHANNEL, PWM_HALF);
+  
   // Loop through each of the calculated points and call the according movement function
   // Start from 1 since 0 is the start point and we always refer back to it
   for (i = 1; i < numPoints; i++)
@@ -183,14 +195,21 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
         return false;
     }
     else if (cols[i] == cols[i-1])
+    {
       statusCodeResult = moveStraight(xMotor, cols[i], rows[i]);
       if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
         return false;
+    }
     else
+    {
       statusCodeResult = moveDiagonal(cols[i], rows[i]);
       if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
         return false;
+    }
   }
+
+  // Turn electromagnet off
+  digitalWrite(ELECTROMAGNET, LOW);
 
   return true;
 }
