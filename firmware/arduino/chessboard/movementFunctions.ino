@@ -214,7 +214,7 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
   // Turn electromagnet off
   digitalWrite(ELECTROMAGNET, LOW);
 
-  return (pointCounter < numPoints);
+  return (pointCounter == numPoints);
 }
 
 bool alignPiece(int col, int row)
