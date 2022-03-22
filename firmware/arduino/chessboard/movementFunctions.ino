@@ -1,10 +1,58 @@
 bool moveDirect(int startCol, int startRow, int endCol, int endRow)
 {
-  // TODO:
-  // Must account for diagonal and straight movement cases
-  // Must also return true if the current position is the target position 
-  // (Since no change is needed)
-  return true;
+  uint8_t statusCodeResult;
+  uint8_t curCol, curRow;
+  int8_t deltaX, deltaY;
+  bool isSuccessful;
+
+  deltaX = endCol - startCol;
+  deltaY = endRow - startRow;
+
+  // If target point is equal to the start point
+  if (deltaX == 0  &&  deltaY == 0)
+    return true;
+
+  // Checks if the EM is aligned properly
+  if ((currPositionX % stepsPerUnitSpace) || (currPositionY % stepsPerUnitSpace))
+    return false;
+
+  curCol = currPositionX / (stepsPerUnitSpace * 8);
+  curRow = currPositionY / (stepsPerUnitSpace * 8);
+
+  // Make initial move to first position. Move diagonally since it's faster.
+  if (!moveDirect(curCol, curRow, startCol, startRow))
+    return false;
+
+  // Enable electromagnet
+  ledcWrite(EM_PWM_CHANNEL, PWM_HALF);
+
+  // Assume no errors, unless proven otherwise
+  isSuccessful = true;
+
+  if (deltaX == 0)
+  {
+    statusCodeResult = moveStraight(yMotor, endCol, endRow);
+    if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
+      isSuccessful = false;
+  }
+  else if (deltaY == 0)
+  {
+    statusCodeResult = moveStraight(xMotor, endCol, endRow);
+    if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
+      isSuccessful = false;
+  }
+  else
+  {
+    // Note: moveDiagonal handles slopes of 1, 1/2, and 2
+    statusCodeResult = moveDiagonal(endCol, endRow);
+    if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
+      isSuccessful = false;
+  }
+
+  // Turn electromagnet off
+  digitalWrite(ELECTROMAGNET, LOW);
+
+  return isSuccessful;
 }
 
 // This type of move is typically decomposed into a set of 4 moves:
