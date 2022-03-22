@@ -18,6 +18,7 @@ volatile char messageBuffer2[INCOMING_MESSAGE_LENGTH];
 volatile char * tempCharPtr;
 volatile char * rxBufferPtr = messageBuffer1;
 volatile char * receivedMessagePtr = messageBuffer2;
+volatile char sentMessage[3]; // sentMessage[] holds status, errorCode, and moveCount (in that order)
 
 // Flags are set asynchronously in uart.ino to begin processing their respective data
 // When receivedMessageValidFlag == true, rxBufferPtr holds a complete and unprocessed message from Pi
@@ -38,7 +39,8 @@ enum MoveCommandType
 {
   DIRECT = '0',
   EDGES = '1',
-  ALIGN = '2'
+  ALIGN = '2',
+  INSTRUCTION = '3'
 };
 
 enum ErrorCode
@@ -48,6 +50,13 @@ enum ErrorCode
   INVALID_LOCATION = '2',
   INCOMPLETE_INSTRUCTION = '3',
   MOVEMENT_ERROR = '4'
+};
+
+enum InstructionType
+{
+  ALIGN_AXIS = '1',
+  SET_ELECTROMAGNET = '2',
+  RETRANSMIT = '3'
 };
 
 // Electromagnet
@@ -193,18 +202,28 @@ void loop()
     if (validateMessageFromPi(receivedMessagePtr))
     { 
         // Sends acknowledgement
-        sendMessageToPi(currentState, moveCount, errorCode);
+        sentMessage[0] = currentState;
+        sentMessage[1] = errorCode;
+        sentMessage[2] = moveCount;
+        sendMessageToPi(sentMessage);
 
         makeMove(receivedMessagePtr);
     }
     // Sends move success/error
-    sendMessageToPi(currentState, moveCount, errorCode);
+    // These variables can be changed inside the makeMove function
+    sentMessage[0] = currentState;
+    sentMessage[1] = errorCode;
+    sentMessage[2] = moveCount;
+    sendMessageToPi(sentMessage);
   }
 
   // Transmit button press
   if (buttonFlag)
   {
-    sendMessageToPi(END_TURN, moveCount, 0);
+    sentMessage[0] = currentState;
+    sentMessage[1] = errorCode;
+    sentMessage[2] = moveCount;
+    sendMessageToPi(sentMessage);
     buttonFlag = false;
   }
 
@@ -212,6 +231,9 @@ void loop()
   if (uartMessageIncompleteFlag)
   {
     uartMessageIncompleteFlag = false;
-    sendMessageToPi(ERROR, moveCount, errorCode);
+    sentMessage[0] = currentState;
+    sentMessage[1] = errorCode;
+    sentMessage[2] = moveCount;
+    sendMessageToPi(sentMessage);
   }
 }

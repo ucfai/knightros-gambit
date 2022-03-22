@@ -84,6 +84,16 @@ bool validateMessageFromPi(volatile char * message)
             return false;
         }
     }
+    else if (message[0] == INSTRUCTION)
+    {
+        // Check if message[5] holds a valid instruction type
+        if (message[5] < ALIGN_AXIS || message[5] > RETRANSMIT)
+        {
+            errorCode = INVALID_LOCATION;
+            currentState = ERROR;
+            return false;
+        }
+    }
     else
     {
         // Invalid opcode
@@ -131,6 +141,37 @@ bool makeMove(volatile char * message)
             return false;
         }
     }
+    // Move type 3 - special instructions
+    else if (message[0] == INSTRUCTION)
+    {
+        // Align Axis
+        if (message[5] == ALIGN)
+        {
+          if (message[1] == '0')
+            alignAxis(xMotor, ZERO_POSITION);
+          else if (message[1] == '1')
+            alignAxis(yMotor, ZERO_POSITION);
+          else if (message[1] == '2')
+            alignAxis(xMotor, MAX_POSITION);
+          else if (message[1] == '3')
+            alignAxis(yMotor, MAX_POSITION);
+        }
+
+        // Enable/Disable Electromagnet
+        else if (message[5] == SET_ELECTROMAGNET)
+        {
+          if (message[1] == '0')
+            digitalWrite(ELECTROMAGNET, LOW);
+          else if (message[1] == '1')
+            ledcWrite(EM_PWM_CHANNEL, PWM_HALF);
+        }
+
+        // Retransmit last message
+        else if (message[5] == RETRANSMIT)
+        {
+            sendMessageToPi(sentMessage);
+        }
+    }
     else
     {
         // Invalid opcode
@@ -145,12 +186,12 @@ bool makeMove(volatile char * message)
     return true;
 }
 
-void sendMessageToPi(volatile char status, char moveCount, char errorMessage)
+void sendMessageToPi(volatile char * message)
 {
     Serial2.write('~');
-    Serial2.write(status);
-    Serial2.write(errorMessage);
-    Serial2.write(moveCount);
+    Serial2.write(message[0]);
+    Serial2.write(message[1]);
+    Serial2.write(message[2]);
 }
 
 bool isInvalidCoord (volatile char c)
