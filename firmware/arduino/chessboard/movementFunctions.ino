@@ -20,7 +20,7 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
   uint8_t rows[5], cols[5];
   int8_t diagDirX, diagDirY;
   int8_t deltaX, deltaY, subDeltaX, subDeltaY, absDeltaX, absDeltaY;
-  uint8_t i, statusCodeResult;
+  uint8_t pointCounter, statusCodeResult;
   uint8_t curCol, curRow;
   uint8_t numPoints = 0;
 
@@ -184,34 +184,37 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
   
   // Loop through each of the calculated points and call the according movement function
   // Start from 1 since 0 is the start point and we always refer back to it
-  for (i = 1; i < numPoints; i++)
+  pointCounter = 1;
+  while (pointCounter < numPoints)
   {
     // Note: rows[0] and cols[0] collectively store the start point requested by the function
     // That allows us to modularly make the calls in a nice for-loop  
-    if (rows[i] == rows[i-1])
+    if (rows[pointCounter] == rows[pointCounter-1])
     {
-      statusCodeResult = moveStraight(yMotor, cols[i], rows[i]);
+      statusCodeResult = moveStraight(yMotor, cols[pointCounter], rows[pointCounter]);
       if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
-        return false;
+        break;
     }
-    else if (cols[i] == cols[i-1])
+    else if (cols[pointCounter] == cols[pointCounter-1])
     {
-      statusCodeResult = moveStraight(xMotor, cols[i], rows[i]);
+      statusCodeResult = moveStraight(xMotor, cols[pointCounter], rows[pointCounter]);
       if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
-        return false;
+        break;
     }
     else
     {
-      statusCodeResult = moveDiagonal(cols[i], rows[i]);
+      statusCodeResult = moveDiagonal(cols[pointCounter], rows[pointCounter]);
       if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
-        return false;
+        break;
     }
+
+    pointCounter++;
   }
 
   // Turn electromagnet off
   digitalWrite(ELECTROMAGNET, LOW);
 
-  return true;
+  return (pointCounter < numPoints);
 }
 
 bool alignPiece(int col, int row)
