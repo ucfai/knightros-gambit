@@ -210,6 +210,7 @@ void loop()
         makeMove(receivedMessagePtr);
     }
     // Sends move success/error
+    // These variables can be changed inside the makeMove function
     sentMessage[0] = currentState;
     sentMessage[1] = errorCode;
     sentMessage[2] = moveCount;
