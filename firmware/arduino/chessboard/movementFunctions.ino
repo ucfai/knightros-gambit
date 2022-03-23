@@ -19,10 +19,19 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow)
   currCol = currPositionX / (stepsPerUnitSpace * 8);
   currRow = currPositionY / (stepsPerUnitSpace * 8);
 
-  // Make initial move to first position. Move diagonally since it's faster.
-  // We have this first condition ANDed to prevent an extra recursive call
-  if ((currCol != startCol  ||  currRow != startRow)  &&  
-      !moveDirect(currCol, currRow, startCol, startRow))
+  // Make initial move to first position and move directly since it's faster.
+  // This is calling the function recursively in the following way:
+  // ==============================================================
+  // 1. When the initial function call is made, we end up entering the first recursive call 
+  //    to move to the start point.
+  // 2. If the target point is the start point, just return true and continue. Otherwise calculate 
+  //    the numbers to move to the first point and enter the 2nd recursive call.
+  //    (Note that the start point in this call is the current point from the previous call)
+  // 3. In this call, we have the start point and end point equal to the current point, so it 
+  //    returns true before anything is done.
+  // 4. Now we end up in the first recursive call and simply move to the start point.
+  // 5. After being moved to the start point, we perform the mvoe fron the initial call.
+  if (!moveDirect(currCol, currRow, startCol, startRow))
     return false;
 
   // Enable electromagnet
