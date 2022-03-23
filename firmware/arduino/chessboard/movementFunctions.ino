@@ -1,7 +1,7 @@
 bool moveDirect(int startCol, int startRow, int endCol, int endRow)
 {
   uint8_t statusCodeResult;
-  uint8_t curCol, curRow;
+  uint8_t currCol, currRow;
   int8_t deltaX, deltaY;
   bool isSuccessful;
 
@@ -16,16 +16,20 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow)
   if ((currPositionX % stepsPerUnitSpace) || (currPositionY % stepsPerUnitSpace))
     return false;
 
-  curCol = currPositionX / (stepsPerUnitSpace * 8);
-  curRow = currPositionY / (stepsPerUnitSpace * 8);
+  currCol = currPositionX / (stepsPerUnitSpace * 8);
+  currRow = currPositionY / (stepsPerUnitSpace * 8);
 
   // Make initial move to first position. Move diagonally since it's faster.
-  if (!moveDirect(curCol, curRow, startCol, startRow))
+  // We have this first condition ANDed to prevent an extra recursive call
+  if ((currCol != startCol  ||  currRow != startRow)  &&  
+      !moveDirect(currCol, currRow, startCol, startRow))
     return false;
 
   // Enable electromagnet
   ledcWrite(EM_PWM_CHANNEL, PWM_HALF);
 
+  // This variable allows us to store the return value of the function
+  // so we can turn off the electromagnet before exiting.
   // Assume no errors, unless proven otherwise
   isSuccessful = true;
 
@@ -69,7 +73,7 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
   int8_t diagDirX, diagDirY;
   int8_t deltaX, deltaY, subDeltaX, subDeltaY, absDeltaX, absDeltaY;
   uint8_t pointCounter, statusCodeResult;
-  uint8_t curCol, curRow;
+  uint8_t currCol, currRow;
   uint8_t numPoints = 0;
 
   // Find the signed difference between the final and initial points
@@ -97,11 +101,11 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
   if ((currPositionX % stepsPerUnitSpace) || (currPositionY % stepsPerUnitSpace))
     return false;
 
-  curCol = currPositionX / (stepsPerUnitSpace * 8);
-  curRow = currPositionY / (stepsPerUnitSpace * 8);
+  currCol = currPositionX / (stepsPerUnitSpace * 8);
+  currRow = currPositionY / (stepsPerUnitSpace * 8);
 
   // Make initial move to first position. Move diagonally since it's faster.
-  if (!moveDirect(curCol, curRow, startCol, startRow))
+  if (!moveDirect(currCol, currRow, startCol, startRow))
     return false;
 
   // Calculate a list of up to 4 new points (including the start point) 
