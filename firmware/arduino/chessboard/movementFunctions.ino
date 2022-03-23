@@ -30,7 +30,7 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow)
   // 3. In this call, we have the start point and end point equal to the current point, so it 
   //    returns true before anything is done.
   // 4. Now we end up in the first recursive call and simply move to the start point.
-  // 5. After being moved to the start point, we perform the mvoe fron the initial call.
+  // 5. After being moved to the start point, we perform the move from the initial call.
   if (!moveDirect(currCol, currRow, startCol, startRow))
     return false;
 
