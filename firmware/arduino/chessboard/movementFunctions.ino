@@ -2,11 +2,17 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow)
 {
   uint8_t statusCodeResult;
   uint8_t currCol, currRow;
-  int8_t deltaX, deltaY;
+  int8_t diagSpaces;
+  int8_t deltaX, deltaY, absDeltaX, absDeltaY;
   bool isSuccessful;
 
+  // Find the signed difference between the final and initial points
   deltaX = endCol - startCol;
   deltaY = endRow - startRow;
+
+  // We need the magnitude of deltaX and deltaY for handling invalid slopes for moveDiagonal  
+  absDeltaX = abs(deltaX);
+  absDeltaY = abs(deltaY);
 
   // If target point is equal to the start point
   if (deltaX == 0  &&  deltaY == 0)
@@ -60,6 +66,46 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow)
     statusCodeResult = moveDiagonal(endCol, endRow);
     if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
       isSuccessful = false;
+  
+    // This means that the movement function returned INVALID_ARGS, so the slope is not valid
+    // To account for this, we'll decompose the move into two moves:
+    // 1. Move using a slope of 1 until aligned with the target point
+    // 2. Move straight to the target point for the rest of the way
+    if (isSuccessful == false)
+    {
+      // Since this can only happen when moving to the start point of the main call, 
+      // turn off the electromagnet
+      digitalWrite(ELECTROMAGNET, LOW);
+      
+      // Reset isSuccessful to true since we have calls that can be successful after this
+      isSuccessful = true;
+
+      // Must evaluate using the absolute value, otherwise if deltaX and deltaY are both negative, 
+      // it will yield an incorrect minimum
+      // We need the number to be in terms of deltaX and deltaY to include signs
+      diagSpaces = (min(absDeltaX, absDeltaY) == absDeltaX)? deltaX : deltaY;
+      statusCodeResult = moveDiagonal(startRow + diagSpaces, startCol + diagSpaces);
+      if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
+        isSuccessful = false;
+      
+      if (isSuccessful == true)
+      {
+        // The remaining movement is in the Y direction
+        if (diagSpaces == deltaX)
+        {
+          statusCodeResult = moveStraight(yMotor, endCol, endRow);
+          if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
+            isSuccessful = false;
+        }
+        // The remaining movement is in the X direction
+        else if (diagSpaces == deltaY)
+        {
+          statusCodeResult = moveStraight(XMotor, endCol, endRow);
+          if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
+            isSuccessful = false;
+        }
+      }
+    }
   }
 
   // Turn electromagnet off
@@ -332,7 +378,8 @@ bool statusCodeHandler(uint8_t status)
   {
     home();
   }
-  // Returns false if status code not one of those handled above, e.g. INVALID_ARGS, or if status code is invalid
+  // Returns false if status code not one of those handled above, 
+  // e.g. INVALID_ARGS, or if status code is invalid
   else
   {
     return false;
