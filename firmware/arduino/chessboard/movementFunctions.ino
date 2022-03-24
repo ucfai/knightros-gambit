@@ -56,7 +56,7 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow)
     motorPtr = (deltaX == 0) ? yMotor : xMotor;
 
     statusCodeResult = moveStraight(motorPtr, endCol, endRow);
-    if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
+    if (!statusCodeHandler(statusCodeResult))
       isSuccessful = false;
   }
   else
@@ -87,7 +87,7 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow)
         diagSpacesY = (deltaY > 0) ? absDiagSpaces : -absDiagSpaces;
 
         statusCodeResult = moveDiagonal(startRow + diagSpacesY, startCol + diagSpacesX);
-        if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
+        if (!statusCodeHandler(statusCodeResult))
           isSuccessful = false;
         
         if (isSuccessful == true)
@@ -96,7 +96,7 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow)
           motorPtr = (absDiagSpaces == absDeltaX) ? yMotor : xMotor;
 
           statusCodeResult = moveStraight(yMotor, endCol, endRow);
-          if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
+          if (!statusCodeHandler(statusCodeResult))
             isSuccessful = false;
         }
       }
@@ -298,19 +298,19 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
     if (rows[pointCounter] == rows[pointCounter-1])
     {
       statusCodeResult = moveStraight(yMotor, cols[pointCounter], rows[pointCounter]);
-      if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
+      if (!statusCodeHandler(statusCodeResult))
         break;
     }
     else if (cols[pointCounter] == cols[pointCounter-1])
     {
       statusCodeResult = moveStraight(xMotor, cols[pointCounter], rows[pointCounter]);
-      if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
+      if (!statusCodeHandler(statusCodeResult))
         break;
     }
     else
     {
       statusCodeResult = moveDiagonal(cols[pointCounter], rows[pointCounter]);
-      if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
+      if (!statusCodeHandler(statusCodeResult))
         break;
     }
 
@@ -354,10 +354,14 @@ void centerPiece()
 }
 
 // Handles error codes passed in by the returns of relevant movement functions
-// Must take in an error code to work properly, returns true by default
+// Must take in an error code to work properly, returns false by default
 bool statusCodeHandler(uint8_t status)
 {
-  if (status == HIT_POS_X_ENDSTOP)
+  if (status == SUCCESS)
+  {
+    return true;
+  }
+  else if (status == HIT_POS_X_ENDSTOP)
   {
     alignAxis(xMotor, MAX_POSITION);
   }
@@ -384,5 +388,5 @@ bool statusCodeHandler(uint8_t status)
     return false;
   }
   
-  return true;
+  return false;
 }
