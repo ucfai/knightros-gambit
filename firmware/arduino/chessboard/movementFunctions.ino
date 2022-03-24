@@ -2,6 +2,7 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow)
 {
   uint8_t statusCodeResult;
   uint8_t currCol, currRow;
+  uint8_t *motorPtr;
   int8_t absDiagSpaces, diagSpacesX, diagSpacesY;
   int8_t deltaX, deltaY, absDeltaX, absDeltaY;
   bool isSuccessful;
@@ -48,15 +49,13 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow)
   // Assume no errors, unless proven otherwise
   isSuccessful = true;
 
-  if (deltaX == 0)
+  if (deltaX == 0  ||  deltaY == 0)
   {
-    statusCodeResult = moveStraight(yMotor, endCol, endRow);
-    if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
-      isSuccessful = false;
-  }
-  else if (deltaY == 0)
-  {
-    statusCodeResult = moveStraight(xMotor, endCol, endRow);
+    // Assign the correct motor based on which motor has movement
+    // Note: Because of the first base case, either deltaX or deltaY must be 0, but not both
+    motorPtr = (deltaX == 0) ? yMotor : xMotor;
+
+    statusCodeResult = moveStraight(motorPtr, endCol, endRow);
     if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
       isSuccessful = false;
   }
@@ -93,20 +92,12 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow)
       
       if (isSuccessful == true)
       {
-        // The remaining movement is in the Y direction
-        if (absDiagSpaces == absDeltaX)
-        {
-          statusCodeResult = moveStraight(yMotor, endCol, endRow);
-          if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
-            isSuccessful = false;
-        }
-        // The remaining movement is in the X direction
-        else if (absDiagSpaces == absDeltaY)
-        {
-          statusCodeResult = moveStraight(xMotor, endCol, endRow);
-          if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
-            isSuccessful = false;
-        }
+        // Assign the correct motor based on which motor still has movement left
+        motorPtr = (absDiagSpaces == absDeltaX) ? yMotor : xMotor;
+
+        statusCodeResult = moveStraight(yMotor, endCol, endRow);
+        if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
+          isSuccessful = false;
       }
     }
   }
