@@ -54,56 +54,47 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow)
     // Assign the correct motor based on which motor has movement
     // Note: Because of the first base case, either deltaX or deltaY must be 0, but not both
     motorPtr = (deltaX == 0) ? yMotor : xMotor;
-
     statusCodeResult = moveStraight(motorPtr, endCol, endRow);
-    if (!statusCodeHandler(statusCodeResult))
-      isSuccessful = false;
+    isSuccessful = statusCodeHandler(statusCodeResult);
   }
   else
   {
     // Note: moveDiagonal handles slopes of 1, 1/2, and 2
     statusCodeResult = moveDiagonal(endCol, endRow);
 
-    if (statusCodeResult != SUCCESS)
-    {  
-      // If we have INVALID_ARGS, the slope is not valid
-      // To account for this, we'll decompose the move into two moves:
-      // 1. Move using a slope of 1 until aligned with the target point
-      // 2. Move straight to the target point for the rest of the way
-      if (statusCodeResult == INVALID_ARGS)
+    // If we have INVALID_ARGS, the slope is not valid
+    // To account for this, we'll decompose the move into two moves:
+    // 1. Move wish a slope of 1 until either the X or Y position is aligned with the target point
+    // 2. Move straight to the target point for the rest of the way
+    if (statusCodeResult == INVALID_ARGS)
+    {
+      // All moveDirect calls that move pieces have valid slopes, so we can only encounter this
+      // if we are moving to the start point, which does not move pieces
+      digitalWrite(ELECTROMAGNET, LOW);
+
+      // We need to find the smaller distance for the diagonal movement using the absolute value, 
+      // because if either deltaX or deltaY are negative it will yield an incorrect minimum
+      // Calculate the X and Y components separately, since they can be different signs  
+      absDiagSpaces = min(absDeltaX, absDeltaY);
+      diagSpacesX = (deltaX > 0) ? absDiagSpaces : -absDiagSpaces;
+      diagSpacesY = (deltaY > 0) ? absDiagSpaces : -absDiagSpaces;
+
+      statusCodeResult = moveDiagonal(startRow + diagSpacesY, startCol + diagSpacesX);      
+      if (statusCodeHandler(statusCodeResult))
       {
-        // All moveDirect calls that move pieces have valid slopes, so we can only encounter this
-        // if we are moving to the start point, which does not move pieces
-        digitalWrite(ELECTROMAGNET, LOW);
-
-        // Reset isSuccessful to true since we have calls that can be successful after this
-        isSuccessful = true;
-
-        // We need to find the smaller distance for the diagonal movement using the absolute value, 
-        // because if either deltaX or deltaY are negative it will yield an incorrect minimum
-        // Calculate the X and Y components separately, since they can be different signs  
-        absDiagSpaces = min(absDeltaX, absDeltaY);
-        diagSpacesX = (deltaX > 0) ? absDiagSpaces : -absDiagSpaces;
-        diagSpacesY = (deltaY > 0) ? absDiagSpaces : -absDiagSpaces;
-
-        statusCodeResult = moveDiagonal(startRow + diagSpacesY, startCol + diagSpacesX);
-        if (!statusCodeHandler(statusCodeResult))
-          isSuccessful = false;
-        
-        if (isSuccessful == true)
-        {
-          // Assign the correct motor based on which motor still has movement left
-          motorPtr = (absDiagSpaces == absDeltaX) ? yMotor : xMotor;
-
-          statusCodeResult = moveStraight(yMotor, endCol, endRow);
-          if (!statusCodeHandler(statusCodeResult))
-            isSuccessful = false;
-        }
+        // Assign the correct motor based on which motor still has movement left
+        motorPtr = (absDiagSpaces == absDeltaX) ? yMotor : xMotor;
+        statusCodeResult = moveStraight(motorPtr, endCol, endRow);
+        isSuccessful = statusCodeHandler(statusCodeResult);
       }
       else
       {
-        isSuccessful = statusCodeHandler(statusCodeResult);
+        isSuccessful = false;
       }
+    }
+    else
+    {
+      isSuccessful = statusCodeHandler(statusCodeResult);
     }
   }
 
@@ -388,5 +379,5 @@ bool statusCodeHandler(uint8_t status)
     return false;
   }
   
-  return false;
+  return true;
 }
