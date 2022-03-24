@@ -25,7 +25,7 @@ class PlayNetwork(nn.Module):
 
     def __init__(self):
         super(PlayNetwork, self).__init__()
-        self.num_res_blocks = 2
+        self.num_res_blocks = 20
         self.num_filters = 32
 
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
