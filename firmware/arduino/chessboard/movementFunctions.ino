@@ -2,7 +2,7 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow)
 {
   uint8_t statusCodeResult;
   uint8_t currCol, currRow;
-  int8_t diagSpaces;
+  int8_t absDiagSpaces, diagSpacesX, diagSpacesY;
   int8_t deltaX, deltaY, absDeltaX, absDeltaY;
   bool isSuccessful;
 
@@ -76,31 +76,34 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow)
       // Since this can only happen when moving to the start point of the main call, 
       // turn off the electromagnet
       digitalWrite(ELECTROMAGNET, LOW);
-      
+
       // Reset isSuccessful to true since we have calls that can be successful after this
       isSuccessful = true;
 
-      // Must evaluate using the absolute value, otherwise if deltaX and deltaY are both negative, 
-      // it will yield an incorrect minimum
-      // We need the number to be in terms of deltaX and deltaY to include signs
-      diagSpaces = (min(absDeltaX, absDeltaY) == absDeltaX)? deltaX : deltaY;
-      statusCodeResult = moveDiagonal(startRow + diagSpaces, startCol + diagSpaces);
+      // We need to find the smaller distance for the diagonal movement using the absolute value, 
+      // because if either deltaX or deltaY are negative it will yield an incorrect minimum
+      // Calculate the X and Y components separately, since they can be different signs  
+      absDiagSpaces = min(absDeltaX, absDeltaY);
+      diagSpacesX = (deltaX > 0) ? absDiagSpaces : -absDiagSpaces;
+      diagSpacesY = (deltaY > 0) ? absDiagSpaces : -absDiagSpaces;
+
+      statusCodeResult = moveDiagonal(startRow + diagSpacesY, startCol + diagSpacesX);
       if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
         isSuccessful = false;
       
       if (isSuccessful == true)
       {
         // The remaining movement is in the Y direction
-        if (diagSpaces == deltaX)
+        if (absDiagSpaces == absDeltaX)
         {
           statusCodeResult = moveStraight(yMotor, endCol, endRow);
           if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
             isSuccessful = false;
         }
         // The remaining movement is in the X direction
-        else if (diagSpaces == deltaY)
+        else if (absDiagSpaces == absDeltaY)
         {
-          statusCodeResult = moveStraight(XMotor, endCol, endRow);
+          statusCodeResult = moveStraight(xMotor, endCol, endRow);
           if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
             isSuccessful = false;
         }
