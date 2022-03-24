@@ -11,6 +11,23 @@ import options
 from streamlit_dashboard import Dashboard
 
 
+def make_dir(dataset_path):
+    if not os.path.exists(os.path.dirname(dataset_path)):
+        os.makedirs(os.path.dirname(dataset_path))
+
+
+def load_dataset(dataset_path, show_dash):
+    assert os.path.exists(dataset_path), "Dataset not found at path provided."
+
+    msg = "Dataset retrieved."
+    if show_dash:
+        Dashboard.info_message("success", msg)
+    else:
+        print(msg)
+
+    return torch.load(dataset_path)
+
+
 def save_model(nnet, save_path, num_saved_models, overwrite):
     """Save given model parameters to external file
     """
@@ -41,6 +58,7 @@ def load_model(nnet, model_path, num_saved_models):
                     nnet.load_state_dict(torch.load(f'./models-{i + 1}.pt'))
                 break
 
+
 def init_params(nnet, device):
     '''Initialize parameters used for training.
 
@@ -65,6 +83,7 @@ def init_params(nnet, device):
             streamlit dashboard.
         show_dash: Bool, specifies whether or not to show the dashboard.
     '''
+
     parser = argparse.ArgumentParser(
         description='Specifies whether to run train.py with streamlit or json. Note: if --json is '
                     'specified, it takes precedence over --dashboard.')
@@ -132,6 +151,8 @@ def init_params(nnet, device):
 
     # Load in a model
     if model_path is not None:
+        if not os.path.exists(os.path.dirname(model_path)):
+            os.makedirs(os.path.dirname(model_path))
         load_model(nnet, model_path, num_saved_models)
 
     # Train network using stockfish evaluations
