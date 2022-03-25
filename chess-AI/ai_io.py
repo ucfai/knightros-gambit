@@ -98,7 +98,7 @@ def init_params(nnet, device):
     parser.add_argument('-m', '--make_dataset',
                         dest='make_dataset',
                         action='store_true',
-                        help='if specified, a dataset will be made')
+                        help='if specified, a dataset will be created')
     parser.add_argument('-s', '--disable_stockfish',
                         dest='stockfish_train',
                         action='store_false',
