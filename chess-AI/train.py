@@ -1,14 +1,13 @@
 """
 Main training program
 """
-from os import path, makedirs
-
+import os
 import chess
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
-from ai_io import init_params, load_model, save_model
+from ai_io import init_params, load_model, save_model, load_dataset, make_dir
 from mcts import Mcts
 from nn_layout import PlayNetwork
 from output_representation import policy_converter
@@ -220,6 +219,13 @@ def train_on_dataset(dataset, nnet, options, show_dash=False):
 
 
 def create_stockfish_dataset(sf_opt, show_dash):
+    """Create dataset of values/moves using stockfish
+
+    Attributes:
+        sf_opt: The stockfish training options
+        show_dash: If true display info on dashboard
+    """
+
     stockfish = StockfishTrain(sf_opt.elo, sf_opt.depth)
 
     # Value and move approximators from stockfish
@@ -230,8 +236,14 @@ def create_stockfish_dataset(sf_opt, show_dash):
 
 
 def train_on_mcts(nnet, mcts_opt, show_dash=False):
-    # Get MCTS object and parameters
-    # TODO: Figure out how many times to perform self play (and better name for this variable)
+    """Use MCTS to improve value and move output of network
+
+    Attributes:
+        nnet: Network to be trained
+        mcts_opt: Options for MCTS training
+        show_dash: If true display info on dashboard
+    """
+
     mcts = Mcts(mcts_opt.exploration, mcts_opt.device)
 
     # Will iterate through the number of training episodes
@@ -253,8 +265,7 @@ def main():
     nnet, dataset_path, stockfish_options, mcts_options, start_train, show_dash, make_dataset_flag, stockfish_train_flag, mcts_train_flag= init_params(nnet, device)
 
     # Makes parent directories if necessary
-    if not path.exists(path.dirname(dataset_path)):
-        makedirs(path.dirname(dataset_path))
+    make_dir(dataset_path)
 
     if start_train:
         if make_dataset_flag:
@@ -272,15 +283,7 @@ def main():
             else:
                 print(msg)
         else:
-            assert path.exists(dataset_path), "Dataset not found at path provided."
-
-            msg = "Dataset retrieved."
-            if show_dash:
-                Dashboard.info_message("success", msg)
-            else:
-                print(msg)
-
-            dataset = torch.load(dataset_path)
+            dataset = load_dataset(dataset_path, show_dash)
 
         if stockfish_train_flag:
             msg = "Stockfish Training Has Begun"
