@@ -1,10 +1,109 @@
-bool moveDirect(int startCol, int startRow, int endCol, int endRow)
+bool moveDirect(int startCol, int startRow, int endCol, int endRow, bool enableMagnet)
 {
-  // TODO:
-  // Must account for diagonal and straight movement cases
-  // Must also return true if the current position is the target position 
-  // (Since no change is needed)
-  return true;
+  uint8_t statusCodeResult;
+  uint8_t currCol, currRow;
+  uint8_t *motorPtr;
+  int8_t absDiagSpaces, diagSpacesX, diagSpacesY;
+  int8_t deltaX, deltaY, absDeltaX, absDeltaY;
+  bool isSuccessful;
+
+  // Find the signed difference between the final and initial points
+  deltaX = endCol - startCol;
+  deltaY = endRow - startRow;
+
+  // We need the magnitude of deltaX and deltaY for handling invalid slopes for moveDiagonal  
+  absDeltaX = abs(deltaX);
+  absDeltaY = abs(deltaY);
+
+  // If target point is equal to the start point
+  if (deltaX == 0  &&  deltaY == 0)
+    return true;
+
+  // Checks if the EM is aligned properly
+  if ((currPositionX % stepsPerUnitSpace) || (currPositionY % stepsPerUnitSpace))
+    return false;
+
+  currCol = currPositionX / (stepsPerUnitSpace * 8);
+  currRow = currPositionY / (stepsPerUnitSpace * 8);
+
+  // Make initial move to first position and move directly since it's faster.
+  // Since we're moving to the initial position, we want the magnet off, so pass in false.
+  // This is calling the function recursively in the following way:
+  // ==============================================================
+  // 1. When the initial function call is made, we end up entering the first recursive call 
+  //    to move to the start point.
+  // 2. If the target point is the start point, just return true and continue. Otherwise calculate 
+  //    the numbers to move to the first point and enter the 2nd recursive call.
+  //    (Note that the start point in this call is the current point from the previous call)
+  // 3. In this call, we have the start point and end point equal to the current point, so it 
+  //    returns true before anything is done.
+  // 4. Now we end up in the first recursive call and simply move to the start point.
+  // 5. After being moved to the start point, we perform the move from the initial call.
+  if (!moveDirect(currCol, currRow, startCol, startRow, false))
+    return false;
+
+  // Enable electromagnet
+  if (enableMagnet)
+    ledcWrite(EM_PWM_CHANNEL, PWM_HALF);
+
+  // This variable allows us to store the return value of the function
+  // so we can turn off the electromagnet before exiting.
+  // Assume no errors, unless proven otherwise
+  isSuccessful = true;
+
+  if (deltaX == 0  ||  deltaY == 0)
+  {
+    // Assign the correct motor based on which motor has movement
+    // Note: Because of the first base case, either deltaX or deltaY must be 0, but not both
+    motorPtr = (deltaX == 0) ? yMotor : xMotor;
+    statusCodeResult = moveStraight(motorPtr, endCol, endRow);
+    isSuccessful = statusCodeHandler(statusCodeResult);
+  }
+  else
+  {
+    // Note: moveDiagonal handles slopes of 1, 1/2, and 2
+    statusCodeResult = moveDiagonal(endCol, endRow);
+
+    // If we have INVALID_ARGS, the slope is not valid
+    // To account for this, we'll decompose the move into two moves:
+    // 1. Move wish a slope of 1 until either the X or Y position is aligned with the target point
+    // 2. Move straight to the target point for the rest of the way
+    if (statusCodeResult == INVALID_ARGS)
+    {
+      // All moveDirect calls that move pieces have valid slopes, so we can only encounter this
+      // if we are moving to the start point, which does not move pieces
+      digitalWrite(ELECTROMAGNET, LOW);
+
+      // We need to find the smaller distance for the diagonal movement using the absolute value, 
+      // because if either deltaX or deltaY are negative it will yield an incorrect minimum
+      // Calculate the X and Y components separately, since they can be different signs  
+      absDiagSpaces = min(absDeltaX, absDeltaY);
+      diagSpacesX = (deltaX > 0) ? absDiagSpaces : -absDiagSpaces;
+      diagSpacesY = (deltaY > 0) ? absDiagSpaces : -absDiagSpaces;
+
+      statusCodeResult = moveDiagonal(startRow + diagSpacesY, startCol + diagSpacesX);      
+      if (statusCodeHandler(statusCodeResult))
+      {
+        // Assign the correct motor based on which motor still has movement left
+        motorPtr = (absDiagSpaces == absDeltaX) ? yMotor : xMotor;
+        statusCodeResult = moveStraight(motorPtr, endCol, endRow);
+        isSuccessful = statusCodeHandler(statusCodeResult);
+      }
+      else
+      {
+        isSuccessful = false;
+      }
+    }
+    else
+    {
+      isSuccessful = statusCodeHandler(statusCodeResult);
+    }
+  }
+
+  // Turn electromagnet off
+  digitalWrite(ELECTROMAGNET, LOW);
+
+  return isSuccessful;
 }
 
 // This type of move is typically decomposed into a set of 4 moves:
@@ -21,7 +120,7 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
   int8_t diagDirX, diagDirY;
   int8_t deltaX, deltaY, subDeltaX, subDeltaY, absDeltaX, absDeltaY;
   uint8_t pointCounter, statusCodeResult;
-  uint8_t curCol, curRow;
+  uint8_t currCol, currRow;
   uint8_t numPoints = 0;
 
   // Find the signed difference between the final and initial points
@@ -49,11 +148,12 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
   if ((currPositionX % stepsPerUnitSpace) || (currPositionY % stepsPerUnitSpace))
     return false;
 
-  curCol = currPositionX / (stepsPerUnitSpace * 8);
-  curRow = currPositionY / (stepsPerUnitSpace * 8);
+  currCol = currPositionX / (stepsPerUnitSpace * 8);
+  currRow = currPositionY / (stepsPerUnitSpace * 8);
 
   // Make initial move to first position. Move diagonally since it's faster.
-  if (!moveDirect(curCol, curRow, startCol, startRow))
+  // Since we're moving to the initial position, we want the magnet off, so pass in false.
+  if (!moveDirect(currCol, currRow, startCol, startRow, false))
     return false;
 
   // Calculate a list of up to 4 new points (including the start point) 
@@ -61,7 +161,7 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
 
   // Case where we should call moveDirect, since pathing can be simplified to that
   if (absDeltaX <= 2  &&  absDeltaY <= 2)
-    return moveDirect(startCol, startRow, endCol, endRow);
+    return moveDirect(startCol, startRow, endCol, endRow, true);
 
   // Initial position
   cols[0] = startCol;
@@ -192,19 +292,19 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
     if (rows[pointCounter] == rows[pointCounter-1])
     {
       statusCodeResult = moveStraight(yMotor, cols[pointCounter], rows[pointCounter]);
-      if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
+      if (!statusCodeHandler(statusCodeResult))
         break;
     }
     else if (cols[pointCounter] == cols[pointCounter-1])
     {
       statusCodeResult = moveStraight(xMotor, cols[pointCounter], rows[pointCounter]);
-      if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
+      if (!statusCodeHandler(statusCodeResult))
         break;
     }
     else
     {
       statusCodeResult = moveDiagonal(cols[pointCounter], rows[pointCounter]);
-      if (statusCodeResult != SUCCESS && !statusCodeHandler(statusCodeResult))
+      if (!statusCodeHandler(statusCodeResult))
         break;
     }
 
@@ -248,10 +348,14 @@ void centerPiece()
 }
 
 // Handles error codes passed in by the returns of relevant movement functions
-// Must take in an error code to work properly, returns true by default
+// Must take in an error code to work properly, returns false by default
 bool statusCodeHandler(uint8_t status)
 {
-  if (status == HIT_POS_X_ENDSTOP)
+  if (status == SUCCESS)
+  {
+    return true;
+  }
+  else if (status == HIT_POS_X_ENDSTOP)
   {
     alignAxis(xMotor, MAX_POSITION);
   }
@@ -271,9 +375,10 @@ bool statusCodeHandler(uint8_t status)
   {
     home();
   }
-  // Returns false if status code not one of those handled above, e.g. INVALID_ARGS, or if status code is invalid
   else
   {
+    // Returns false if status code not one of those handled above, 
+    // e.g. INVALID_ARGS, or if status code is invalid
     return false;
   }
   

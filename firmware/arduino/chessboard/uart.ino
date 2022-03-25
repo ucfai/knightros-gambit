@@ -114,7 +114,8 @@ bool makeMove(volatile char * message)
     // Move type 0
     if (message[0]  ==  DIRECT)
     {
-        if (!moveDirect(message[2] - 'A', message[1] - 'A', message[4] - 'A', message[3] - 'A'))
+        // Since we're moving a piece, we want the magnet on, so pass in true.
+        if (!moveDirect(message[2] - 'A', message[1] - 'A', message[4] - 'A', message[3] - 'A', true))
         {
             currentState = ERROR;
             errorCode = MOVEMENT_ERROR;
