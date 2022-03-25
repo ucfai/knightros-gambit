@@ -1,4 +1,4 @@
-bool moveDirect(int startCol, int startRow, int endCol, int endRow)
+bool moveDirect(int startCol, int startRow, int endCol, int endRow, bool motorEnable)
 {
   uint8_t statusCodeResult;
   uint8_t currCol, currRow;
@@ -6,6 +6,7 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow)
   int8_t absDiagSpaces, diagSpacesX, diagSpacesY;
   int8_t deltaX, deltaY, absDeltaX, absDeltaY;
   bool isSuccessful;
+  static uint8_t callCount = 0;
 
   // Find the signed difference between the final and initial points
   deltaX = endCol - startCol;
@@ -38,11 +39,12 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow)
   //    returns true before anything is done.
   // 4. Now we end up in the first recursive call and simply move to the start point.
   // 5. After being moved to the start point, we perform the move from the initial call.
-  if (!moveDirect(currCol, currRow, startCol, startRow))
+  if (!moveDirect(currCol, currRow, startCol, startRow, false))
     return false;
 
   // Enable electromagnet
-  ledcWrite(EM_PWM_CHANNEL, PWM_HALF);
+  if (motorEnable)
+    ledcWrite(EM_PWM_CHANNEL, PWM_HALF);
 
   // This variable allows us to store the return value of the function
   // so we can turn off the electromagnet before exiting.
@@ -150,7 +152,7 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
   currRow = currPositionY / (stepsPerUnitSpace * 8);
 
   // Make initial move to first position. Move diagonally since it's faster.
-  if (!moveDirect(currCol, currRow, startCol, startRow))
+  if (!moveDirect(currCol, currRow, startCol, startRow, false))
     return false;
 
   // Calculate a list of up to 4 new points (including the start point) 
@@ -158,7 +160,7 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
 
   // Case where we should call moveDirect, since pathing can be simplified to that
   if (absDeltaX <= 2  &&  absDeltaY <= 2)
-    return moveDirect(startCol, startRow, endCol, endRow);
+    return moveDirect(startCol, startRow, endCol, endRow, true);
 
   // Initial position
   cols[0] = startCol;
