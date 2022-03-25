@@ -70,16 +70,24 @@ def init_params(nnet, device):
                     'specified, it takes precedence over --dashboard.')
     parser.add_argument('-j', '--json',
                         dest='json',
-                        action='store_const',
-                        const=True,
-                        default=False,
+                        action='store_true',
                         help='if specified, load params from file')
     parser.add_argument('-d', '--dashboard',
                         dest='dashboard',
-                        action='store_const',
-                        const=True,
-                        default=False,
+                        action='store_true',
                         help='if specified, load params from dashboard')
+    parser.add_argument('-m', '--make_dataset',
+                        dest='make_dataset',
+                        action='store_true',
+                        help='if specified, a dataset will be made')
+    parser.add_argument('-s', '--disable_stockfish',
+                        dest='stockfish_train',
+                        action='store_false',
+                        help='if specified, stockfish train will be disabled')
+    parser.add_argument('-t', '--disable_mcts',
+                        dest='mcts_train',
+                        action='store_false',
+                        help='if specified, mcts train will be disabled')
     args = parser.parse_args()
 
     if args.json:
@@ -107,6 +115,10 @@ def init_params(nnet, device):
         training_episodes = params['mcts']['training_episodes']
         mcts_simulations = params['mcts']['simulations']
 
+        make_dataset_flag = args.make_dataset
+        stockfish_train_flag = args.stockfish_train
+        mcts_train_flag = args.mcts_train
+
         # If using dashboard, this is set by the start button; set to True when reading from file
         start_train = True
 
@@ -126,6 +138,8 @@ def init_params(nnet, device):
 
         start_train = dashboard.train_button()
 
+        make_dataset_flag, stockfish_train_flag, mcts_train_flag = dashboard.train_flags()
+
     else:
         raise ValueError("This program must be run with the `train.sh` script. See the script "
                          "for usage instructions.")
@@ -143,7 +157,8 @@ def init_params(nnet, device):
                                        mcts_batch_size, mcts_games, device, model_path,
                                        num_saved_models, overwrite, exploration, mcts_simulations, training_episodes)
 
-    return (nnet, dataset_path, stockfish_options, mcts_options, start_train, args.dashboard)
+    return (nnet, dataset_path, stockfish_options, mcts_options, start_train, args.dashboard,
+    make_dataset_flag, stockfish_train_flag, mcts_train_flag)
 
 if __name__ == "__main__":
     print("no main for this file")

@@ -249,9 +249,8 @@ def main():
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     nnet = PlayNetwork().to(device=device)
 
-    make_dataset_flag, stockfish_train_flag, mcts_train_flag = True, True, True
 
-    nnet, dataset_path, stockfish_options, mcts_options, start_train, show_dash = init_params(nnet, device)
+    nnet, dataset_path, stockfish_options, mcts_options, start_train, show_dash, make_dataset_flag, stockfish_train_flag, mcts_train_flag= init_params(nnet, device)
 
     # Makes parent directories if necessary
     if not path.exists(path.dirname(dataset_path)):
