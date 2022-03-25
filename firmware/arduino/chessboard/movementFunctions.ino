@@ -1,4 +1,4 @@
-bool moveDirect(int startCol, int startRow, int endCol, int endRow, bool motorEnable)
+bool moveDirect(int startCol, int startRow, int endCol, int endRow, bool enableMagnet)
 {
   uint8_t statusCodeResult;
   uint8_t currCol, currRow;
@@ -6,7 +6,6 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow, bool motorEn
   int8_t absDiagSpaces, diagSpacesX, diagSpacesY;
   int8_t deltaX, deltaY, absDeltaX, absDeltaY;
   bool isSuccessful;
-  static uint8_t callCount = 0;
 
   // Find the signed difference between the final and initial points
   deltaX = endCol - startCol;
@@ -43,7 +42,7 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow, bool motorEn
     return false;
 
   // Enable electromagnet
-  if (motorEnable)
+  if (enableMagnet)
     ledcWrite(EM_PWM_CHANNEL, PWM_HALF);
 
   // This variable allows us to store the return value of the function
@@ -152,6 +151,7 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
   currRow = currPositionY / (stepsPerUnitSpace * 8);
 
   // Make initial move to first position. Move diagonally since it's faster.
+  // Since we're moving to the initial position, we want the magnet off, so pass in false.
   if (!moveDirect(currCol, currRow, startCol, startRow, false))
     return false;
 
