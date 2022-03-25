@@ -27,6 +27,7 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow, bool enableM
   currRow = currPositionY / (stepsPerUnitSpace * 8);
 
   // Make initial move to first position and move directly since it's faster.
+  // Since we're moving to the initial position, we want the magnet off, so pass in false.
   // This is calling the function recursively in the following way:
   // ==============================================================
   // 1. When the initial function call is made, we end up entering the first recursive call 
