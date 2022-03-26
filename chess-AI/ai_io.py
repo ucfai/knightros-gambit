@@ -136,9 +136,9 @@ def init_params(nnet, device):
         training_episodes = params['mcts']['training_episodes']
         mcts_simulations = params['mcts']['simulations']
 
-        make_dataset_flag = args.make_dataset
-        stockfish_train_flag = args.stockfish_train
-        mcts_train_flag = args.mcts_train
+        make_dataset = args.make_dataset
+        stockfish_train = args.stockfish_train
+        mcts_train = args.mcts_train
 
         # If using dashboard, this is set by the start button; set to True when reading from file
         start_train = True
@@ -159,7 +159,7 @@ def init_params(nnet, device):
 
         start_train = dashboard.train_button()
 
-        make_dataset_flag, stockfish_train_flag, mcts_train_flag = dashboard.train_flags()
+        make_dataset, stockfish_train, mcts_train = dashboard.train_flags()
 
     else:
         raise ValueError("This program must be run with the `train.sh` script. See the script "
