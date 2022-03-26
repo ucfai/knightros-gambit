@@ -1,3 +1,5 @@
+#! /bin/bash
+
 # example use:
 # ./train.sh streamlit
 # ./train.sh json
