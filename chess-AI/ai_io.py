@@ -145,7 +145,7 @@ def init_params(nnet, device):
         dashboard = Dashboard()
         # TODO: Have reasonable defaults in case certain hyperparams are not specified within the
         # streamlit dashboard. Can use the params in params.json
-        model_path, dataset_path = dashboard.load_files()
+        dataset_path, model_path = dashboard.load_files()
 
         num_saved_models, overwrite, learning_rate, \
         momentum, weight_decay = dashboard.nnet_params()
@@ -165,6 +165,9 @@ def init_params(nnet, device):
 
     # Load in a model
     if model_path is not None:
+        print()
+        print(model_path)
+        print()
         if not os.path.exists(os.path.dirname(model_path)):
             os.makedirs(os.path.dirname(model_path))
         load_model(nnet, model_path, num_saved_models)
