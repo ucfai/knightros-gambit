@@ -12,11 +12,13 @@ from streamlit_dashboard import Dashboard
 
 
 def make_dir(dataset_path):
+    """Create a directory for the corresponding dataset path if it does not already exist."""
     if not os.path.exists(os.path.dirname(dataset_path)):
         os.makedirs(os.path.dirname(dataset_path))
 
 
 def load_dataset(dataset_path, show_dash):
+    """Load the dataset at the provided path. If using streamlit, show a confirmation message."""
     assert os.path.exists(dataset_path), "Dataset not found at path provided."
 
     msg = "Dataset retrieved."
@@ -173,16 +175,18 @@ def init_params(nnet, device):
         load_model(nnet, model_path, num_saved_models)
 
     # Train network using stockfish evaluations
-    stockfish_options = options.StockfishOptions(learning_rate, momentum, weight_decay, stock_epochs,
-                                                 stock_batch_size, stock_games, device, model_path,
-                                                 num_saved_models, overwrite, elo, depth)
+    stockfish_options = options.StockfishOptions(learning_rate, momentum, weight_decay,
+                                                 stock_epochs, stock_batch_size, stock_games,
+                                                 device, model_path, num_saved_models, overwrite,
+                                                 elo, depth)
 
     mcts_options = options.MCTSOptions(learning_rate, momentum, weight_decay, mcts_epochs,
                                        mcts_batch_size, mcts_games, device, model_path,
-                                       num_saved_models, overwrite, exploration, mcts_simulations, training_episodes)
+                                       num_saved_models, overwrite, exploration, mcts_simulations,
+                                       training_episodes)
 
     return (nnet, dataset_path, stockfish_options, mcts_options, start_train, args.dashboard,
-    make_dataset_flag, stockfish_train_flag, mcts_train_flag)
+            make_dataset_flag, stockfish_train_flag, mcts_train_flag)
 
 if __name__ == "__main__":
     print("no main for this file")
