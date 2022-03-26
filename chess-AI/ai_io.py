@@ -185,8 +185,9 @@ def init_params(nnet, device):
                                        num_saved_models, overwrite, exploration, mcts_simulations,
                                        training_episodes)
 
-    return (nnet, dataset_path, stockfish_options, mcts_options, start_train, args.dashboard,
-            make_dataset_flag, stockfish_train_flag, mcts_train_flag)
+    flags = options.TrainingFlags(
+        start_train, args.dashboard, make_dataset, stockfish_train, mcts_train)
+    return (nnet, dataset_path, stockfish_options, mcts_options, flags)
 
 if __name__ == "__main__":
     print("no main for this file")

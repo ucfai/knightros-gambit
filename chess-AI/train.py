@@ -1,13 +1,12 @@
 """
 Main training program
 """
-import os
 import chess
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
-from ai_io import init_params, load_model, save_model, load_dataset, make_dir
+from ai_io import init_params, save_model, load_dataset, make_dir
 from mcts import Mcts
 from nn_layout import PlayNetwork
 from output_representation import policy_converter
@@ -150,7 +149,8 @@ def train_on_dataset(dataset, nnet, options, show_dash=False):
 
     # Create optimizer for updating parameters during training
     # TODO: Consider using other optimizers, such as Adam
-    opt = torch.optim.SGD(nnet.parameters(), lr=options.learning_rate, weight_decay=options.weight_decay, momentum=options.momentum)
+    opt = torch.optim.SGD(nnet.parameters(), lr=options.learning_rate,
+                          weight_decay=options.weight_decay, momentum=options.momentum)
     train_dl = DataLoader(dataset=dataset, batch_size=options.batch_size, shuffle=False)
 
     # Main training loop
@@ -171,7 +171,7 @@ def train_on_dataset(dataset, nnet, options, show_dash=False):
             value_batch = []
 
             # Store policies and values for entire batch
-            # TODO: Loop might be replaceable with one nnet call on inputs followed by zip to separate lists
+            # TODO: Can maybe replace loop with 1 nnet call on inputs, then zip to separate lists
             for state in input_states:
                 policy, value = nnet(state.to(device=options.device))
                 policy_batch.append(policy)
@@ -248,7 +248,8 @@ def train_on_mcts(nnet, mcts_opt, show_dash=False):
 
     # Will iterate through the number of training episodes
     for _ in range(mcts_opt.training_episodes):
-        mcts_moves = lambda board: mcts.get_tree_results(mcts_opt.simulations, nnet, board, temperature=5)
+        mcts_moves = lambda board: mcts.get_tree_results(mcts_opt.simulations, nnet, board,
+                                                         temperature=5)
 
         dataset = create_dataset(mcts_opt.games, mcts_moves)
         train_on_dataset(dataset, nnet, mcts_opt, show_dash)
@@ -261,62 +262,62 @@ def main():
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     nnet = PlayNetwork().to(device=device)
 
-    nnet, dataset_path, stockfish_options, mcts_options, start_train, show_dash, make_dataset_flag, stockfish_train_flag, mcts_train_flag= init_params(nnet, device)
+    nnet, dataset_path, stockfish_options, mcts_options, flags = init_params(nnet, device)
 
     # Need to check for dataset
     if not dataset_path:
         msg = "No dataset path specified"
-        if show_dash:
+        if flags.show_dash:
             Dashboard.info_message("error", msg)
         else:
             print(msg)
     else:
         # Makes parent directories if necessary
-        make_dir(dataset_path)    
+        make_dir(dataset_path)
 
-        if start_train:
-            if make_dataset_flag:
+        if flags.start_train:
+            if flags.make_dataset:
                 msg = "Dataset Creation Has Begun"
-                if show_dash:
+                if flags.show_dash:
                     Dashboard.info_message("success", msg)
                 else:
                     print(msg)
-                dataset = create_stockfish_dataset(stockfish_options, show_dash)
+                dataset = create_stockfish_dataset(stockfish_options, flags.show_dash)
                 torch.save(dataset, dataset_path)
 
                 msg = "Dataset Creation completed"
-                if show_dash:
+                if flags.show_dash:
                     Dashboard.info_message("success", msg)
                 else:
                     print(msg)
             else:
-                dataset = load_dataset(dataset_path, show_dash)
+                dataset = load_dataset(dataset_path, flags.show_dash)
 
-            if stockfish_train_flag:
+            if flags.stockfish_train:
                 msg = "Stockfish Training Has Begun"
-                if show_dash:
+                if flags.show_dash:
                     Dashboard.info_message("success", msg)
                 else:
                     print(msg)
                 train_on_dataset(dataset, nnet, stockfish_options)
 
                 msg = "Stockfish Training completed"
-                if show_dash:
+                if flags.show_dash:
                     Dashboard.info_message("success", msg)
                 else:
                     print(msg)
 
-            if mcts_train_flag:
+            if flags.mcts_train:
                 # Train network using MCTS
                 msg = "MCTS Training has begun"
-                if show_dash:
+                if flags.show_dash:
                     Dashboard.info_message("success", msg)
                 else:
                     print(msg)
-                train_on_mcts(nnet, mcts_options, show_dash)
+                train_on_mcts(nnet, mcts_options, flags.show_dash)
 
                 msg = "MCTS Training completed"
-                if show_dash:
+                if flags.show_dash:
                     Dashboard.info_message("success", msg)
                 else:
                     print(msg)
