@@ -2,7 +2,7 @@
     "_comment": "PARAMS MUST BE ALPHABETIZED",
 
     "saving":{
-        "dataset_path": null,
+        "dataset_path": "datasets/stockfish_data.pt",
         "model_path": null,
         "num_saved_models": 5,
         "overwrite": true

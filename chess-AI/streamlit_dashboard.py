@@ -104,3 +104,15 @@ class Dashboard:
         weight_decay = self.col2.number_input("Weight Decay", value=0.01)
 
         return saved_models, overwrite, learning_rate, momentum, weight_decay
+
+
+    def train_flags(self):
+        """ Gets the make dataset flag, stockfish train flag, and mcts train 
+        flag from the dashboard
+        """
+        self.col1.title("Training Flags")
+        make_dataset_flag = self.col1.checkbox("Make Dataset", value=True)
+        stockfish_train_flag = self.col1.checkbox("Stockfish Train", value=True)
+        mcts_train_flag = self.col1.checkbox("MCTS Train", value=True)
+
+        return make_dataset_flag, stockfish_train_flag, mcts_train_flag

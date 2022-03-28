@@ -40,9 +40,10 @@ class MCTSOptions(TrainOptions):
     """
 
     def __init__(self, learning_rate, momentum, weight_decay, epochs, batch_size, games, device,
-                 save_path, num_saved_models, overwrite, exploration, simulations, training_episodes):
-        TrainOptions.__init__(self, learning_rate, momentum, weight_decay, epochs, batch_size, games, device,
-                              save_path, num_saved_models, overwrite)
+                 save_path, num_saved_models, overwrite, exploration, simulations,
+                 training_episodes):
+        TrainOptions.__init__(self, learning_rate, momentum, weight_decay, epochs, batch_size,
+                              games, device, save_path, num_saved_models, overwrite)
 
         self.exploration = exploration
         self.simulations = simulations
@@ -59,8 +60,18 @@ class StockfishOptions(TrainOptions):
 
     def __init__(self, learning_rate, momentum, weight_decay, epochs, batch_size, games, device,
                  save_path, num_saved_models, overwrite, elo, depth):
-        TrainOptions.__init__(self, learning_rate, momentum, weight_decay, epochs, batch_size, games, device,
-                              save_path, num_saved_models, overwrite)
+        TrainOptions.__init__(self, learning_rate, momentum, weight_decay, epochs, batch_size,
+                              games, device, save_path, num_saved_models, overwrite)
 
         self.elo = elo
         self.depth = depth
+
+
+class TrainingFlags:
+    """Helper class used to encapsulate various flags used during training."""
+    def __init__(self, start_train, show_dash, make_dataset, stockfish_train, mcts_train):
+        self.start_train = start_train
+        self.show_dash = show_dash
+        self.make_dataset = make_dataset
+        self.stockfish_train = stockfish_train
+        self.mcts_train = mcts_train
