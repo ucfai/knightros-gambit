@@ -54,9 +54,9 @@ enum ErrorCode
 
 enum InstructionType
 {
-  ALIGN_AXIS = '1',
-  SET_ELECTROMAGNET = '2',
-  RETRANSMIT = '3'
+  ALIGN_AXIS = 'A',
+  SET_ELECTROMAGNET = 'S',
+  RETRANSMIT = 'R'
 };
 
 // Electromagnet

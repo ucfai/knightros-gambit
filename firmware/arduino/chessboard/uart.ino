@@ -87,7 +87,8 @@ bool validateMessageFromPi(volatile char * message)
     else if (message[0] == INSTRUCTION)
     {
         // Check if message[5] holds a valid instruction type
-        if (message[5] < ALIGN_AXIS || message[5] > RETRANSMIT)
+        if (message[5] != ALIGN_AXIS && message[5] != RETRANSMIT &&
+            message[5] != SET_ELECTROMAGNET)
         {
             errorCode = INVALID_LOCATION;
             currentState = ERROR;
