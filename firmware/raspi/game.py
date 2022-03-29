@@ -6,7 +6,7 @@ developed (web, speech, otb).
 import time
 
 from boardinterface import Board
-from status import ArduinoStatus, OpCode
+import status
 import util
 
 class Game:
@@ -22,7 +22,7 @@ class Game:
         # board.setup_board(is_human_turn)
 
         # TODO: remove this after real Arduino communication is set up
-        self.board.set_status_from_arduino(ArduinoStatus.IDLE, 0, None)
+        self.board.set_status_from_arduino(status.ArduinoStatus.IDLE, 0, None)
 
     def winner(self):
         """Returns None if draw or still in progress, True if white won, False if black won.
@@ -83,42 +83,31 @@ class Game:
         Returns:
             made_move: boolean that is True if turn changes, otherwise False.
         '''
-        board_status = self.board.get_status_from_arduino()
-        print(f"\nBoard Status: {board_status}")
+        arduino_status = self.board.get_status_from_arduino()
+        print(f"\nBoard Status: {arduino_status}")
 
-        if board_status.status == ArduinoStatus.EXECUTING_MOVE:
+        if arduino_status.status == status.ArduinoStatus.EXECUTING_MOVE:
             # Wait for move in progress to finish executing
             time.sleep(1) # reduce the amount of polling while waiting for move to finish
 
             # TODO: This is just so we have game loop working, remove once we read from arduino
-            self.board.set_status_from_arduino(ArduinoStatus.IDLE,
+            self.board.set_status_from_arduino(status.ArduinoStatus.IDLE,
                                                self.board.msg_queue[0].move_count,
-                                               None)
+                                               self.board.msg_queue[0].op_code)
             # Turn doesn't change, since we don't get next move if Arduino is still executing
             return False
 
-        if board_status.status == ArduinoStatus.ERROR:
+        if arduino_status.status == status.ArduinoStatus.ERROR:
             # TODO: figure out edge/error cases and handle them here
             raise ValueError("Unimplemented, need to handle errors")
 
-        if board_status.status == ArduinoStatus.IDLE:
+        if arduino_status.status == status.ArduinoStatus.IDLE:
             if self.board.msg_queue:
-                # Arduino sends and receives move_count % 2, for normal move type messages, since
-                # it only needs move_count as a form of acknowledgement.
-                # Note: debug messages (such as retransmit) are added to message queue as a string.
-                # If the move count returned in ArduinoStatus is debug type, just check last char
-                # of most recent msg on queue for equality. Otherwise, check that the move count
-                # matches move count % 2 (as this is the outgoing format for move count)
-
-                # TODO: Update this to handle adding arbitrary string messages to queue.
-                # Probably need to update the Message class to handle being created from a string.
-
-                # if any([
-                #     all([board_status.move_count in ArduinoStatus.DEBUG_IDENTIFIERS,
-                #          board_status.move_count == self.board.msg_queue[0].move_count]),
-                #     board_status.move_count == self.board.msg_queue[0].move_count % 2]):
-                if all([board_status.move_count == self.board.msg_queue[0].move_count,
-                        board_status.status == ArduinoStatus.IDLE]):
+                # We have a separate move counter for moves and instructions; to resolve conflicts
+                # we check both OpType (to identify whether we are checking for an instruction or
+                # move, and then the move number. If both match, we remove the message from queue.
+                if all([arduino_status.extra == self.board.msg_queue[0].op_code,
+                        arduino_status.move_count == self.board.msg_queue[0].move_count]):
                     self.board.msg_queue.popleft()
                     print("Removed message from queue")
                     # After removing move from queue, return, allows rechecking if msg_queue empty
@@ -139,10 +128,10 @@ class Game:
             # msg can be a UCI move, or it can be a fully formatted `Message` string
             if len(msg) in (4, 5):
                 self.send_uci_move_to_board(msg)
-            elif len(msg) == OpCode.MESSAGE_LENGTH:
+            elif len(msg) == status.OpCode.MESSAGE_LENGTH:
                 # Decompose each move into a `Message` type and add to board's msg queue
                 op_code = msg[1]
-                if op_code in OpCode.UCI_MOVE_OPCODES:
+                if op_code in status.OpCode.UCI_MOVE_OPCODES:
                     # TODO: need to handle promotions here; maybe also needs to be updated
                     # in general for the opcodes. This section has to be more fleshed out.
                     start_bc = util.BoardCell(ord(msg[2]) - ord('A'), ord(msg[3]) - ord('A'))
@@ -154,10 +143,10 @@ class Game:
                     # TODO: if human_plays_white_pieces is false, need to flip boardcell diagonally
                     self.board.add_move_to_queue(start_bc, end_bc, op_code)
                     return False
-                if op_code == OpCode.INSTRUCTION:
+                if op_code == status.OpCode.INSTRUCTION:
                     # Note: Instruction type opcodes are added to front of queue as they take
                     # priority. Ex: want to request home axis before sending any other msgs.
-                    self.board.add_instruction_to_queue(op_type=msg[-1], extra=msg[2])
+                    self.board.add_instruction_to_queue(op_type=msg[2], extra=msg[3])
                     return False
                 raise ValueError(f"Couldn't parse message {msg}")
 

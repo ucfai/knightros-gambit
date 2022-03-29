@@ -105,7 +105,7 @@ class Engine:
         # (util.Const.OFFSET_SIZE, util.Const.OFFSET_SIZE) and the middle of "h8" corresponds to
         # BoardCell (util.Const.UPPER_RIGHT_OFFSET, util.Const.UPPER_RIGHT_OFFSET). Vice versa for
         # black pieces. Below logic converts chess coordinates to board coordinates.
-        
+
         # TODO: remove magic numbers
         if self.human_plays_white_pieces:
             return util.BoardCell(
@@ -216,6 +216,7 @@ class Board:
     def __init__(self, human_plays_white_pieces):
         self.engine = Engine(human_plays_white_pieces)
         self.move_count = 0
+        self.instruction_count = 0
         self.arduino_status = ArduinoStatus(ArduinoStatus.IDLE, self.move_count, None)
 
         self.graveyard = Graveyard()
@@ -520,7 +521,8 @@ class Board:
     def add_instruction_to_queue(self, op_type, extra='0'):
         '''Add Instruction to self.msg_queue.
         '''
-        instruction = Instruction(op_type, extra)
+        self.instruction_count += 1
+        instruction = Instruction(op_type, self.instruction_count, extra)
         self.add_message_to_queue(instruction, add_to_front=True)
 
     def add_message_to_queue(self, message, add_to_front=False):
@@ -602,7 +604,6 @@ class Move:
         op_code: OpCode specifying how piece should be moved.
     """
     def __init__(self, move_count, source, dest, op_code):
-        # super().__init__(move_count, op_code)
         self.move_count = move_count
         self.op_code = op_code
         self.source = source
@@ -623,10 +624,11 @@ class Instruction:
         op_type: char describing type of instruction. See status.OpType.
         extra: str field used for ALIGN_AXIS and SET_ELECTROMAGNET. See status.OpType.
     """
-    def __init__(self, op_type, extra='0'):
-        # super().__init__(move_count=op_type, op_code=op_code)
+    def __init__(self, op_type, instruction_count, extra='0'):
+        self.op_code = OpCode.INSTRUCTION
         self.op_type = op_type
+        self.move_count = instruction_count
         self.extra = extra
 
     def __str__(self):
-        return f"~{OpCode.INSTRUCTION}{self.extra}000{self.op_type}"
+        return f"~{OpCode.INSTRUCTION}{self.op_type}{self.extra}00{self.move_count}"

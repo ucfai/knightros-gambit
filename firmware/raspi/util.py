@@ -238,7 +238,7 @@ def parse_args():
 
     return parser.parse_args()
 
-def transpose_board_cell(boardcell):
+def transpose_boardcell(boardcell):
     """Transpose board cell from white pieces on human side (default) to black on human side.
 
     If you transpose a board cell twice, you get the original location.
@@ -248,6 +248,7 @@ def transpose_board_cell(boardcell):
     return BoardCell(Const.BOARD_SIZE - boardcell.row, Const.BOARD_SIZE - boardcell.col)
 
 class Const:
+    """Helper file storing various constants used for KG program."""
     CELLS_PER_SQ = 2
     OFFSET_SIZE = 4
     BOARD_SIZE = 22
