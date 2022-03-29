@@ -522,7 +522,7 @@ class Board:
         '''Add Instruction to self.msg_queue.
         '''
         self.instruction_count += 1
-        instruction = Instruction(op_type, self.instruction_count, extra)
+        instruction = Instruction(op_type, self.instruction_count % 2, extra)
         self.add_message_to_queue(instruction, add_to_front=True)
 
     def add_message_to_queue(self, message, add_to_front=False):
