@@ -1,7 +1,9 @@
+"""This is a GUI utility to generate opcode messages for use during debugging/testing."""
 import tkinter
 
-# TODO: update to use this https://stackoverflow.com/a/49896477
+
 class ButtonInfo:
+    """Helper class storing button metadata."""
     def __init__(self, button, msg, row, col, color):
         self.button = button
         self.msg = msg
@@ -11,6 +13,7 @@ class ButtonInfo:
 
 
 class GUI(tkinter.Tk):
+    """Main entrypoint of program."""
     LARGEFONT =("Verdana", 35)
 
     BLUEHEX = "#FFFF00"
@@ -58,6 +61,7 @@ class GUI(tkinter.Tk):
     # to display the current frame passed as
     # parameter
     def show_frame(self, cont, idx):
+        """Bring the specified frame to the front and set the dropdown variable."""
         frame = self.frames[cont]
         frame.previous_opcode_idx = idx
         frame.variable.set(frame.opcodes[idx])
@@ -65,6 +69,7 @@ class GUI(tkinter.Tk):
 
 
 class BaseFrame(tkinter.Frame):
+    """Base frame for each opcode type."""
     def __init__(self, parent, controller, title):
         tkinter.Frame.__init__(self, parent)
 
@@ -108,6 +113,7 @@ class BaseFrame(tkinter.Frame):
         self.status_frame.grid(row=GUI.BOARDSIZE + 2, column=0, sticky="ew")
 
     def dropdown_changed(self, *args):
+        """This function is called when the opcode dropdown is changed."""
         currop = self.variable.get()
         idx = self.opcodes.index(currop)
         if idx in (0, 1):
@@ -130,6 +136,7 @@ class BaseFrame(tkinter.Frame):
         self.controller.show_frame(frame, idx)
 
     def update_status(self, text):
+        """Update text of status label."""
         # update status bar
         self.status.configure(state='normal')
         self.status.delete(1.0, tkinter.END)
@@ -138,6 +145,7 @@ class BaseFrame(tkinter.Frame):
 
 
 class OpCode0and1Page(BaseFrame):
+    """Frame for generating movement type opcodes."""
     def __init__(self, parent, controller):
         title = "Select two squares; an opcode will be generated from the first to the second" \
                 " square.\nNote: the blue highlighted buttons represent centers of chess" \
@@ -179,6 +187,7 @@ class OpCode0and1Page(BaseFrame):
         self.button_area.grid(row=1, column=0, rowspan=GUI.BOARDSIZE, sticky="nsew")
 
     def callable(self, msg, row, col):
+        """This function is called when any button in button grid is selected."""
         # Clear buttons if two selected before selecting new button
         if self.src_btn_info is not None and self.dest_btn_info is not None:
             # reset buttons
@@ -229,6 +238,7 @@ class OpCode0and1Page(BaseFrame):
 
 
 class OpCode2Page(BaseFrame):
+    """Frame for generating AlignPieceOnSquare type opcodes."""
     def __init__(self, parent, controller):
         title = "Select a single square; an opcode will be generated to center the piece on that "\
                 "square."
@@ -265,6 +275,7 @@ class OpCode2Page(BaseFrame):
         self.button_area.grid(row=1, column=0, rowspan=GUI.BOARDSIZE, sticky="nsew")
 
     def callable(self, msg, row, col):
+        """This function is called when any button in button grid is selected."""
         button = self.button_grid[row][col]
 
         if self.btn_info is not None:
@@ -297,6 +308,7 @@ class OpCode2Page(BaseFrame):
 
 
 class OpCode3Page(BaseFrame):
+    """Frame for generating Instruction type opcodes."""
     def __init__(self, parent, controller):
         title = "Select an optype."
         super().__init__(parent, controller, title)
@@ -340,6 +352,7 @@ class OpCode3Page(BaseFrame):
         self.dropdown_area2.grid(row=1, column=1, sticky="ew")
 
     def dropdown_changed2(self, *args):
+        """This function is called when the dropdown changes and updates the label."""
         currop = self.variable2.get()
         idx = self.instruction_types.index(currop)
         if idx == 0:
@@ -361,6 +374,7 @@ class OpCode3Page(BaseFrame):
         self.label.configure(text=text)
 
     def callable(self):
+        """This function called when the submit button is clicked, displays opcode msg."""
         extra = self.textbox.get("1.0",tkinter.END)[0]
         idx = self.instruction_types.index(self.variable2.get())
         if idx == 0:
