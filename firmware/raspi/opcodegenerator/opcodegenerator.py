@@ -1,8 +1,6 @@
-import time
 import tkinter
-from tkinter import ttk
 
-# update to use this https://stackoverflow.com/a/49896477
+# TODO: update to use this https://stackoverflow.com/a/49896477
 class ButtonInfo:
     def __init__(self, button, msg, row, col, color):
         self.button = button
@@ -31,7 +29,7 @@ class GUI(tkinter.Tk):
         tkinter.Tk.__init__(self, *args, **kwargs)
 
         # creating a container
-        container = tkinter.Frame(self) 
+        container = tkinter.Frame(self)
         container.pack(side = "top", fill = "both", expand = True)
 
         container.grid_rowconfigure(0, weight = 1)
@@ -49,7 +47,7 @@ class GUI(tkinter.Tk):
         for F in (OpCode0and1Page, OpCode2Page, OpCode3Page):
             frame = F(container, self)
             self.frames[F] = frame
-  
+
             frame.grid(row = 0, column = 0, sticky ="nsew")
 
         self.msg_count = 0
@@ -100,7 +98,7 @@ class BaseFrame(tkinter.Frame):
         self.variable = tkinter.StringVar(self.dropdown_area)
         self.variable.set(self.opcodes[0]) # default value
         self.variable.trace("w", self.dropdown_changed)
-        
+
         self.dropdown = tkinter.OptionMenu(self.dropdown_area, self.variable, *self.opcodes)
         self.dropdown.pack()
 
@@ -114,15 +112,16 @@ class BaseFrame(tkinter.Frame):
         idx = self.opcodes.index(currop)
         if idx in (0, 1):
             text = "Select two squares; an opcode will be generated from the first to the second" \
-                   " square.\nNote: the blue highlighted buttons represent centers of chess" \
-                   " squares.\nThe yellow highlighted buttons represent corners of chess squares."
+                   " square.\nNote: the blue highlighted buttons represent centers of chess " \
+                   "squares.\nThe yellow highlighted buttons represent corners/sides of chess " \
+                   "squares."
             frame = OpCode0and1Page
         elif idx == 2:
-            text = "Select a single square; an opcode will be generated to center the piece on that square."
+            text = "Select a single square; an opcode will be generated to center the piece on " \
+                   "that square."
             frame = OpCode2Page
         elif idx == 3:
-            # TODO: implement displaying and selecting optypes
-            text = "Select an optype."
+            text = "Select an InstructionType."
             frame = OpCode3Page
 
         self.previous_opcode_idx = idx
@@ -131,11 +130,11 @@ class BaseFrame(tkinter.Frame):
         self.controller.show_frame(frame, idx)
 
     def update_status(self, text):
-            # update status bar
-            self.status.configure(state='normal')
-            self.status.delete(1.0, tkinter.END)
-            self.status.insert(1.0, text, "center")
-            self.status.configure(state='disabled')
+        # update status bar
+        self.status.configure(state='normal')
+        self.status.delete(1.0, tkinter.END)
+        self.status.insert(1.0, text, "center")
+        self.status.configure(state='disabled')
 
 
 class OpCode0and1Page(BaseFrame):
@@ -172,14 +171,14 @@ class OpCode0and1Page(BaseFrame):
                 buttonij = tkinter.Button(
                     self.button_area, text="  o  ", highlightbackground=color,
                     command=lambda tmp=msg, row=i, col=j: self.callable(
-                        tmp, row, col, self.button_grid))
+                        tmp, row, col))
                 buttonij.grid(row=i, column=j)
                 button_row.append(buttonij)
             self.button_grid.append(button_row)
 
         self.button_area.grid(row=1, column=0, rowspan=GUI.BOARDSIZE, sticky="nsew")
 
-    def callable(self, msg, row, col, button_grid):
+    def callable(self, msg, row, col):
         # Clear buttons if two selected before selecting new button
         if self.src_btn_info is not None and self.dest_btn_info is not None:
             # reset buttons
@@ -210,9 +209,11 @@ class OpCode0and1Page(BaseFrame):
         # If no buttons already selected, store selected button as src, else dest
         else:
             if self.src_btn_info is None:
-                self.src_btn_info = ButtonInfo(button, msg, row, col, button.cget("highlightbackground"))
+                self.src_btn_info = ButtonInfo(button, msg, row, col,
+                                               button.cget("highlightbackground"))
             else:
-                self.dest_btn_info = ButtonInfo(button, msg, row, col, button.cget("highlightbackground"))
+                self.dest_btn_info = ButtonInfo(button, msg, row, col,
+                                                button.cget("highlightbackground"))
 
             button.config(relief="sunken", font=GUI.BOLD_FONT, highlightbackground=GUI.REDHEX)
 
@@ -220,7 +221,8 @@ class OpCode0and1Page(BaseFrame):
         if self.src_btn_info is not None and self.dest_btn_info is not None:
             # create opcodemsg
             opcode = self.opcodes.index(self.variable.get())
-            opcodemsg = f"~{opcode}{self.src_btn_info.msg}{self.dest_btn_info.msg}{self.controller.msg_count}"
+            opcodemsg = f"~{opcode}{self.src_btn_info.msg}{self.dest_btn_info.msg}" \
+                        f"{self.controller.msg_count}"
             self.controller.msg_count = (self.controller.msg_count + 1) % 2
 
             self.update_status(opcodemsg)
@@ -255,15 +257,15 @@ class OpCode2Page(BaseFrame):
                 buttonij = tkinter.Button(
                     self.button_area, text="  o  ", highlightbackground=color,
                     command=lambda tmp=msg, row=i, col=j: self.callable(
-                        tmp, row, col, self.button_grid))
+                        tmp, row, col))
                 buttonij.grid(row=i, column=j)
                 button_row.append(buttonij)
             self.button_grid.append(button_row)
 
         self.button_area.grid(row=1, column=0, rowspan=GUI.BOARDSIZE, sticky="nsew")
 
-    def callable(self, msg, row, col, button_grid):
-        button = button_grid[row][col]
+    def callable(self, msg, row, col):
+        button = self.button_grid[row][col]
 
         if self.btn_info is not None:
             tmp = self.btn_info
@@ -301,22 +303,19 @@ class OpCode3Page(BaseFrame):
 
         self.controller = controller
 
-        default_text = "A code used to indicate that the Arduino should align an axis.\n" \
-                   "Setting the Extra field (e.g. msg[2]) to '0' indicates aligning x axis to zero,\n" \
-                   "'1' indicates aligning y axis to zero, '2' indicates aligning x axis to max,\n" \
-                   "'3' indicates aligning y axis to max."
+        default_text = "Indicates that the Arduino should align an axis.\n" \
+                       "Setting the Extra field (e.g. msg[2]) to '0' indicates aligning x axis\n" \
+                       " to zero, '1' indicates aligning y axis to zero, '2' indicates aligning\n" \
+                       "x axis to max, '3' indicates aligning y axis to max."
         self.label = tkinter.Label(self, text=default_text, font = GUI.DEFAULT_FONT)
 
-        self.compute_btn = tkinter.Button(
-                    self, text="Compute",
-                    command=lambda: self.callable())
+        self.compute_btn = tkinter.Button(self, text="Compute", command=self.callable)
 
         self.textbox = tkinter.Text(self, borderwidth=2, relief="groove", height = 1, width = 1)
 
         # putting the grid in its place by using grid
         self.label.grid(row=1, column=0, padx=10, pady=10)
 
-        # TODO: finish implementing here, just need a simple dropdown with instruction types.
         self.instruction_types = [
             "A: ALIGN_AXIS",
             "S: SET_ELECTROMAGNET",
@@ -329,7 +328,7 @@ class OpCode3Page(BaseFrame):
         self.variable2 = tkinter.StringVar(self.dropdown_area2)
         self.variable2.set(self.instruction_types[0]) # default value
         self.variable2.trace("w", self.dropdown_changed2)
-        
+
         self.dropdown2 = tkinter.OptionMenu(self.dropdown_area2, self.variable2,
                                            *self.instruction_types)
         self.dropdown2.pack()
@@ -344,16 +343,16 @@ class OpCode3Page(BaseFrame):
         currop = self.variable2.get()
         idx = self.instruction_types.index(currop)
         if idx == 0:
-            text = "A code used to indicate that the Arduino should align an axis.\n" \
-                   "Setting the Extra field (e.g. msg[2]) to '0' indicates aligning x axis to zero,\n" \
-                   "'1' indicates aligning y axis to zero, '2' indicates aligning x axis to max,\n" \
-                   "'3' indicates aligning y axis to max."
+            text = "Indicates that the Arduino should align an axis.\n" \
+                   "Setting the Extra field (e.g. msg[2]) to '0' indicates aligning x axis\n" \
+                   " to zero, '1' indicates aligning y axis to zero, '2' indicates aligning\n" \
+                   "x axis to max, '3' indicates aligning y axis to max."
         elif idx == 1:
-            text = "A code used to indicate that the Arduino should set the state of the\n" \
+            text = "Indicates that the Arduino should set the state of the\n" \
                    "electromagnet. Setting the Extra field (e.g. msg[2]) to '0' indicates OFF,\n" \
                    "'1' indicates ON."
         elif idx == 2:
-            text = "A code used to indicate that the Arduino should retransmit the last message.\n" \
+            text = "Indicates that the Arduino should retransmit the last message.\n" \
                    "This code is used when a corrupted or misaligned message is received.\n" \
                    "The Extra field is ignored."
 
@@ -363,21 +362,21 @@ class OpCode3Page(BaseFrame):
 
     def callable(self):
         extra = self.textbox.get("1.0",tkinter.END)[0]
-        print(extra)
         idx = self.instruction_types.index(self.variable2.get())
         if idx == 0:
             if extra in ('0', '1', '2', '3'):
                 opcodemsg = f"~3{self.variable2.get()[0]}{extra}00{self.controller.msg_count}"
                 self.controller.msg_count = (self.controller.msg_count + 1) % 2
             else:
-                opcodemsg = "Received invalid value for extra, expected value in ('0', '1', '2', '3')"
+                opcodemsg = "Received invalid value for extra, expected value in " \
+                "('0', '1', '2', '3')"
         elif idx == 1:
             if extra in ('0', '1'):
                 opcodemsg = f"~3{self.variable2.get()[0]}{extra}00{self.controller.msg_count}"
                 self.controller.msg_count = (self.controller.msg_count + 1) % 2
             else:
                 opcodemsg = "Received invalid value for extra, expected value in ('0', '1')"
-        elif idx == 2:            
+        elif idx == 2:
             opcodemsg = f"~3{self.variable2.get()[0]}000{self.controller.msg_count}"
             self.controller.msg_count = (self.controller.msg_count + 1) % 2
         else:
