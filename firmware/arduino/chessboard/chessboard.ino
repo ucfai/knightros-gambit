@@ -179,14 +179,14 @@ void setup()
   ledcSetup(EM_PWM_CHANNEL, PWM_FREQUENCY, PWM_RESOLUTION);
   ledcAttachPin(ELECTROMAGNET, EM_PWM_CHANNEL);
 
-  // Homes the EM to the origin and sets currPositionX/Y to 0
-  home();
-
   // Initializes global 2d array `pulsesPerSlope` which is used to define circle paths
   // that are used in the `makeCircle()` function in circleFunction.ino
   calculatePulsesPerSlope();
 
   Serial2.begin(115200, SERIAL_8N1, RX2, TX2);
+  Serial.begin(115200);
+  Serial.println();
+  Serial.println("Starting Program...");
   
   attachInterrupt(digitalPinToInterrupt(CHESS_TIMER_BUTTON), chessTimerISR, RISING);
 }

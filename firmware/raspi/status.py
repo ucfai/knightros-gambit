@@ -85,17 +85,18 @@ class OpType:
     '''Enum of op types used to provide information about OpCode.INSTRUCTION types.
     '''
     # This code indicates Arduino should align an axis
-    # Setting first info bit (e.g. msg[2]) to '0' indicates aligning to zero, '1' indicates
-    # aligning to max
-    ALIGN_AXIS = '1'
+    # Setting first info bit (e.g. msg[2]) to '0' indicates aligning x axis to zero, '1' indicates
+    # aligning y axis to zero, '2' indicates aligning x axis to max, '3' indicates aligning y axis
+    # to max.
+    ALIGN_AXIS = 'A'
 
     # This code indicates Arduino should set the state of the electromagnet
     # Setting first info bit (e.g. msg[2]) to '0' indicates OFF, '1' indicates ON
-    SET_ELECTROMAGNET = '2'
+    SET_ELECTROMAGNET = 'S'
 
     # This code indicates Arduino should retransmit last message
     # This code used when a corrupted or misaligned message is received
-    RETRANSMIT_LAST_MSG = '3'
+    RETRANSMIT_LAST_MSG = 'R'
 
     # Tuple of all OpTypes, used for checking membership
     VALID_OPS = (ALIGN_AXIS, SET_ELECTROMAGNET, RETRANSMIT_LAST_MSG)

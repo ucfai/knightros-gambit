@@ -109,7 +109,7 @@ class Mcts:
         # Get flattened probability distribution
         n_values = torch.from_numpy(n_values)
         n_values = n_values ** (1 / temperature)
-        search_probs = n_values/sum(n_values)
+        search_probs = n_values/torch.sum(n_values)
         move = random.choices(moves, search_probs)[0]
 
         # Return list of uci_moves and corresponding search probabilities
