@@ -3,7 +3,7 @@
 
     "saving":{
         "dataset_path": "datasets/stockfish_data.pt",
-        "model_path": null,
+        "model_path": "models",
         "num_saved_models": 5,
         "overwrite": true
     },
