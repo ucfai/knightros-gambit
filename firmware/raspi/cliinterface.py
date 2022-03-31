@@ -4,6 +4,7 @@ import random
 
 from game import Game
 import player
+import status
 from util import parse_args
 
 # TODO: make this function have a better name; it doesn't just return bool, it also assigns color.
@@ -89,6 +90,8 @@ def main():
     mode_of_interaction = params["mode_of_interaction"]
     print(f"\nRUNNING IN {mode_of_interaction.upper()} MODE...\n")
 
+    # Note: If running in test or debug, need to call `alignAxis()` for xmin and ymin explicitly.
+    # All other modes perform homing before entering main game loop.
     if params["mode_of_interaction"] == "test":
         game = Game(params["mode_of_interaction"])
         # TODO: Refactor to handle dispatching moves using the code in `process`.
@@ -101,6 +104,10 @@ def main():
     elif params["mode_of_interaction"] in ("cli", "otb", "web", "speech"):
         game = Game(params["mode_of_interaction"], params["human_plays_white_pieces"])
         # _, human_plays_white_pieces, board, ai_player = params
+
+        # Sends two instruction messages for homing, 1st for min x, 2nd for min y
+        game.board.add_instruction_to_queue(op_type=status.OpType.ALIGN_AXIS, extra='0')
+        game.board.add_instruction_to_queue(op_type=status.OpType.ALIGN_AXIS, extra='1')
 
     # Main game loop
     current_player = 0
