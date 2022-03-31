@@ -128,7 +128,7 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
     digitalWrite(motor[STEP_PIN], HIGH);
   }
 
-  // Moves motor towards max or 0 for fine-tuned alignment
+  // Moves EM back to nearest grid edge after endstop has been triggered
   if (alignmentCode == MAX_POSITION)
   {
     digitalWrite(motor[DIR_PIN], POS_DIR);
