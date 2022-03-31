@@ -9,6 +9,7 @@ import torch
 
 import util
 
+
 class StockfishTrain:
     """Build a dataset of moves and stockfish evaluations.
 
@@ -34,6 +35,7 @@ class StockfishTrain:
     @staticmethod
     def centipawn_to_winprob(centipawn):
         """Transforms centipawn value to approximate probability of winning
+        Equation taken from https://www.chessprogramming.org/Pawn_Advantage,_Win_Percentage,_and_Elo
         """
         return 1 / (1 + 10**(-centipawn/400))
 
@@ -104,8 +106,8 @@ class StockfishTrain:
             # if x > 0 , that is a mate for white in x moves
             # if x < 0, that is a mate for black in x moves
             if move["Centipawn"] is None:
-                # Probability of losing positions is set to 0 here but we would like to explore them regardless.
-                # Epsilon-greedy resolves by choosing a random move some amount of the time.
+                # Probability of mating moves is set to 1, mating moves for the opponent is set to 0.
+                # We would like to explore losing moves regardless, but epsilon-greedy resolves this.
                 search_probs.append(np.sign(move["Mate"]) * player / 2 + 0.5)
             else:
                 search_probs.append(self.centipawn_to_winprob(move["Centipawn"] * player))
@@ -113,11 +115,11 @@ class StockfishTrain:
         search_probs = torch.tensor(search_probs).float() ** (1/temperature)
         total = torch.sum(search_probs)
 
-        # Avoid 0/0 error (this checks if sum tensor is zero)
-        if not total.is_nonzero():
-            search_probs = torch.full(search_probs.size(), 1/search_probs.size(dim=0))
-        else:
+        # Avoid 0/0 error
+        if total.is_nonzero():
             search_probs = search_probs / total
+        else:
+            search_probs = torch.full(search_probs.size(), 1 / search_probs.size(dim=0))
 
         # Will choose the move to make from the list of moves
         move = StockfishTrain.choose_move(moves, epsilon)
