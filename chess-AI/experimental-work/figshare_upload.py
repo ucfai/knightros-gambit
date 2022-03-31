@@ -11,7 +11,7 @@ BASE_URL = 'https://api.figshare.com/v2/{endpoint}'
 
 CHUNK_SIZE = 1048576
 TOKEN = os.getenv('FIGSHARE_KEY')
-
+print(TOKEN)
 # FILE_PATH = '/path/to/work/directory/cat.obj'
 # TITLE = 'A 3D cat object model'
 
