@@ -65,8 +65,8 @@ void serialEvent2()
 // Check that the instruction is valid
 bool validateMessageFromPi(volatile char * message)
 {
-    // If no error occurs to change the extraByte, it should indicate NO_ERROR
-    extraByte = NO_ERROR;
+    // If no error occurs to change the extraByte, it should store the opcode
+    extraByte = message[0];
 
     if (message[0] == DIRECT || message[0] == EDGES)
     {
@@ -98,9 +98,6 @@ bool validateMessageFromPi(volatile char * message)
             currentState = ERROR;
             return false;
         }
-
-        // Send opcode back in the extraByte field
-        extraByte = message[1];
     }
     else
     {
@@ -118,8 +115,8 @@ bool validateMessageFromPi(volatile char * message)
 
 bool makeMove(volatile char * message)
 {
-    // If no error occurs to change the extraByte, it should indicate NO_ERROR
-    extraByte = NO_ERROR;
+    // If no error occurs to change the extraByte, it should store the opcode
+    extraByte = message[0];
 
     // Move type 0
     if (message[0]  ==  DIRECT)
@@ -155,9 +152,6 @@ bool makeMove(volatile char * message)
     // Move type 3 - special instructions
     else if (message[0] == INSTRUCTION)
     {
-        // Set the extra byte to the opcode
-        extraByte = message[1];
-
         // Align Axis
         if (message[1] == ALIGN)
         {
@@ -194,7 +188,7 @@ bool makeMove(volatile char * message)
         return false;
     }
 
-    // Move is was made
+    // Move was made
     currentState = IDLE;
     return true;
 }
