@@ -135,6 +135,12 @@ int maxPosition;
 #define ZERO_ENDSTOP_PIN 4
 #define MAX_ENDSTOP_PIN 5
 
+// Alignment lengths per axis
+#define MAX_X_ALIGNMENT
+#define MIN_X_ALIGNMENT
+#define MAX_Y_ALIGNMENT
+#define MIN_Y_ALIGNMENT
+
 // Button debounce time (in milliseconds)
 #define DEBOUNCE_TIME 100 
 

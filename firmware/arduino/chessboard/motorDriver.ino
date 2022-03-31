@@ -76,7 +76,22 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   int eighthStepsPerPulse;
   int i;
   uint8_t endstopPin;
+  uint16_t tempAlignWholeSteps, j;
 
+  if (motor == xMotor)
+    tempAlignWholeSteps = (alignmentCode == MAX_POSITION) ? MAX_X_ALIGNMENT : MIN_X_ALIGNMENT;
+  else if (motor == yMotor)
+    tempAlignWholeSteps = (alignmentCode == MAX_POSITION) ? MAX_Y_ALIGNMENT : MIN_Y_ALIGNMENT;
+
+  setScale(motor, WHOLE_STEPS);
+
+  for (j = 0; j < tempAlignWholeSteps; j++)
+    {
+      digitalWrite(motor[STEP_PIN], LOW);
+      delay(1);
+      digitalWrite(motor[STEP_PIN], HIGH);
+    }
+    
   // Stores corresponding motor position based off of which motor is being aligned,
   // so that correct position can be incremented by function
   currentMotorPos = (motor == xMotor) ? &currPositionX : &currPositionY;
