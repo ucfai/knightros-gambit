@@ -89,7 +89,7 @@ bool validateMessageFromPi(volatile char * message)
   }
   else if (message[0] == INSTRUCTION)
   {
-    // Check if message[5] holds an invalid instruction type
+    // Check if message[1] holds an invalid instruction type or if message[2] is an invalid code
     if ((message[1] != ALIGN_AXIS        || message[2] < '0' || message[2] > '3') && 
         (message[1] != SET_ELECTROMAGNET || message[2] < '0' || message[2] > '1') &&
          message[1] != RETRANSMIT)

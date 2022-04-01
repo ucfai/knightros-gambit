@@ -10,7 +10,7 @@ int circleRadius[NUM_CIRCLES+1];
 enum SlopeToIndex
 {
   SLOPE_HORIZ_FAST = 0,
-  SLOPE_HORIZONTAL_SLOW = 1,
+  SLOPE_HORIZ_SLOW = 1,
   SLOPE_EIGHTH = 2,
   SLOPE_QUARTER_FAST = 3,
   SLOPE_QUARTER_SLOW = 4,
@@ -23,8 +23,8 @@ enum SlopeToIndex
   SLOPE_FOUR_FAST = 11,
   SLOPE_FOUR_SLOW = 12,
   SLOPE_EIGHT = 13,
-  SLOPE_VERTICAL_FAST = 14,
-  SLOPE_VERTICAL_SLOW = 15
+  SLOPE_VERT_FAST = 14,
+  SLOPE_VERT_SLOW = 15
 };
 
 enum Quarters
@@ -68,19 +68,19 @@ void makeCircle(int circle, int firstQuarter)
 
     // Set starting point for the while loop
     if (quarter == QUARTER_TOP || quarter == QUARTER_BOTTOM)
-      slopeIndex = SLOPE_HORIZONTAL_SLOW;
+      slopeIndex = SLOPE_HORIZ_SLOW;
     else
       slopeIndex = NUM_SLOPES_PER_QUARTER_CIRCLE - 1;
 
     // Iterate through pulsesPerSlope
-    while (slopeIndex >= SLOPE_HORIZ_FAST && slopeIndex <= SLOPE_VERTICAL_SLOW)
+    while (slopeIndex >= SLOPE_HORIZ_FAST && slopeIndex <= SLOPE_VERT_SLOW)
     {
       // Y-scale
       if (slopeIndex == SLOPE_TWO_SLOW || slopeIndex == SLOPE_QUARTER_FAST)
         setScale(yMotor, QUARTER_STEPS);    
       else if (slopeIndex == SLOPE_FOUR_SLOW || slopeIndex == SLOPE_HALF_FAST)
         setScale(yMotor, HALF_STEPS);    
-      else if (slopeIndex == SLOPE_EIGHT    || slopeIndex == SLOPE_VERTICAL_FAST || 
+      else if (slopeIndex == SLOPE_EIGHT    || slopeIndex == SLOPE_VERT_FAST || 
                slopeIndex == SLOPE_ONE_FAST || slopeIndex == SLOPE_FOUR_FAST || 
                slopeIndex == SLOPE_TWO_FAST)
         setScale(yMotor, WHOLE_STEPS);    
@@ -101,7 +101,7 @@ void makeCircle(int circle, int firstQuarter)
 
       // Send pulses for the current slopeIndex
       // Separate loops for vertical and horizontal cases to optimize performance
-      if (slopeIndex == SLOPE_VERTICAL_SLOW || slopeIndex == SLOPE_VERTICAL_FAST)
+      if (slopeIndex == SLOPE_VERT_SLOW || slopeIndex == SLOPE_VERT_FAST)
       {
         for (int i = 0; i < pulsesPerSlope[circle][slopeIndex]; i++)
         {
@@ -111,7 +111,7 @@ void makeCircle(int circle, int firstQuarter)
           digitalWrite(yMotor[STEP_PIN], HIGH);
         }
       }
-      else if (slopeIndex == SLOPE_HORIZONTAL_SLOW || slopeIndex == SLOPE_HORIZ_FAST)
+      else if (slopeIndex == SLOPE_HORIZ_SLOW || slopeIndex == SLOPE_HORIZ_FAST)
       {
         for (i = 0; i < pulsesPerSlope[circle][slopeIndex]; i++)
         {
@@ -191,7 +191,7 @@ void calculatePulsesPerSlope()
     // Horizontal steps
     while (getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 1.0/16.0)
     {
-      pulsesPerSlope[circle][SLOPE_HORIZONTAL_SLOW]++;
+      pulsesPerSlope[circle][SLOPE_HORIZ_SLOW]++;
       xStepsRemaining--;
     }
 
@@ -258,15 +258,15 @@ void calculatePulsesPerSlope()
     }
 
     // Add any leftover x-steps to the beginning of the circle
-    pulsesPerSlope[circle][SLOPE_HORIZONTAL_SLOW] += xStepsRemaining;
+    pulsesPerSlope[circle][SLOPE_HORIZ_SLOW] += xStepsRemaining;
 
     // Remaining y-steps are vertical moves at the end
-    pulsesPerSlope[circle][SLOPE_VERTICAL_SLOW] += yStepsRemaining;
+    pulsesPerSlope[circle][SLOPE_VERT_SLOW] += yStepsRemaining;
 
     // Calculate the number of maximum scale steps and leftover small steps at each slope
     // ex: 13 Horizontal steps at 1/8 scale becomes 1 step at 1/1 scale and 5 steps at 1/8 scale
-    pulsesPerSlope[circle][SLOPE_HORIZ_FAST] = pulsesPerSlope[circle][SLOPE_HORIZONTAL_SLOW] / 8;
-    pulsesPerSlope[circle][SLOPE_HORIZONTAL_SLOW] %= 8;
+    pulsesPerSlope[circle][SLOPE_HORIZ_FAST] = pulsesPerSlope[circle][SLOPE_HORIZ_SLOW] / 8;
+    pulsesPerSlope[circle][SLOPE_HORIZ_SLOW] %= 8;
     pulsesPerSlope[circle][SLOPE_QUARTER_FAST] = pulsesPerSlope[circle][SLOPE_QUARTER_SLOW] / 2;
     pulsesPerSlope[circle][SLOPE_QUARTER_SLOW] %= 2;
     pulsesPerSlope[circle][SLOPE_HALF_FAST] = pulsesPerSlope[circle][SLOPE_HALF_SLOW] / 4;
@@ -277,8 +277,8 @@ void calculatePulsesPerSlope()
     pulsesPerSlope[circle][SLOPE_TWO_SLOW] %= 4;
     pulsesPerSlope[circle][SLOPE_FOUR_FAST] = pulsesPerSlope[circle][SLOPE_FOUR_SLOW] / 2;
     pulsesPerSlope[circle][SLOPE_FOUR_SLOW] %= 2;
-    pulsesPerSlope[circle][SLOPE_VERTICAL_FAST] = pulsesPerSlope[circle][SLOPE_VERTICAL_SLOW] / 8;
-    pulsesPerSlope[circle][SLOPE_VERTICAL_SLOW] %= 8;
+    pulsesPerSlope[circle][SLOPE_VERT_FAST] = pulsesPerSlope[circle][SLOPE_VERT_SLOW] / 8;
+    pulsesPerSlope[circle][SLOPE_VERT_SLOW] %= 8;
   }
 }
 
