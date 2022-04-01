@@ -129,7 +129,7 @@ def create_dataset(games, move_approximator, val_approximator=None, show_dash=Fa
     return dataset
 
 
-def train_on_dataset(dataset, nnet, options, save=True, show_dash=False):
+def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=False):
     """Train with the specified dataset
 
     Attributes:
@@ -216,7 +216,7 @@ def train_on_dataset(dataset, nnet, options, save=True, show_dash=False):
 
     # Saves model to specified file, or a new file if not specified.
     if save:
-        save_model(nnet, options.save_path + "/model_{}".format(int(time.time()*1000)), options.num_saved_models,
+        save_model(nnet, options.save_path + "/model_{}".format(iteration), options.num_saved_models,
                    options.overwrite)
 
 
@@ -254,7 +254,8 @@ def train_on_mcts(nnet, mcts_opt, save_freq=10, show_dash=False):
                                                          temperature=5)
 
         dataset = create_dataset(mcts_opt.games, mcts_moves)
-        train_on_dataset(dataset, nnet, mcts_opt, save=(i % save_freq == 0), show_dash=show_dash)
+        train_on_dataset(dataset, nnet, mcts_opt, iteration=(i+1), save=(i % save_freq == 0),
+                         show_dash=show_dash)
 
 
 def main():
@@ -301,7 +302,7 @@ def main():
                     Dashboard.info_message("success", msg)
                 else:
                     print(msg)
-                train_on_dataset(dataset, nnet, stockfish_options, save=True)
+                train_on_dataset(dataset, nnet, stockfish_options, iteration=0, save=True)
 
                 msg = "Stockfish Training completed"
                 if flags.show_dash:
