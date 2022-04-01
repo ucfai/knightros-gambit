@@ -230,18 +230,6 @@ void loop()
         sentMessage[2] = moveCount;
         sendMessageToPi(sentMessage);
 
-        // Print outgoing message
-        if (DEBUG)
-        {
-          Serial.println("Outgoing Message:  ");
-          Serial.print(sentMessage[0]);
-          Serial.print(" ");
-          Serial.print(sentMessage[0]);
-          Serial.print(" ");
-          Serial.print(sentMessage[0]);
-          Serial.println("\n");
-        }
-
         makeMove(receivedMessagePtr);
     }
     // Sends move success/error
@@ -250,18 +238,6 @@ void loop()
     sentMessage[1] = extraByte;
     sentMessage[2] = moveCount;
     sendMessageToPi(sentMessage);
-
-    // Print outgoing message
-    if (DEBUG)
-    {
-      Serial.println("Outgoing Message:  ");
-      Serial.print(sentMessage[0]);
-      Serial.print(" ");
-      Serial.print(sentMessage[0]);
-      Serial.print(" ");
-      Serial.print(sentMessage[0]);
-      Serial.println("\n");
-    }
   }
 
   // Transmit button press

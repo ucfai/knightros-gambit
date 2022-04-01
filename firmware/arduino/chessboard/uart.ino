@@ -195,6 +195,18 @@ bool makeMove(volatile char * message)
 
 void sendMessageToPi(volatile char * message)
 {
+    // Print outgoing message
+    if (DEBUG)
+    {
+      Serial.println("Outgoing Message:  ");
+      Serial.print(sentMessage[0]);
+      Serial.print(" ");
+      Serial.print(sentMessage[1]);
+      Serial.print(" ");
+      Serial.print(sentMessage[2]);
+      Serial.println("\n");
+    }
+
     Serial2.write('~');
     Serial2.write(message[0]);
     Serial2.write(message[1]);

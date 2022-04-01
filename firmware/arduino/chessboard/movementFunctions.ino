@@ -26,7 +26,7 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow, bool enableM
   currCol = currPositionX / (stepsPerUnitSpace * 8);
   currRow = currPositionY / (stepsPerUnitSpace * 8);
 
-  // Print debug info about moveDirect
+  // Print debug info about moveDirect moving to start position
   // Make sure to only print the "moving to start position" message in the first recursive call
   if (DEBUG  &&  currCol != startCol  && currRow != startRow)
   {
@@ -59,7 +59,7 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow, bool enableM
   if (!moveDirect(currCol, currRow, startCol, startRow, false))
     return false;
 
-  // Print debug info about stright movement
+  // Print debug info about moveDirect main movement
   if (DEBUG)
   {
     Serial.println("The following is in the form (col, row)");
@@ -72,6 +72,9 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow, bool enableM
     Serial.print(", ");
     Serial.print(endRow);
     Serial.print(")");
+    Serial.print("    ");
+    Serial.print("Electromagnet State: ");
+    Serial.print( (enableMagnet ? "On" : "Off"));
     Serial.println("\n");
   }
 
@@ -184,7 +187,7 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
   currCol = currPositionX / (stepsPerUnitSpace * 8);
   currRow = currPositionY / (stepsPerUnitSpace * 8);
 
-  // Print debug info about moveAlongEdges
+  // Print debug info about moveAlongEdges moving to start position
   if (DEBUG)
   {
     Serial.println("The following is in the form (col, row)");
@@ -205,11 +208,11 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
   if (!moveDirect(currCol, currRow, startCol, startRow, false))
     return false;
 
-  // Print debug info about stright movement
+  // Print debug info about moveAlongEdges main movement
   if (DEBUG)
   {
     Serial.println("The following is in the form (col, row)");
-    Serial.print("Moving directly from (");
+    Serial.print("Moving along edges from (");
     Serial.print(startCol);
     Serial.print(", ");
     Serial.print(startRow);
@@ -390,11 +393,19 @@ bool alignPiece(int col, int row)
 // Assumes that the starting position is the center of the square the piece is on
 void centerPiece()
 {
+  uint8_t currCol = currPositionX / (stepsPerUnitSpace * 8);
+  uint8_t currRow = currPositionY / (stepsPerUnitSpace * 8);
 
-  // Print debug message
+  // Print debug message about centerPiece
   if (DEBUG)
   {
-    Serial.println("Centering piece on current chess square center\n");
+    Serial.println("The following is in the form (col, row)");
+    Serial.print("Centering piece on: (");
+    Serial.print(currRow);
+    Serial.print(", ");
+    Serial.print(currCol);
+    Serial.print(")");
+    Serial.println("\n");
   }
 
   // Loop counter
