@@ -199,12 +199,20 @@ void sendMessageToPi(volatile char * message)
     if (DEBUG)
     {
       Serial.println("Outgoing Message:  ");
-      Serial.print(sentMessage[0]);
+      Serial.print(message[0]);
       Serial.print(" ");
-      Serial.print(sentMessage[1]);
+      Serial.print(message[1]);
       Serial.print(" ");
-      Serial.print(sentMessage[2]);
+      Serial.print(message[2]);
       Serial.println("\n");
+
+      // If we have an error, print the error code
+      if (message[0] == ERROR)
+      {
+        Serial.print("Encountered an error: ");
+        Serial.print(message[1]);
+        Serial.println("\n");
+      }
     }
 
     Serial2.write('~');
