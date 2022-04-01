@@ -16,7 +16,7 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow, bool enableM
   absDeltaY = abs(deltaY);
 
   // If target point is equal to the start point
-  if (deltaX == 0  &&  deltaY == 0)
+  if (deltaX == 0 && deltaY == 0)
     return true;
 
   // Checks if the EM is aligned properly
@@ -28,7 +28,7 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow, bool enableM
 
   // Print debug info about moveDirect moving to start position
   // Make sure to only print the "moving to start position" message in the first recursive call
-  if (DEBUG  &&  currCol != startCol  && currRow != startRow)
+  if (DEBUG && currCol != startCol && currRow != startRow)
   {
     Serial.println("The following is in the form (col, row)");
     Serial.print("Moving to starting position from (");
@@ -87,7 +87,7 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow, bool enableM
   // Assume no errors, unless proven otherwise
   isSuccessful = true;
 
-  if (deltaX == 0  ||  deltaY == 0)
+  if (deltaX == 0 || deltaY == 0)
   {
     // Assign the correct motor based on which motor has movement
     // Note: Because of the first base case, either deltaX or deltaY must be 0, but not both
@@ -177,7 +177,7 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
   diagDirY = (deltaY > 0) ? 1 : -1;
 
   // If target point is equal to the start point
-  if (deltaX == 0  &&  deltaY == 0)
+  if (deltaX == 0 && deltaY == 0)
     return true;
     
   // Checks if the EM is aligned properly
@@ -228,7 +228,7 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
   // We use previous points to calculate subsequent points, since they're on the same path
 
   // Case where we should call moveDirect, since pathing can be simplified to that
-  if (absDeltaX <= 2  &&  absDeltaY <= 2)
+  if (absDeltaX <= 2 && absDeltaY <= 2)
     return moveDirect(startCol, startRow, endCol, endRow, true);
 
   // Initial position
@@ -237,7 +237,7 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
 
   // Because of the checks above, we know absDeltaX and absDeltaY can't both be 0 at the same time
   // Case where we have a strictly vertical or horizontal movement along edges
-  if (absDeltaX == 0  ||  absDeltaY == 0)
+  if (absDeltaX == 0 || absDeltaY == 0)
   {
     uint8_t diagDirX2, diagDirY2;
 
@@ -278,7 +278,7 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
     numPoints = 4;
   }
   // Case where we're moving a cached piece to the graveyard from a capture
-  else if (startCol % 2  ||  startRow % 2)
+  else if (startCol % 2 || startRow % 2)
   {
     subDeltaX = deltaX - diagDirX; 
     subDeltaY = deltaY - diagDirY;
@@ -300,7 +300,7 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
     numPoints = 4;
   }
   // Case where we have a knight or graveyard movement
-  else if (absDeltaX == 2  ||  absDeltaY == 2)
+  else if (absDeltaX == 2 || absDeltaY == 2)
   {
     if (absDeltaX == 2)
       subDeltaX = 0;

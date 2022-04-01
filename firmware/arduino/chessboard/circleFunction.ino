@@ -73,7 +73,7 @@ void makeCircle(int circle, int firstQuarter)
       slopeIndex = NUM_SLOPES_PER_QUARTER_CIRCLE - 1;
 
     // Iterate through pulsesPerSlope
-    while (slopeIndex >= SLOPE_HORIZONTAL_FAST  &&  slopeIndex <= SLOPE_VERTICAL_SLOW)
+    while (slopeIndex >= SLOPE_HORIZONTAL_FAST && slopeIndex <= SLOPE_VERTICAL_SLOW)
     {
       // Y-scale
       if (slopeIndex == SLOPE_TWO_SLOW || slopeIndex == SLOPE_QUARTER_FAST)
@@ -196,7 +196,7 @@ void calculatePulsesPerSlope()
     }
 
     // Eighth slope steps
-    while (getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0/16.0  && 
+    while (getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0/16.0 && 
           xStepsRemaining >= 8)
     {
       pulsesPerSlope[circle][SLOPE_EIGHTH]++;
@@ -205,7 +205,7 @@ void calculatePulsesPerSlope()
     }
 
     // Quarter slope steps
-    while (getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0/8.0  &&  
+    while (getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0/8.0 &&  
           xStepsRemaining >= 4)
     {
       pulsesPerSlope[circle][SLOPE_QUARTER_SLOW]++;
@@ -214,7 +214,7 @@ void calculatePulsesPerSlope()
     }
 
     // Half slope steps
-    while (getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0/4.0  &&  
+    while (getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0/4.0 &&  
           xStepsRemaining >= 2)
     {
       pulsesPerSlope[circle][SLOPE_HALF_SLOW]++;
@@ -231,7 +231,7 @@ void calculatePulsesPerSlope()
     }
 
     // Slope=2 steps
-    while (getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0  &&  
+    while (getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0 &&  
           yStepsRemaining >= 2)
     {
       pulsesPerSlope[circle][SLOPE_TWO_SLOW]++;
@@ -240,7 +240,7 @@ void calculatePulsesPerSlope()
     }
 
     // Slope=4 steps
-    while (getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 6.0  &&  
+    while (getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 6.0 &&  
           yStepsRemaining >= 4)
     {
       pulsesPerSlope[circle][SLOPE_FOUR_SLOW]++;
@@ -249,7 +249,7 @@ void calculatePulsesPerSlope()
     }
 
     // Slope=8 steps
-    while (getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 12.0  &&  
+    while (getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 12.0 &&  
           yStepsRemaining >= 8)
     {
       pulsesPerSlope[circle][SLOPE_EIGHT]++;
