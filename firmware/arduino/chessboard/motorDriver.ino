@@ -329,9 +329,7 @@ uint8_t moveDiagonal(int endCol, int endRow)
     Serial.print(endCol);
     Serial.print(", ");
     Serial.print(endRow);
-    Serial.print(") ");
-    Serial.print("along the ");
-    Serial.print( (motor == xMotor) ? "x-axis" : "y-axis");
+    Serial.print(")");
     Serial.println("\n");
   }
 

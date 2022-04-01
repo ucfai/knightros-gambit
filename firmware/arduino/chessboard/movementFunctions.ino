@@ -30,6 +30,7 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow, bool enableM
   // Make sure to only print the "moving to start position" message in the first recursive call
   if (DEBUG  &&  currCol != startCol  && currRow != startRow)
   {
+    Serial.println("The following is in the form (col, row)");
     Serial.print("Moving to starting position from (");
     Serial.print(currCol);
     Serial.print(", ");
@@ -70,10 +71,7 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow, bool enableM
     Serial.print(endCol);
     Serial.print(", ");
     Serial.print(endRow);
-    Serial.print(") ");
-    Serial.print();
-    Serial.print("along the ");
-    Serial.print( (motor == xMotor) ? "x-axis" : "y-axis");
+    Serial.print(")");
     Serial.println("\n");
   }
 
@@ -189,6 +187,7 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
   // Print debug info about moveAlongEdges
   if (DEBUG)
   {
+    Serial.println("The following is in the form (col, row)");
     Serial.print("Moving to starting position from (");
     Serial.print(currCol);
     Serial.print(", ");
@@ -218,9 +217,7 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
     Serial.print(endCol);
     Serial.print(", ");
     Serial.print(endRow);
-    Serial.print(") ");
-    Serial.print("along the ");
-    Serial.print( (motor == xMotor) ? "x-axis" : "y-axis");
+    Serial.print(")");
     Serial.println("\n");
   }
 

@@ -233,7 +233,7 @@ void loop()
         // Print outgoing message
         if (DEBUG)
         {
-          Serial.println("Outgoing Message:  ")
+          Serial.println("Outgoing Message:  ");
           Serial.print(sentMessage[0]);
           Serial.print(" ");
           Serial.print(sentMessage[0]);
@@ -254,7 +254,7 @@ void loop()
     // Print outgoing message
     if (DEBUG)
     {
-      Serial.println("Outgoing Message:  ")
+      Serial.println("Outgoing Message:  ");
       Serial.print(sentMessage[0]);
       Serial.print(" ");
       Serial.print(sentMessage[0]);
