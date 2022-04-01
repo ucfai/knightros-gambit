@@ -224,14 +224,15 @@ void loop()
     currentState = EXECUTING;
     if (validateMessageFromPi(receivedMessagePtr))
     { 
-        // Sends acknowledgement
-        sentMessage[0] = currentState;
-        sentMessage[1] = extraByte;
-        sentMessage[2] = moveCount;
-        sendMessageToPi(sentMessage);
+      // Sends acknowledgement
+      sentMessage[0] = currentState;
+      sentMessage[1] = extraByte;
+      sentMessage[2] = moveCount;
+      sendMessageToPi(sentMessage);
 
-        makeMove(receivedMessagePtr);
+      makeMove(receivedMessagePtr);
     }
+    
     // Sends move success/error
     // These variables can be changed inside the makeMove function
     sentMessage[0] = currentState;
