@@ -78,6 +78,16 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   uint8_t endstopPin;
   uint16_t tempAlignWholeSteps;
     
+  // Print debug info about which motor is being aligned to where
+  if (DEBUG)
+  {
+    Serial.print("Aligning ");
+    Serial.print( (motor == xMotor) ? "x-axis motor" : "y-axis motor");
+    Serial.print(" to ");
+    Serial.print( (alignmentCode == ZERO_POSITION) ? "zero position" : "max position");
+    Serial.println("\n");
+  }
+  
   // Stores corresponding motor position based off of which motor is being aligned,
   // so that correct position can be incremented by function
   currentMotorPos = (motor == xMotor) ? &currPositionX : &currPositionY;
@@ -198,6 +208,26 @@ uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
   startCol = currPositionX / (stepsPerUnitSpace * 8);
   startRow = currPositionY / (stepsPerUnitSpace * 8);
 
+
+  // Print debug info about straight movement
+  if (DEBUG)
+  {
+    Serial.println("The following is in the form (col, row)");
+    Serial.print("Moving straight from (");
+    Serial.print(startCol);
+    Serial.print(", ");
+    Serial.print(startRow);
+    Serial.print(") to (");
+    Serial.print(endCol);
+    Serial.print(", ");
+    Serial.print(endRow);
+    Serial.print(") ");
+    Serial.print("along the ");
+    Serial.print( (motor == xMotor) ? "x-axis" : "y-axis");
+    Serial.println("\n");
+  }
+
+
   // Same as homeAxis(), sets the loop to only update a single motors position at a time
   // Direction is still determined seperately by if statements
   currentMotorPos = (motor == xMotor) ? &currPositionX : &currPositionY;
@@ -285,6 +315,26 @@ uint8_t moveDiagonal(int endCol, int endRow)
   // Converts current position to be in terms of unit spaces instead of eighth steps
   startCol = currPositionX / (stepsPerUnitSpace * 8);
   startRow = currPositionY / (stepsPerUnitSpace * 8);
+
+
+  // Print debug info about diagonal movement
+  if (DEBUG)
+  {
+    Serial.println("The following is in the form (col, row)");
+    Serial.print("Moving diagonal from (");
+    Serial.print(startCol);
+    Serial.print(", ");
+    Serial.print(startRow);
+    Serial.print(") to (");
+    Serial.print(endCol);
+    Serial.print(", ");
+    Serial.print(endRow);
+    Serial.print(") ");
+    Serial.print("along the ");
+    Serial.print( (motor == xMotor) ? "x-axis" : "y-axis");
+    Serial.println("\n");
+  }
+
 
   // Sets scale and numEighthSteps for both X and Y
   // Abs ensures that numStepsX and numStepsY will be positive

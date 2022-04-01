@@ -194,8 +194,12 @@ void setup()
 
   Serial2.begin(115200, SERIAL_8N1, RX2, TX2);
   Serial.begin(115200);
-  Serial.println();
-  Serial.println("Starting Program...");
+
+  if (DEBUG)
+  {
+    Serial.println();
+    Serial.println("Starting Program...");
+  }
   
   attachInterrupt(digitalPinToInterrupt(CHESS_TIMER_BUTTON), chessTimerISR, RISING);
 }
@@ -205,6 +209,16 @@ void loop()
   // Process the received message
   if (receivedMessageValidFlag)
   {
+
+    // Print the most recent byte received
+    if (DEBUG)
+    {
+      Serial.println("Incoming message:  ");
+      for (int i = 0; i < INCOMING_MESSAGE_LENGTH; i++)
+        Serial.print(receivedMessagePtr[i]);
+      Serial.println("\n");
+    }
+
     receivedMessageValidFlag = false;
 
     currentState = EXECUTING;
@@ -216,6 +230,18 @@ void loop()
         sentMessage[2] = moveCount;
         sendMessageToPi(sentMessage);
 
+        // Print outgoing message
+        if (DEBUG)
+        {
+          Serial.println("Outgoing Message:  ")
+          Serial.print(sentMessage[0]);
+          Serial.print(" ");
+          Serial.print(sentMessage[0]);
+          Serial.print(" ");
+          Serial.print(sentMessage[0]);
+          Serial.println("\n");
+        }
+
         makeMove(receivedMessagePtr);
     }
     // Sends move success/error
@@ -224,6 +250,18 @@ void loop()
     sentMessage[1] = extraByte;
     sentMessage[2] = moveCount;
     sendMessageToPi(sentMessage);
+
+    // Print outgoing message
+    if (DEBUG)
+    {
+      Serial.println("Outgoing Message:  ")
+      Serial.print(sentMessage[0]);
+      Serial.print(" ");
+      Serial.print(sentMessage[0]);
+      Serial.print(" ");
+      Serial.print(sentMessage[0]);
+      Serial.println("\n");
+    }
   }
 
   // Transmit button press

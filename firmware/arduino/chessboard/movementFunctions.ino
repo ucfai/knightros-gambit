@@ -26,6 +26,22 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow, bool enableM
   currCol = currPositionX / (stepsPerUnitSpace * 8);
   currRow = currPositionY / (stepsPerUnitSpace * 8);
 
+  // Print debug info about moveDirect
+  // Make sure to only print the "moving to start position" message in the first recursive call
+  if (DEBUG  &&  currCol != startCol  && currRow != startRow)
+  {
+    Serial.print("Moving to starting position from (");
+    Serial.print(currCol);
+    Serial.print(", ");
+    Serial.print(currRow);
+    Serial.print(") to (");
+    Serial.print(startCol);
+    Serial.print(", ");
+    Serial.print(startRow);
+    Serial.print(") ");
+    Serial.println("\n");
+  }
+
   // Make initial move to first position and move directly since it's faster.
   // Since we're moving to the initial position, we want the magnet off, so pass in false.
   // This is calling the function recursively in the following way:
@@ -41,6 +57,25 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow, bool enableM
   // 5. After being moved to the start point, we perform the move from the initial call.
   if (!moveDirect(currCol, currRow, startCol, startRow, false))
     return false;
+
+  // Print debug info about stright movement
+  if (DEBUG)
+  {
+    Serial.println("The following is in the form (col, row)");
+    Serial.print("Moving directly from (");
+    Serial.print(startCol);
+    Serial.print(", ");
+    Serial.print(startRow);
+    Serial.print(") to (");
+    Serial.print(endCol);
+    Serial.print(", ");
+    Serial.print(endRow);
+    Serial.print(") ");
+    Serial.print();
+    Serial.print("along the ");
+    Serial.print( (motor == xMotor) ? "x-axis" : "y-axis");
+    Serial.println("\n");
+  }
 
   // Enable electromagnet
   if (enableMagnet)
@@ -151,10 +186,43 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
   currCol = currPositionX / (stepsPerUnitSpace * 8);
   currRow = currPositionY / (stepsPerUnitSpace * 8);
 
+  // Print debug info about moveAlongEdges
+  if (DEBUG)
+  {
+    Serial.print("Moving to starting position from (");
+    Serial.print(currCol);
+    Serial.print(", ");
+    Serial.print(currRow);
+    Serial.print(") to (");
+    Serial.print(startCol);
+    Serial.print(", ");
+    Serial.print(startRow);
+    Serial.print(") ");
+    Serial.println("\n");
+  }
+
   // Make initial move to first position. Move diagonally since it's faster.
   // Since we're moving to the initial position, we want the magnet off, so pass in false.
   if (!moveDirect(currCol, currRow, startCol, startRow, false))
     return false;
+
+  // Print debug info about stright movement
+  if (DEBUG)
+  {
+    Serial.println("The following is in the form (col, row)");
+    Serial.print("Moving directly from (");
+    Serial.print(startCol);
+    Serial.print(", ");
+    Serial.print(startRow);
+    Serial.print(") to (");
+    Serial.print(endCol);
+    Serial.print(", ");
+    Serial.print(endRow);
+    Serial.print(") ");
+    Serial.print("along the ");
+    Serial.print( (motor == xMotor) ? "x-axis" : "y-axis");
+    Serial.println("\n");
+  }
 
   // Calculate a list of up to 4 new points (including the start point) 
   // We use previous points to calculate subsequent points, since they're on the same path
@@ -325,6 +393,13 @@ bool alignPiece(int col, int row)
 // Assumes that the starting position is the center of the square the piece is on
 void centerPiece()
 {
+
+  // Print debug message
+  if (DEBUG)
+  {
+    Serial.println("Centering piece on current chess square center\n");
+  }
+
   // Loop counter
   int i;
 
