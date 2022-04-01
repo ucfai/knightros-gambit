@@ -76,7 +76,8 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   int eighthStepsPerPulse;
   int i;
   uint8_t endstopPin;
-
+  uint16_t tempAlignWholeSteps;
+    
   // Stores corresponding motor position based off of which motor is being aligned,
   // so that correct position can be incremented by function
   currentMotorPos = (motor == xMotor) ? &currPositionX : &currPositionY;
@@ -127,7 +128,7 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
     digitalWrite(motor[STEP_PIN], HIGH);
   }
 
-  // Moves motor towards max or 0 for fine-tuned alignment
+  // Moves EM back to nearest grid edge after endstop has been triggered
   if (alignmentCode == MAX_POSITION)
   {
     digitalWrite(motor[DIR_PIN], POS_DIR);
@@ -145,6 +146,21 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
     digitalWrite(motor[STEP_PIN], LOW);
     delay(1);
     digitalWrite(motor[STEP_PIN], HIGH);
+  }
+
+  // Moves EM back to nearest grid edge after endstop trigger and absolute alignment
+  if (motor == xMotor)
+    tempAlignWholeSteps = (alignmentCode == MAX_POSITION) ? MAX_X_ALIGNMENT : MIN_X_ALIGNMENT;
+  else if (motor == yMotor)
+    tempAlignWholeSteps = (alignmentCode == MAX_POSITION) ? MAX_Y_ALIGNMENT : MIN_Y_ALIGNMENT;
+
+  setScale(motor, WHOLE_STEPS);
+
+  for (i = 0; i < tempAlignWholeSteps; i++)
+  {
+      digitalWrite(motor[STEP_PIN], LOW);
+      delay(1);
+      digitalWrite(motor[STEP_PIN], HIGH);
   }
 
   // Sets the motor position to either the max position or 0
