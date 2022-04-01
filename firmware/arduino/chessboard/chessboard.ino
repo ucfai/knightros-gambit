@@ -9,7 +9,7 @@
 
 // UART input and flags
 char moveCount;
-volatile char errorCode;
+volatile char extraByte;
 
 // Create two message buffers, 1: incoming message and 2: last received message
 // tempCharPtr is used to swap between the two message buffers
@@ -18,7 +18,7 @@ volatile char messageBuffer2[INCOMING_MESSAGE_LENGTH];
 volatile char * tempCharPtr;
 volatile char * rxBufferPtr = messageBuffer1;
 volatile char * receivedMessagePtr = messageBuffer2;
-volatile char sentMessage[3]; // sentMessage[] holds status, errorCode, and moveCount (in that order)
+volatile char sentMessage[3]; // sentMessage[] holds status, extraByte, and moveCount (in that order)
 
 // Flags are set asynchronously in uart.ino to begin processing their respective data
 // When receivedMessageValidFlag == true, rxBufferPtr holds a complete and unprocessed message from Pi
@@ -54,9 +54,9 @@ enum ErrorCode
 
 enum InstructionType
 {
-  ALIGN_AXIS = '1',
-  SET_ELECTROMAGNET = '2',
-  RETRANSMIT = '3'
+  ALIGN_AXIS = 'A',
+  SET_ELECTROMAGNET = 'S',
+  RETRANSMIT = 'R'
 };
 
 // Electromagnet
@@ -203,7 +203,7 @@ void loop()
     { 
         // Sends acknowledgement
         sentMessage[0] = currentState;
-        sentMessage[1] = errorCode;
+        sentMessage[1] = extraByte;
         sentMessage[2] = moveCount;
         sendMessageToPi(sentMessage);
 
@@ -212,7 +212,7 @@ void loop()
     // Sends move success/error
     // These variables can be changed inside the makeMove function
     sentMessage[0] = currentState;
-    sentMessage[1] = errorCode;
+    sentMessage[1] = extraByte;
     sentMessage[2] = moveCount;
     sendMessageToPi(sentMessage);
   }
@@ -221,7 +221,7 @@ void loop()
   if (buttonFlag)
   {
     sentMessage[0] = currentState;
-    sentMessage[1] = errorCode;
+    sentMessage[1] = extraByte;
     sentMessage[2] = moveCount;
     sendMessageToPi(sentMessage);
     buttonFlag = false;
@@ -232,7 +232,7 @@ void loop()
   {
     uartMessageIncompleteFlag = false;
     sentMessage[0] = currentState;
-    sentMessage[1] = errorCode;
+    sentMessage[1] = extraByte;
     sentMessage[2] = moveCount;
     sendMessageToPi(sentMessage);
   }

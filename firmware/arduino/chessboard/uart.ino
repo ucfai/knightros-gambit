@@ -33,7 +33,7 @@ void serialEvent2()
             if (byteNum != -1)
             {
                 currentState = ERROR;
-                errorCode = INCOMPLETE_INSTRUCTION;
+                extraByte = INCOMPLETE_INSTRUCTION;
                 uartMessageIncompleteFlag = true;
             }
 
@@ -65,12 +65,15 @@ void serialEvent2()
 // Check that the instruction is valid
 bool validateMessageFromPi(volatile char * message)
 {
+    // If no error occurs to change the extraByte, it should store the opcode
+    extraByte = message[0];
+
     if (message[0] == DIRECT || message[0] == EDGES)
     {
         if (isInvalidCoord(message[1]) || isInvalidCoord(message[2]) ||
             isInvalidCoord(message[3]) || isInvalidCoord(message[4]))
         {
-            errorCode = INVALID_LOCATION;
+            extraByte = INVALID_LOCATION;
             currentState = ERROR;
             return false;
         }
@@ -79,17 +82,19 @@ bool validateMessageFromPi(volatile char * message)
     {
         if (isInvalidCoord(message[1]) || isInvalidCoord(message[2]))
         {
-            errorCode = INVALID_LOCATION;
+            extraByte = INVALID_LOCATION;
             currentState = ERROR;
             return false;
         }
     }
     else if (message[0] == INSTRUCTION)
     {
-        // Check if message[5] holds a valid instruction type
-        if (message[5] < ALIGN_AXIS || message[5] > RETRANSMIT)
+        // Check if message[5] holds an invalid instruction type
+        if ((message[1] != ALIGN_AXIS  || message[2] < '0' || message[2] > '3') && 
+            (message[1] != SET_ELECTROMAGNET || message[2] < '0' || message[2] > '1') &&
+             message[1] != RETRANSMIT)
         {
-            errorCode = INVALID_LOCATION;
+            extraByte = INVALID_LOCATION;
             currentState = ERROR;
             return false;
         }
@@ -97,7 +102,7 @@ bool validateMessageFromPi(volatile char * message)
     else
     {
         // Invalid opcode
-        errorCode = INVALID_OP;
+        extraByte = INVALID_OP;
         currentState = ERROR;
         return false;
     }
@@ -105,12 +110,14 @@ bool validateMessageFromPi(volatile char * message)
     // Update last valid move count
     moveCount = message[5];
 
-    errorCode = NO_ERROR;
     return true;
 }
 
 bool makeMove(volatile char * message)
 {
+    // If no error occurs to change the extraByte, it should store the opcode
+    extraByte = message[0];
+
     // Move type 0
     if (message[0]  ==  DIRECT)
     {
@@ -118,7 +125,7 @@ bool makeMove(volatile char * message)
         if (!moveDirect(message[2] - 'A', message[1] - 'A', message[4] - 'A', message[3] - 'A', true))
         {
             currentState = ERROR;
-            errorCode = MOVEMENT_ERROR;
+            extraByte = MOVEMENT_ERROR;
             return false;
         }
     }
@@ -128,7 +135,7 @@ bool makeMove(volatile char * message)
         if(!moveAlongEdges(message[2] - 'A', message[1] - 'A', message[4] - 'A', message[3] - 'A'))
         {
             currentState = ERROR;
-            errorCode = MOVEMENT_ERROR;
+            extraByte = MOVEMENT_ERROR;
             return false;
         }
     }
@@ -138,7 +145,7 @@ bool makeMove(volatile char * message)
         if(!alignPiece(message[2] - 'A', message[1] - 'A'))
         {
             currentState = ERROR;
-            errorCode = MOVEMENT_ERROR;
+            extraByte = MOVEMENT_ERROR;
             return false;
         }
     }
@@ -146,29 +153,29 @@ bool makeMove(volatile char * message)
     else if (message[0] == INSTRUCTION)
     {
         // Align Axis
-        if (message[5] == ALIGN)
+        if (message[1] == ALIGN)
         {
-          if (message[1] == '0')
+          if (message[2] == '0')
             alignAxis(xMotor, ZERO_POSITION);
-          else if (message[1] == '1')
+          else if (message[2] == '1')
             alignAxis(yMotor, ZERO_POSITION);
-          else if (message[1] == '2')
+          else if (message[2] == '2')
             alignAxis(xMotor, MAX_POSITION);
-          else if (message[1] == '3')
+          else if (message[2] == '3')
             alignAxis(yMotor, MAX_POSITION);
         }
 
         // Enable/Disable Electromagnet
-        else if (message[5] == SET_ELECTROMAGNET)
+        else if (message[1] == SET_ELECTROMAGNET)
         {
-          if (message[1] == '0')
+          if (message[2] == '0')
             digitalWrite(ELECTROMAGNET, LOW);
-          else if (message[1] == '1')
+          else if (message[2] == '1')
             ledcWrite(EM_PWM_CHANNEL, PWM_HALF);
         }
 
         // Retransmit last message
-        else if (message[5] == RETRANSMIT)
+        else if (message[1] == RETRANSMIT)
         {
             sendMessageToPi(sentMessage);
         }
@@ -176,13 +183,12 @@ bool makeMove(volatile char * message)
     else
     {
         // Invalid opcode
-        errorCode = INVALID_OP;
+        extraByte = INVALID_OP;
         currentState = ERROR;
         return false;
     }
 
-    // Move is valid and was made
-    errorCode = NO_ERROR;
+    // Move was made
     currentState = IDLE;
     return true;
 }
@@ -197,5 +203,5 @@ void sendMessageToPi(volatile char * message)
 
 bool isInvalidCoord (volatile char c)
 {
-    return c < 'A' || c > 'X';
+    return c < 'A' || c > 'W';
 }
