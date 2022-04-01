@@ -80,15 +80,17 @@ void makeCircle(int circle, int firstQuarter)
         setScale(yMotor, QUARTER_STEPS);    
       else if (slopeIndex == SLOPE_FOUR_SLOW || slopeIndex == SLOPE_HALF_FAST)
         setScale(yMotor, HALF_STEPS);    
-      else if (slopeIndex == SLOPE_EIGHT || slopeIndex == SLOPE_VERTICAL_FAST || 
-               slopeIndex == SLOPE_ONE_FAST || slopeIndex == SLOPE_FOUR_FAST || slopeIndex == SLOPE_TWO_FAST)
+      else if (slopeIndex == SLOPE_EIGHT    || slopeIndex == SLOPE_VERTICAL_FAST || 
+               slopeIndex == SLOPE_ONE_FAST || slopeIndex == SLOPE_FOUR_FAST || 
+               slopeIndex == SLOPE_TWO_FAST)
         setScale(yMotor, WHOLE_STEPS);    
       else
         setScale(yMotor, EIGHTH_STEPS);    
 
       // X-scale
-      if (slopeIndex == SLOPE_EIGHTH || slopeIndex == SLOPE_HORIZONTAL_FAST || 
-          slopeIndex == SLOPE_ONE_FAST || slopeIndex == SLOPE_QUARTER_FAST || slopeIndex == SLOPE_HALF_FAST)
+      if (slopeIndex == SLOPE_EIGHTH   || slopeIndex == SLOPE_HORIZONTAL_FAST || 
+          slopeIndex == SLOPE_ONE_FAST || slopeIndex == SLOPE_QUARTER_FAST || 
+          slopeIndex == SLOPE_HALF_FAST)
         setScale(xMotor, WHOLE_STEPS);
       else if (slopeIndex == SLOPE_QUARTER_SLOW || slopeIndex == SLOPE_TWO_FAST)
         setScale(xMotor, HALF_STEPS);
@@ -146,7 +148,8 @@ void makeCircle(int circle, int firstQuarter)
 }
 
 // Calculates and stores the number of pulses that need to be made at each slope
-// Creates evenly spaced circles based on MILLIMETERS_PER_UNITSPACE, STEPS_PER_MILLIMETER, and NUM_CIRCLES 
+// Creates evenly spaced circles based on MILLIMETERS_PER_UNITSPACE, 
+// STEPS_PER_MILLIMETER, and NUM_CIRCLES 
 void calculatePulsesPerSlope()
 {
   // Loop counter
@@ -178,8 +181,10 @@ void calculatePulsesPerSlope()
     // Store circle radius in full steps
     circleRadius[circle] = radius / 8;
 
-    // StepsRemaining records the number of steps that need to be taken to reach the leftmost point on the circle
-    // Initialize to the total number of steps per quarter circle. The starting point is the topmost point
+    // StepsRemaining records the number of steps that need to be taken to 
+    // reach the leftmost point on the circle.
+    // Initialize to the total number of steps per quarter circle. 
+    // The starting point is the topmost point.
     xStepsRemaining = radius;
     yStepsRemaining = radius;
 
@@ -191,7 +196,8 @@ void calculatePulsesPerSlope()
     }
 
     // Eighth slope steps
-    while(getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0/16.0  &&  xStepsRemaining >= 8)
+    while(getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0/16.0  && 
+          xStepsRemaining >= 8)
     {
       pulsesPerSlope[circle][SLOPE_EIGHTH]++;
       xStepsRemaining -= 8;
@@ -199,7 +205,8 @@ void calculatePulsesPerSlope()
     }
 
     // Quarter slope steps
-    while(getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0/8.0  &&  xStepsRemaining >= 4)
+    while(getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0/8.0  &&  
+          xStepsRemaining >= 4)
     {
       pulsesPerSlope[circle][SLOPE_QUARTER_SLOW]++;
       xStepsRemaining -= 4;
@@ -207,7 +214,8 @@ void calculatePulsesPerSlope()
     }
 
     // Half slope steps
-    while(getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0/4.0  &&  xStepsRemaining >= 2)
+    while(getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0/4.0  &&  
+          xStepsRemaining >= 2)
     {
       pulsesPerSlope[circle][SLOPE_HALF_SLOW]++;
       xStepsRemaining -= 2;
@@ -223,7 +231,8 @@ void calculatePulsesPerSlope()
     }
 
     // Slope=2 steps
-    while(getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0  &&  yStepsRemaining >= 2)
+    while(getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0  &&  
+          yStepsRemaining >= 2)
     {
       pulsesPerSlope[circle][SLOPE_TWO_SLOW]++;
       xStepsRemaining--;
@@ -231,7 +240,8 @@ void calculatePulsesPerSlope()
     }
 
     // Slope=4 steps
-    while(getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 6.0  &&  yStepsRemaining >= 4)
+    while(getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 6.0  &&  
+          yStepsRemaining >= 4)
     {
       pulsesPerSlope[circle][SLOPE_FOUR_SLOW]++;
       xStepsRemaining--;
@@ -239,7 +249,8 @@ void calculatePulsesPerSlope()
     }
 
     // Slope=8 steps
-    while(getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 12.0  &&  yStepsRemaining >= 8)
+    while(getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 12.0  &&  
+          yStepsRemaining >= 8)
     {
       pulsesPerSlope[circle][SLOPE_EIGHT]++;
       xStepsRemaining--;

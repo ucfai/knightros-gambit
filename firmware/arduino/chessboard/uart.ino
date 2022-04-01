@@ -1,18 +1,18 @@
 char incomingByte;
-volatile unsigned long previousActivationTime = 0;
+volatile unsigned long previousISRTime = 0;
 
 int byteNum = -1; // -1 indicates that the start code hasn't been received
 
 // Send message to Pi when the chess timer is pressed
 void chessTimerISR()
 {
-  unsigned long current_time = millis();
+  unsigned long currentISRTime = millis();
   
   // Check if the difference between button presses is longer than the debounce time
-  if ((current_time - previousActivationTime > DEBOUNCE_TIME) || 
-      (current_time < previousActivationTime && previousActivationTime - current_time > DEBOUNCE_TIME))
+  if ((currentISRTime - previousISRTime > DEBOUNCE_TIME) || 
+      (currentISRTime < previousISRTime && previousISRTime - currentISRTime > DEBOUNCE_TIME))
   {
-    previousActivationTime = current_time;
+    previousISRTime = currentISRTime;
     buttonFlag = true;
   }
 }
@@ -90,7 +90,7 @@ bool validateMessageFromPi(volatile char * message)
   else if (message[0] == INSTRUCTION)
   {
     // Check if message[5] holds an invalid instruction type
-    if ((message[1] != ALIGN_AXIS || message[2] < '0' || message[2] > '3') && 
+    if ((message[1] != ALIGN_AXIS        || message[2] < '0' || message[2] > '3') && 
         (message[1] != SET_ELECTROMAGNET || message[2] < '0' || message[2] > '1') &&
          message[1] != RETRANSMIT)
     {

@@ -21,10 +21,11 @@ volatile char messageBuffer2[INCOMING_MESSAGE_LENGTH];
 volatile char * tempCharPtr;
 volatile char * rxBufferPtr = messageBuffer1;
 volatile char * receivedMessagePtr = messageBuffer2;
-volatile char sentMessage[3]; // sentMessage[] holds status, extraByte, and moveCount (in that order)
+volatile char sentMessage[3]; // holds status, extraByte, and moveCount (in that order)
 
 // Flags are set asynchronously in uart.ino to begin processing their respective data
-// When receivedMessageValidFlag == true, rxBufferPtr holds a complete and unprocessed message from Pi
+// When receivedMessageValidFlag == true, rxBufferPtr holds a complete and 
+// unprocessed message from the pi
 volatile bool receivedMessageValidFlag = false;
 volatile bool buttonFlag = false;  // Queues END_TURN transmission when the chess timer is pressed
 volatile bool uartMessageIncompleteFlag = false;  // Queues an error message when UART drops bytes
@@ -85,14 +86,16 @@ enum InstructionType
 #define X_MOTOR_MS2 12
 #define X_MOTOR_DIR 27
 #define X_MOTOR_STEP 14
-uint8_t xMotor[6] = {X_MOTOR_STEP, X_MOTOR_DIR, X_MOTOR_MS1, X_MOTOR_MS2, X_AXIS_MAX_ENDSTOP, X_AXIS_ZERO_ENDSTOP};
+uint8_t xMotor[6] = {X_MOTOR_STEP, X_MOTOR_DIR, X_MOTOR_MS1, 
+                     X_MOTOR_MS2, X_AXIS_MAX_ENDSTOP, X_AXIS_ZERO_ENDSTOP};
 
 // Y motor pins
 #define Y_MOTOR_MS1 26
 #define Y_MOTOR_MS2 25
 #define Y_MOTOR_DIR 32
 #define Y_MOTOR_STEP 33
-uint8_t yMotor[6] = {Y_MOTOR_STEP, Y_MOTOR_DIR, Y_MOTOR_MS1, Y_MOTOR_MS2, Y_AXIS_MAX_ENDSTOP, Y_AXIS_ZERO_ENDSTOP};
+uint8_t yMotor[6] = {Y_MOTOR_STEP, Y_MOTOR_DIR, Y_MOTOR_MS1, 
+                     Y_MOTOR_MS2, Y_AXIS_MAX_ENDSTOP, Y_AXIS_ZERO_ENDSTOP};
 
 // Shared motor pins
 #define MOTOR_ENABLE 4
@@ -112,15 +115,16 @@ uint8_t yMotor[6] = {Y_MOTOR_STEP, Y_MOTOR_DIR, Y_MOTOR_MS1, Y_MOTOR_MS2, Y_AXIS
 // Number of whole steps per unit space
 int stepsPerUnitSpace;
 
-// currPositionX and currPositionY measure distance from the origin (bottom left corner of the board) in eighth steps
+// currPositionX and currPositionY measure distance from the origin (bottom left 
+// corner of the board) in eighth steps
 int currPositionX, currPositionY;
 
 // Maximum position that currPositionX/Y may reach
 int maxPosition;
 
 // Sets direction of motor to move in the positive or negative direction regardless of axis
-// Since the origin is at the bottom left corner, left/downward movement is considered negative (NEG_DIR),
-// and right/upward movement is positive (POS_DIR)
+// Since the origin is at the bottom left corner, left/downward movement is considered 
+// negative (NEG_DIR), and right/upward movement is positive (POS_DIR)
 #define POS_DIR 0 
 #define NEG_DIR 1
 
@@ -232,7 +236,7 @@ void loop()
 
       makeMove(receivedMessagePtr);
     }
-    
+
     // Sends move success/error
     // These variables can be changed inside the makeMove function
     sentMessage[0] = currentState;
