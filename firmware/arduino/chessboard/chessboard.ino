@@ -2,6 +2,9 @@
 // START: Pin definitons
 // ================================
 
+// Debug flag for enabling printing error messages to the serial monitor
+#define DEBUG 1
+
 // UART
 #define RX2 16
 #define TX2 17
