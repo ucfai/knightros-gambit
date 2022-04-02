@@ -27,7 +27,7 @@ void serialEvent2()
     incomingByte = (char) Serial2.read();
 
     // Reset buffer position
-    if (incomingByte  ==  '~')
+    if (incomingByte == '~')
     {
       // Send message to Pi if the previous instruction was incomplete
       if (byteNum != -1)
@@ -40,13 +40,13 @@ void serialEvent2()
       byteNum = 0;
     }
     // Add byte to buffer
-    else if (byteNum  !=  -1)
+    else if (byteNum != -1)
     {
       rxBufferPtr[byteNum++] = incomingByte;
     }
 
     // Check if the buffer is full, process input
-    if (byteNum  ==  INCOMING_MESSAGE_LENGTH)
+    if (byteNum == INCOMING_MESSAGE_LENGTH)
     {
       // Reset buffer position
       byteNum = -1;
@@ -119,7 +119,7 @@ bool makeMove(volatile char * message)
   extraByte = message[0];
 
   // Move type 0
-  if (message[0]  ==  DIRECT)
+  if (message[0] == DIRECT)
   {
     // Since we're moving a piece, we want the magnet on, so pass in true.
     if (!moveDirect(message[2] - 'A', message[1] - 'A', message[4] - 'A', message[3] - 'A', true))
