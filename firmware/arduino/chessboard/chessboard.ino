@@ -9,6 +9,7 @@
 #define RX2 16
 #define TX2 17
 #define INCOMING_MESSAGE_LENGTH 6
+#define OUTGOING_MESSAGE_LENGTH 3
 
 // UART input and flags
 char moveCount;
@@ -21,7 +22,7 @@ volatile char messageBuffer2[INCOMING_MESSAGE_LENGTH];
 volatile char * tempCharPtr;
 volatile char * rxBufferPtr = messageBuffer1;
 volatile char * receivedMessagePtr = messageBuffer2;
-volatile char sentMessage[3]; // holds status, extraByte, and moveCount (in that order)
+volatile char sentMessage[OUTGOING_MESSAGE_LENGTH]; // holds status, extraByte, and moveCount (in that order)
 
 // Flags are set asynchronously in uart.ino to begin processing their respective data
 // When receivedMessageValidFlag == true, rxBufferPtr holds a complete and 
