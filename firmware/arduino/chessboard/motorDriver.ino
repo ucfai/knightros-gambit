@@ -11,16 +11,18 @@ enum MovementStatus
 };
 
 // Current position tracking scale in eighth steps
+// P refers to positive, N refers to negative
+// Eighths refers to eight steps
 enum EighthStepsScale
 {
-  POS_EIGHTH_STEPS_PER_WHOLE_STEP = 8,
-  POS_EIGHTH_STEPS_PER_HALF_STEP = 4,
-  POS_EIGHTH_STEPS_PER_QUARTER_STEP = 2,
-  POS_EIGHTH_STEPS_PER_EIGHTH_STEP = 1,
-  NEG_EIGHTH_STEPS_PER_WHOLE_STEP = -8,
-  NEG_EIGHTH_STEPS_PER_HALF_STEP = -4,
-  NEG_EIGHTH_STEPS_PER_QUARTER_STEP = -2,
-  NEG_EIGHTH_STEPS_PER_EIGHTH_STEP = -1
+  P_EIGHTHS_PER_WHOLE_STEP = 8,
+  P_EIGHTHS_PER_HALF_STEP = 4,
+  P_EIGHTHS_PER_QUARTER_STEP = 2,
+  P_EIGHTHS_PER_EIGHTH_STEP = 1,
+  N_EIGHTHS_PER_WHOLE_STEP = -8,
+  N_EIGHTHS_PER_HALF_STEP = -4,
+  N_EIGHTHS_PER_QUARTER_STEP = -2,
+  N_EIGHTHS_PER_EIGHTH_STEP = -1
 };
 
 // Sets position extremes to be used as alignment codes
@@ -76,7 +78,18 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   int eighthStepsPerPulse;
   int i;
   uint8_t endstopPin;
-
+  uint16_t tempAlignWholeSteps;
+    
+  // Print debug info about which motor is being aligned to where
+  if (DEBUG)
+  {
+    Serial.print("Aligning ");
+    Serial.print( (motor == xMotor) ? "x-axis motor" : "y-axis motor");
+    Serial.print(" to ");
+    Serial.print( (alignmentCode == ZERO_POSITION) ? "zero position" : "max position");
+    Serial.println("\n");
+  }
+  
   // Stores corresponding motor position based off of which motor is being aligned,
   // so that correct position can be incremented by function
   currentMotorPos = (motor == xMotor) ? &currPositionX : &currPositionY;
@@ -89,13 +102,13 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   if (alignmentCode == MAX_POSITION)
   {
     digitalWrite(motor[DIR_PIN], POS_DIR);
-    eighthStepsPerPulse = POS_EIGHTH_STEPS_PER_WHOLE_STEP;
+    eighthStepsPerPulse = P_EIGHTHS_PER_WHOLE_STEP;
     endstopPin = MAX_ENDSTOP_PIN;
   }
   else
   {
     digitalWrite(motor[DIR_PIN], NEG_DIR);
-    eighthStepsPerPulse = NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
+    eighthStepsPerPulse = N_EIGHTHS_PER_WHOLE_STEP;
     endstopPin = ZERO_ENDSTOP_PIN;
   }
   setScale(motor, WHOLE_STEPS);
@@ -112,12 +125,12 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   if (alignmentCode == MAX_POSITION)
   {
     digitalWrite(motor[DIR_PIN], NEG_DIR);
-    eighthStepsPerPulse = NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
+    eighthStepsPerPulse = N_EIGHTHS_PER_WHOLE_STEP;
   }
   else
   {
     digitalWrite(motor[DIR_PIN], POS_DIR);
-    eighthStepsPerPulse = POS_EIGHTH_STEPS_PER_WHOLE_STEP;
+    eighthStepsPerPulse = P_EIGHTHS_PER_WHOLE_STEP;
   }
 
   for (i = 0; i < HOME_CALIBRATION_OFFSET; i++)
@@ -131,12 +144,12 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   if (alignmentCode == MAX_POSITION)
   {
     digitalWrite(motor[DIR_PIN], POS_DIR);
-    eighthStepsPerPulse = POS_EIGHTH_STEPS_PER_WHOLE_STEP;
+    eighthStepsPerPulse = P_EIGHTHS_PER_WHOLE_STEP;
   }
   else
   {
     digitalWrite(motor[DIR_PIN], NEG_DIR);
-    eighthStepsPerPulse = NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
+    eighthStepsPerPulse = N_EIGHTHS_PER_WHOLE_STEP;
   }
   setScale(motor, EIGHTH_STEPS);
   
@@ -145,6 +158,21 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
     digitalWrite(motor[STEP_PIN], LOW);
     delay(1);
     digitalWrite(motor[STEP_PIN], HIGH);
+  }
+
+  // Moves EM back to nearest grid edge after endstop trigger and absolute alignment
+  if (motor == xMotor)
+    tempAlignWholeSteps = (alignmentCode == MAX_POSITION) ? MAX_X_ALIGNMENT : MIN_X_ALIGNMENT;
+  else if (motor == yMotor)
+    tempAlignWholeSteps = (alignmentCode == MAX_POSITION) ? MAX_Y_ALIGNMENT : MIN_Y_ALIGNMENT;
+
+  setScale(motor, WHOLE_STEPS);
+
+  for (i = 0; i < tempAlignWholeSteps; i++)
+  {
+      digitalWrite(motor[STEP_PIN], LOW);
+      delay(1);
+      digitalWrite(motor[STEP_PIN], HIGH);
   }
 
   // Sets the motor position to either the max position or 0
@@ -161,7 +189,7 @@ void home()
 // Moves the magnet from the "start" point to the "end" point
 // This can only move in straight lines
 // A specific motor is passed to this function since we are only moving one here
-// Returns a 'MovementStatus' code, '0' if successful, varying nonzero values for various error codes
+// Returns a 'MovementStatus' code, '0' if successful and nonzero values for various error codes
 // For all status codes, check 'MovementStatus' in chessboard.ino
 uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
 {
@@ -173,7 +201,7 @@ uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
   int startCol, startRow;
 
   // Checks if the EM is aligned properly
-  if ((currPositionX % stepsPerUnitSpace) || (currPositionY % stepsPerUnitSpace))
+  if ((currPositionX % stepsPerUnitSpace)  ||  (currPositionY % stepsPerUnitSpace))
   {
     return INVALID_ALIGNMENT;
   }
@@ -181,6 +209,26 @@ uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
   // Converts current position to be in terms of unit spaces instead of eighth steps
   startCol = currPositionX / (stepsPerUnitSpace * 8);
   startRow = currPositionY / (stepsPerUnitSpace * 8);
+
+
+  // Print debug info about straight movement
+  if (DEBUG)
+  {
+    Serial.println("The following is in the form (col, row)");
+    Serial.print("Moving straight from (");
+    Serial.print(startCol);
+    Serial.print(", ");
+    Serial.print(startRow);
+    Serial.print(") to (");
+    Serial.print(endCol);
+    Serial.print(", ");
+    Serial.print(endRow);
+    Serial.print(") ");
+    Serial.print("along the ");
+    Serial.print( (motor == xMotor) ? "x-axis" : "y-axis");
+    Serial.println("\n");
+  }
+
 
   // Same as homeAxis(), sets the loop to only update a single motors position at a time
   // Direction is still determined seperately by if statements
@@ -195,7 +243,7 @@ uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
     dir = (endCol > startCol) ? POS_DIR : NEG_DIR;
     setScale(xMotor, WHOLE_STEPS);
     // Sets motor and direction if X movement
-    eighthStepsPerPulse = (dir == POS_DIR) ? POS_EIGHTH_STEPS_PER_WHOLE_STEP : NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
+    eighthStepsPerPulse = (dir == POS_DIR) ? P_EIGHTHS_PER_WHOLE_STEP : N_EIGHTHS_PER_WHOLE_STEP;
   }
   else if (endCol == startCol)
   {
@@ -204,7 +252,7 @@ uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
     dir = (endRow > startRow) ? POS_DIR : NEG_DIR;
     setScale(yMotor, WHOLE_STEPS);
     // Sets motor and direction if Y movement
-    eighthStepsPerPulse = (dir == POS_DIR) ? POS_EIGHTH_STEPS_PER_WHOLE_STEP : NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
+    eighthStepsPerPulse = (dir == POS_DIR) ? P_EIGHTHS_PER_WHOLE_STEP : N_EIGHTHS_PER_WHOLE_STEP;
   }
   else
   {
@@ -249,7 +297,7 @@ uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
 
 // Moves the magnet from the "start" point to the "end" point
 // This can move in diagonal lines of slopes: 1, 2, and 1/2
-// Returns a 'MovementStatus' code, '0' if successful, varying nonzero values for various error codes
+// Returns a 'MovementStatus' code, '0' if successful and nonzero values for various error codes
 // For all status codes, check 'MovementStatus' in chessboard.ino
 uint8_t moveDiagonal(int endCol, int endRow)
 {
@@ -261,7 +309,7 @@ uint8_t moveDiagonal(int endCol, int endRow)
   int startRow, startCol;
 
   // Checks if the EM is aligned properly
-  if ((currPositionX % stepsPerUnitSpace) || (currPositionY % stepsPerUnitSpace))
+  if ((currPositionX % stepsPerUnitSpace)  ||  (currPositionY % stepsPerUnitSpace))
   {
     return INVALID_ALIGNMENT;
   }
@@ -269,6 +317,24 @@ uint8_t moveDiagonal(int endCol, int endRow)
   // Converts current position to be in terms of unit spaces instead of eighth steps
   startCol = currPositionX / (stepsPerUnitSpace * 8);
   startRow = currPositionY / (stepsPerUnitSpace * 8);
+
+
+  // Print debug info about diagonal movement
+  if (DEBUG)
+  {
+    Serial.println("The following is in the form (col, row)");
+    Serial.print("Moving diagonal from (");
+    Serial.print(startCol);
+    Serial.print(", ");
+    Serial.print(startRow);
+    Serial.print(") to (");
+    Serial.print(endCol);
+    Serial.print(", ");
+    Serial.print(endRow);
+    Serial.print(")");
+    Serial.println("\n");
+  }
+
 
   // Sets scale and numEighthSteps for both X and Y
   // Abs ensures that numStepsX and numStepsY will be positive
@@ -292,24 +358,24 @@ uint8_t moveDiagonal(int endCol, int endRow)
     setScale(xMotor, WHOLE_STEPS);
     setScale(yMotor, WHOLE_STEPS);
     // Sets sign based off of direction of each motor
-    eighthStepsPerPulseX = (dirX == POS_DIR) ? POS_EIGHTH_STEPS_PER_WHOLE_STEP : NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
-    eighthStepsPerPulseY = (dirY == POS_DIR) ? POS_EIGHTH_STEPS_PER_WHOLE_STEP : NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
+    eighthStepsPerPulseX = (dirX == POS_DIR) ? P_EIGHTHS_PER_WHOLE_STEP : N_EIGHTHS_PER_WHOLE_STEP;
+    eighthStepsPerPulseY = (dirY == POS_DIR) ? P_EIGHTHS_PER_WHOLE_STEP : N_EIGHTHS_PER_WHOLE_STEP;
   }
-  else if (numStepsY > numStepsX && (numStepsY / numStepsX) == 2)
+  else if (numStepsY > numStepsX  &&  (numStepsY / numStepsX) == 2)
   {
     setScale(xMotor, HALF_STEPS);
     setScale(yMotor, WHOLE_STEPS);
     // Sets sign based off of direction of each motor
-    eighthStepsPerPulseX = (dirX == POS_DIR) ? POS_EIGHTH_STEPS_PER_HALF_STEP : NEG_EIGHTH_STEPS_PER_HALF_STEP;
-    eighthStepsPerPulseY = (dirY == POS_DIR) ? POS_EIGHTH_STEPS_PER_WHOLE_STEP : NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
+    eighthStepsPerPulseX = (dirX == POS_DIR) ? P_EIGHTHS_PER_HALF_STEP  : N_EIGHTHS_PER_HALF_STEP;
+    eighthStepsPerPulseY = (dirY == POS_DIR) ? P_EIGHTHS_PER_WHOLE_STEP : N_EIGHTHS_PER_WHOLE_STEP;
   }
-  else if (numStepsY < numStepsX && (numStepsX / numStepsY) == 2)
+  else if (numStepsY < numStepsX  &&  (numStepsX / numStepsY) == 2)
   {
     setScale(xMotor, WHOLE_STEPS);
     setScale(yMotor, HALF_STEPS);
     // Sets sign based off of direction of each motor
-    eighthStepsPerPulseX = (dirX == POS_DIR) ? POS_EIGHTH_STEPS_PER_WHOLE_STEP : NEG_EIGHTH_STEPS_PER_WHOLE_STEP;
-    eighthStepsPerPulseY = (dirY == POS_DIR) ? POS_EIGHTH_STEPS_PER_HALF_STEP : NEG_EIGHTH_STEPS_PER_HALF_STEP;
+    eighthStepsPerPulseX = (dirX == POS_DIR) ? P_EIGHTHS_PER_WHOLE_STEP : N_EIGHTHS_PER_WHOLE_STEP;
+    eighthStepsPerPulseY = (dirY == POS_DIR) ? P_EIGHTHS_PER_HALF_STEP  : N_EIGHTHS_PER_HALF_STEP;
   }
   else
   {
