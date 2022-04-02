@@ -80,7 +80,7 @@ bool validateMessageFromPi(volatile char * message)
 {
   int i;
 
-  // Print the most recent byte received
+  // Print the most recent message received
   if (DEBUG)
   {
     Serial.println("Incoming message:  ");
