@@ -16,27 +16,27 @@ class FigshareApi:
     BASE_URL = 'https://api.figshare.com/v2/{endpoint}'
 
     def __init__(self):
+        # get the api key which is stored as an environment variable
         self.api_key = os.getenv('FIGSHARE_KEY')
             
     def get_figshare_dataset(self,store_path,file_name):
         '''
         get a dataset from figshare using the path provided
         '''
-
-        base_url = "https://ndownloader.figshare.com/files/"
+        endpoint = "account/articles/{article_id}/files"
         results = self.get_articles()
-        figshare_url = None
+        download_url = None
 
+        # find the file we want to download
         for item in results:
             if file_name == item['title']:
-                print(item)
-                figshare_url = base_url + str(item['id'])
-                print(figshare_url)
-    
-        if not figshare_url:
+                article_id = item['id']
+                file_data = self.issue_request('GET', endpoint.format(article_id=article_id))
+                download_url = file_data[0]["download_url"]
+        if not download_url:
             print("file not found")
         else:
-            urlretrieve(figshare_url, store_path)
+            urlretrieve(download_url, store_path)
 
         return torch.load(store_path)
 
@@ -63,8 +63,12 @@ class FigshareApi:
 
     # create the article within figshare
     def create_article(self,title):
+        # NOTE: this data is just place holder , however required for publishing
         data = {
-            'title': title 
+            'title': title,
+            "description": "Test description of article",
+            "keywords": ["TEST","TEST2"],
+            "categories": [ 1,10,11]
         }
         result = self.issue_request('POST', 'account/articles', data=data)
         print ('Created article:', result['location'], '\n')
@@ -95,7 +99,8 @@ class FigshareApi:
         md5, size = self.get_file_check_data(file_name)
         data = {'name': os.path.basename(file_name),
                 'md5': md5,
-                'size': size}
+                'size': size,
+                }
 
         result = self.issue_request('POST', endpoint, data=data)
         print ('Initiated file upload:', result['location'], '\n')
@@ -135,14 +140,18 @@ class FigshareApi:
 
 
     def upload(self,title,path):
-        # create the article
+
+        # create and upload the article
         article_id = self.create_article(title)
         file_info = self.initiate_new_upload(article_id, path)
-
         self.upload_parts(file_info,path)
 
         # We return to the figshare API to complete the file upload process.
         self.complete_upload(article_id, file_info['id'])
-        self.get_figshare_dataset("test/test.pt",title)
 
-        # Then we upload the file.
+        # article must be published to be downloaded
+        self.issue_request('POST', 'account/articles/{}/publish'.format(article_id))
+
+
+       
+
