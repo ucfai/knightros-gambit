@@ -7,7 +7,7 @@ from collections import deque
 
 import chess
 
-from status import ArduinoException, ArduinoStatus, OpCode, OpType
+from status import ArduinoException, ArduinoStatus, OpCode, InstructionType
 import util
 # import serial
 
@@ -231,7 +231,7 @@ class Board:
     def retransmit_last_msg(self):
         """Create message to request Arduino retransmit last message and add to msg_queue.
         """
-        self.add_instruction_to_queue(OpType.RETRANSMIT_LAST_MSG)
+        self.add_instruction_to_queue(InstructionType.RETRANSMIT_LAST_MSG)
 
     def set_electromagnet(self, turn_on):
         """Create message to set state of electromagnet and add to msg_queue.
@@ -245,7 +245,7 @@ class Board:
         if turn_on not in ('0', '1'):
             raise ValueError("Received unexpected code", turn_on)
 
-        self.add_instruction_to_queue(OpType.SET_ELECTROMAGNET, turn_on)
+        self.add_instruction_to_queue(InstructionType.SET_ELECTROMAGNET, turn_on)
 
     def align_axis(self, alignment_code):
         """Create message to align axis and add to msg_queue.
@@ -261,7 +261,7 @@ class Board:
         if alignment_code not in ('0', '1', '2', '3'):
             raise ValueError("Received unexpected alignment_code", alignment_code)
 
-        self.add_instruction_to_queue(OpType.ALIGN_AXIS, alignment_code)
+        self.add_instruction_to_queue(InstructionType.ALIGN_AXIS, alignment_code)
 
     def make_move(self, uci_move):
         ''' This function assumes that is_valid_move has been called for the uci_move.
@@ -621,8 +621,8 @@ class Instruction:
     """Wrapper class for instruction type messages.
 
     Attributes:
-        op_type: char describing type of instruction. See status.OpType.
-        extra: str field used for ALIGN_AXIS and SET_ELECTROMAGNET. See status.OpType.
+        op_type: char describing type of instruction. See status.InstructionType.
+        extra: str field used for ALIGN_AXIS and SET_ELECTROMAGNET. See status.InstructionType.
     """
     def __init__(self, op_type, instruction_count, extra='0'):
         self.op_code = OpCode.INSTRUCTION

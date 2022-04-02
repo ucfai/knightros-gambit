@@ -105,9 +105,8 @@ def main():
         game = Game(params["mode_of_interaction"], params["human_plays_white_pieces"])
         # _, human_plays_white_pieces, board, ai_player = params
 
-        # Sends two instruction messages for homing, 1st for min x, 2nd for min y
-        game.board.add_instruction_to_queue(op_type=status.OpType.ALIGN_AXIS, extra='0')
-        game.board.add_instruction_to_queue(op_type=status.OpType.ALIGN_AXIS, extra='1')
+        # Sends instruction messages for homing (see InstructionType in status)
+        game.board.add_instruction_to_queue(op_type=status.InstructionType.ALIGN_AXIS, extra='4')
 
     # Main game loop
     current_player = 0
