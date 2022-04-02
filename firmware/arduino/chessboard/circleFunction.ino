@@ -103,7 +103,7 @@ void makeCircle(int circle, int firstQuarter)
       // Separate loops for vertical and horizontal cases to optimize performance
       if (slopeIndex == SLOPE_VERT_SLOW  ||  slopeIndex == SLOPE_VERT_FAST)
       {
-        for (int i = 0; i < pulsesPerSlope[circle][slopeIndex]; i++)
+        for (i = 0; i < pulsesPerSlope[circle][slopeIndex]; i++)
         {
           // Y-Step
           digitalWrite(yMotor[STEP_PIN], LOW);

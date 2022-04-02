@@ -1,34 +1,65 @@
-// ================================
-// START: Pin definitons
-// ================================
+// ==========================================
+// START: Constant definitons
+// ==========================================
 
 // Debug flag for enabling printing error messages to the serial monitor
 #define DEBUG 1
 
-// UART
-#define RX2 16
-#define TX2 17
-#define INCOMING_MESSAGE_LENGTH 6
+enum UART
+{
+  RX2 = 16,
+  TX2 = 17,
+  INCOMING_MESSAGE_LENGTH = 6,
+  OUTGOING_MESSAGE_LENGTH = 3
+};
 
-// UART input and flags
-char moveCount;
-volatile char extraByte;
+// 127 is for 50% duty cycle, 255 is for 100% duty cycle
+enum ElectromagnetMisc
+{
+  ELECTROMAGNET = 23,
+  PWM_FULL = 255,
+  PWM_HALF = 127,
+  EM_PWM_CHANNEL = 0,
+  PWM_FREQUENCY = 100,
+  PWM_RESOLUTION = 8
+};
 
-// Create two message buffers, 1: incoming message and 2: last received message
-// tempCharPtr is used to swap between the two message buffers
-volatile char messageBuffer1[INCOMING_MESSAGE_LENGTH];
-volatile char messageBuffer2[INCOMING_MESSAGE_LENGTH];
-volatile char * tempCharPtr;
-volatile char * rxBufferPtr = messageBuffer1;
-volatile char * receivedMessagePtr = messageBuffer2;
-volatile char sentMessage[3]; // holds status, extraByte, and moveCount (in that order)
+enum SwitchesMisc
+{
+  X_AXIS_MAX_ENDSTOP = 36,
+  Y_AXIS_MAX_ENDSTOP = 34,
+  X_AXIS_ZERO_ENDSTOP = 39,
+  Y_AXIS_ZERO_ENDSTOP = 35,
+  CHESS_TIMER_BUTTON = 21,
+  DEBOUNCE_TIME = 100    
+};
 
-// Flags are set asynchronously in uart.ino to begin processing their respective data
-// When receivedMessageValidFlag == true, rxBufferPtr holds a complete and 
-// unprocessed message from the pi
-volatile bool receivedMessageValidFlag = false;
-volatile bool buttonFlag = false;  // Queues END_TURN transmission when the chess timer is pressed
-volatile bool uartMessageIncompleteFlag = false;  // Queues an error message when UART drops bytes
+enum XMotorPins
+{
+  X_MOTOR_MS1 = 13,
+  X_MOTOR_MS2 = 12,
+  X_MOTOR_DIR = 27,
+  X_MOTOR_STEP = 14
+};
+uint8_t xMotor[6] = {X_MOTOR_STEP, X_MOTOR_DIR, X_MOTOR_MS1, 
+                     X_MOTOR_MS2, X_AXIS_MAX_ENDSTOP, X_AXIS_ZERO_ENDSTOP};
+
+enum YMotorPins
+{
+  Y_MOTOR_MS1 = 26,
+  Y_MOTOR_MS2 = 25,
+  Y_MOTOR_DIR = 32,
+  Y_MOTOR_STEP = 33
+};
+uint8_t yMotor[6] = {Y_MOTOR_STEP, Y_MOTOR_DIR, Y_MOTOR_MS1, 
+                     Y_MOTOR_MS2, Y_AXIS_MAX_ENDSTOP, Y_AXIS_ZERO_ENDSTOP};
+
+enum SharedMotorPins
+{
+  MOTOR_ENABLE = 4,
+  MOTOR_RESET = 2,
+  MOTOR_SLEEP = 15
+};
 
 enum ArduinoState
 {
@@ -63,54 +94,80 @@ enum InstructionType
   RETRANSMIT = 'R'
 };
 
-// Electromagnet
-// 127 is for 50% duty cycle, 255 is for 100% duty cycle
-#define ELECTROMAGNET 23
-#define PWM_FULL 255
-#define PWM_HALF 127
+enum DistanceConstants
+{
+  MILLIMETERS_PER_UNITSPACE = 32,
+  STEPS_PER_MILLIMETER = 5,  // Whole steps per millimeter
+  HOME_CALIBRATION_OFFSET = 100,
+  TOTAL_UNITSPACES = 22
+};  
 
-// PWM setup for EM
-#define EM_PWM_CHANNEL 0
-#define PWM_FREQUENCY 100
-#define PWM_RESOLUTION 8
+// Sets direction of motor to move in the positive or negative direction regardless of axis
+// Since the origin is at the bottom left corner, left/downward movement is considered negative (NEG_DIR), 
+// and right/upward movement is positive (POS_DIR)
+enum Direction
+{
+  POS_DIR = 0,
+  NEG_DIR = 1
+}; 
 
-// Switches and buttons
-#define X_AXIS_MAX_ENDSTOP 36
-#define Y_AXIS_MAX_ENDSTOP 34
-#define X_AXIS_ZERO_ENDSTOP 39
-#define Y_AXIS_ZERO_ENDSTOP 35
-#define CHESS_TIMER_BUTTON 21
+enum StepSize
+{
+  WHOLE_STEPS = 1,
+  HALF_STEPS = 2,
+  QUARTER_STEPS = 4,
+  EIGHTH_STEPS = 8
+};
 
-// X motor pins
-#define X_MOTOR_MS1 13
-#define X_MOTOR_MS2 12
-#define X_MOTOR_DIR 27
-#define X_MOTOR_STEP 14
-uint8_t xMotor[6] = {X_MOTOR_STEP, X_MOTOR_DIR, X_MOTOR_MS1, 
-                     X_MOTOR_MS2, X_AXIS_MAX_ENDSTOP, X_AXIS_ZERO_ENDSTOP};
+enum MotorArrayIndicies
+{
+  STEP_PIN = 0,
+  DIR_PIN = 1,
+  MS1_PIN = 2,
+  MS2_PIN = 3,
+  ZERO_ENDSTOP_PIN = 4,
+  MAX_ENDSTOP_PIN = 5
+};
 
-// Y motor pins
-#define Y_MOTOR_MS1 26
-#define Y_MOTOR_MS2 25
-#define Y_MOTOR_DIR 32
-#define Y_MOTOR_STEP 33
-uint8_t yMotor[6] = {Y_MOTOR_STEP, Y_MOTOR_DIR, Y_MOTOR_MS1, 
-                     Y_MOTOR_MS2, Y_AXIS_MAX_ENDSTOP, Y_AXIS_ZERO_ENDSTOP};
+enum AlignmentSpacing
+{
+  MAX_X_ALIGNMENT = 15,
+  MIN_X_ALIGNMENT = 15,
+  MAX_Y_ALIGNMENT = 15,
+  MIN_Y_ALIGNMENT = 15
+};
 
-// Shared motor pins
-#define MOTOR_ENABLE 4
-#define MOTOR_RESET 2
-#define MOTOR_SLEEP 15
+enum CircleFunctionConsts
+{
+  // Number of concentric circles to make when centering pieces
+  NUM_CIRCLES = 3,
+  // Number of different slope settings for each quarter circle
+  NUM_SLOPES_PER_QUARTER_CIRCLE = 9
+};
 
-// ================================
-// END: Pin definitons
-// ================================
+// ==========================================
+// START: Global Variable Declarations
+// ==========================================
 
-// Distance definitions
-#define MILLIMETERS_PER_UNITSPACE 32
-#define STEPS_PER_MILLIMETER 5  // Whole steps per millimeter
-#define HOME_CALIBRATION_OFFSET 100
-#define TOTAL_UNITSPACES 22
+// UART input and flags
+char moveCount;
+volatile char extraByte;
+
+// Create two message buffers, 1: incoming message and 2: last received message
+// tempCharPtr is used to swap between the two message buffers
+volatile char messageBuffer1[INCOMING_MESSAGE_LENGTH];
+volatile char messageBuffer2[INCOMING_MESSAGE_LENGTH];
+volatile char * tempCharPtr;
+volatile char * rxBufferPtr = messageBuffer1;
+volatile char * receivedMessagePtr = messageBuffer2;
+volatile char sentMessage[OUTGOING_MESSAGE_LENGTH]; // holds status, extraByte, and moveCount (in that order)
+
+// Flags are set asynchronously in uart.ino to begin processing their respective data
+// When receivedMessageValidFlag == true, rxBufferPtr holds a complete and 
+// unprocessed message from the pi
+volatile bool receivedMessageValidFlag = false;
+volatile bool buttonFlag = false;  // Queues END_TURN transmission when the chess timer is pressed
+volatile bool uartMessageIncompleteFlag = false;  // Queues an error message when UART drops bytes
 
 // Number of whole steps per unit space
 int stepsPerUnitSpace;
@@ -120,42 +177,7 @@ int stepsPerUnitSpace;
 int currPositionX, currPositionY;
 
 // Maximum position that currPositionX/Y may reach
-int maxPosition;
-
-// Sets direction of motor to move in the positive or negative direction regardless of axis
-// Since the origin is at the bottom left corner, left/downward movement is considered 
-// negative (NEG_DIR), and right/upward movement is positive (POS_DIR)
-#define POS_DIR 0 
-#define NEG_DIR 1
-
-// Step size definitions
-#define WHOLE_STEPS 1
-#define HALF_STEPS 2
-#define QUARTER_STEPS 4
-#define EIGHTH_STEPS 8
-
-// Motor array index definitions
-#define STEP_PIN 0
-#define DIR_PIN 1
-#define MS1_PIN 2
-#define MS2_PIN 3
-#define ZERO_ENDSTOP_PIN 4
-#define MAX_ENDSTOP_PIN 5
-
-// Alignment spacings for each corner
-#define MAX_X_ALIGNMENT 15
-#define MIN_X_ALIGNMENT 15
-#define MAX_Y_ALIGNMENT 15
-#define MIN_Y_ALIGNMENT 15
-
-// Button debounce time (in milliseconds)
-#define DEBOUNCE_TIME 100 
-
-// Number of concentric circles to make when centering pieces
-#define NUM_CIRCLES 3
-
-// Number of different slope settings for each quarter circle
-#define NUM_SLOPES_PER_QUARTER_CIRCLE 9
+int maxPosition;  
 
 void setup()
 {
@@ -213,45 +235,25 @@ void loop()
   // Process the received message
   if (receivedMessageValidFlag)
   {
-
-    // Print the most recent byte received
-    if (DEBUG)
-    {
-      Serial.println("Incoming message:  ");
-      for (int i = 0; i < INCOMING_MESSAGE_LENGTH; i++)
-        Serial.print(receivedMessagePtr[i]);
-      Serial.println("\n");
-    }
-
     receivedMessageValidFlag = false;
 
     currentState = EXECUTING;
     if (validateMessageFromPi(receivedMessagePtr))
     { 
       // Sends acknowledgement
-      sentMessage[0] = currentState;
-      sentMessage[1] = extraByte;
-      sentMessage[2] = moveCount;
-      sendMessageToPi(sentMessage);
-
+      sendParamsToPi(currentState, extraByte, moveCount);
       makeMove(receivedMessagePtr);
     }
 
     // Sends move success/error
     // These variables can be changed inside the makeMove function
-    sentMessage[0] = currentState;
-    sentMessage[1] = extraByte;
-    sentMessage[2] = moveCount;
-    sendMessageToPi(sentMessage);
+    sendParamsToPi(currentState, extraByte, moveCount);
   }
 
   // Transmit button press
   if (buttonFlag)
   {
-    sentMessage[0] = currentState;
-    sentMessage[1] = extraByte;
-    sentMessage[2] = moveCount;
-    sendMessageToPi(sentMessage);
+    sendParamsToPi(currentState, extraByte, moveCount);
     buttonFlag = false;
   }
 
@@ -259,9 +261,6 @@ void loop()
   if (uartMessageIncompleteFlag)
   {
     uartMessageIncompleteFlag = false;
-    sentMessage[0] = currentState;
-    sentMessage[1] = extraByte;
-    sentMessage[2] = moveCount;
-    sendMessageToPi(sentMessage);
+    sendParamsToPi(currentState, extraByte, moveCount);
   }
 }

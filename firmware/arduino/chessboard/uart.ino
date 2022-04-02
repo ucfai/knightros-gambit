@@ -3,6 +3,18 @@ volatile unsigned long previousISRTime = 0;
 
 int byteNum = -1; // -1 indicates that the start code hasn't been received
 
+enum PiMsgIndices
+{
+  OPCODE_IDX = 0,
+  ITYPE_IDX = 1,
+  EXTRA_IDX = 2,
+  Y0_IDX = 1,
+  X0_IDX = 2,
+  Y1_IDX = 3,
+  X1_IDX = 4,
+  MSG_COUNT_IDX = 5
+};
+
 // Send message to Pi when the chess timer is pressed
 void chessTimerISR()
 {
@@ -27,6 +39,7 @@ void serialEvent2()
     incomingByte = (char) Serial2.read();
 
     // Reset buffer position
+    // '~' is the delimiter for our messages
     if (incomingByte == '~')
     {
       // Send message to Pi if the previous instruction was incomplete
@@ -65,34 +78,45 @@ void serialEvent2()
 // Check that the instruction is valid
 bool validateMessageFromPi(volatile char * message)
 {
-  // If no error occurs to change the extraByte, it should store the opcode
-  extraByte = message[0];
+  int i;
 
-  if (message[0] == DIRECT  ||  message[0] == EDGES)
+  // Print the most recent message received
+  if (DEBUG)
   {
-    if (isInvalidCoord(message[1])  ||  isInvalidCoord(message[2]) ||
-        isInvalidCoord(message[3])  ||  isInvalidCoord(message[4]))
+    Serial.println("Incoming message:  ");
+    for (i = 0; i < INCOMING_MESSAGE_LENGTH; i++)
+      Serial.print(receivedMessagePtr[i]);
+    Serial.println("\n");
+  }
+
+  // If no error occurs to change the extraByte, it should store the opcode
+  extraByte = message[OPCODE_IDX];
+
+  if (message[OPCODE_IDX] == DIRECT  ||  message[OPCODE_IDX] == EDGES)
+  {
+    if (isInvalidCoord(message[X0_IDX])  ||  isInvalidCoord(message[Y0_IDX]) ||
+        isInvalidCoord(message[X1_IDX])  ||  isInvalidCoord(message[Y1_IDX]))
     {
       extraByte = INVALID_LOCATION;
       currentState = ERROR;
       return false;
     }
   }
-  else if (message[0] == ALIGN)
+  else if (message[OPCODE_IDX] == ALIGN)
   {
-    if (isInvalidCoord(message[1])  ||  isInvalidCoord(message[2]))
+    if (isInvalidCoord(message[X0_IDX])  ||  isInvalidCoord(message[Y0_IDX]))
     {
       extraByte = INVALID_LOCATION;
       currentState = ERROR;
       return false;
     }
   }
-  else if (message[0] == INSTRUCTION)
+  else if (message[OPCODE_IDX] == INSTRUCTION)
   {
     // Check if message[1] holds an invalid instruction type or if message[2] is an invalid code
-    if ((message[1] != ALIGN_AXIS         ||  message[2] < '0'  ||  message[2] > '3')  &&  
-        (message[1] != SET_ELECTROMAGNET  ||  message[2] < '0'  ||  message[2] > '1') &&
-         message[1] != RETRANSMIT)
+    if ((message[ITYPE_IDX] != ALIGN_AXIS         ||  message[EXTRA_IDX] < '0'  ||  message[EXTRA_IDX] > '3')  &&  
+        (message[ITYPE_IDX] != SET_ELECTROMAGNET  ||  message[EXTRA_IDX] < '0'  ||  message[EXTRA_IDX] > '1')  &&
+         message[ITYPE_IDX] != RETRANSMIT)
     {
       extraByte = INVALID_LOCATION;
       currentState = ERROR;
@@ -108,7 +132,7 @@ bool validateMessageFromPi(volatile char * message)
   }
 
   // Update last valid move count
-  moveCount = message[5];
+  moveCount = message[MSG_COUNT_IDX];
 
   return true;
 }
@@ -116,13 +140,13 @@ bool validateMessageFromPi(volatile char * message)
 bool makeMove(volatile char * message)
 {
   // If no error occurs to change the extraByte, it should store the opcode
-  extraByte = message[0];
+  extraByte = message[OPCODE_IDX];
 
   // Move type 0
-  if (message[0] == DIRECT)
+  if (message[OPCODE_IDX] == DIRECT)
   {
     // Since we're moving a piece, we want the magnet on, so pass in true.
-    if (!moveDirect(message[2] - 'A', message[1] - 'A', message[4] - 'A', message[3] - 'A', true))
+    if (!moveDirect(message[X0_IDX] - 'A', message[Y0_IDX] - 'A', message[X1_IDX] - 'A', message[Y1_IDX] - 'A', true))
     {
       currentState = ERROR;
       extraByte = MOVEMENT_ERROR;
@@ -130,9 +154,9 @@ bool makeMove(volatile char * message)
     }
   }
   // Move type 1
-  else if (message[0] == EDGES)
+  else if (message[OPCODE_IDX] == EDGES)
   {
-    if(!moveAlongEdges(message[2] - 'A', message[1] - 'A', message[4] - 'A', message[3] - 'A'))
+    if(!moveAlongEdges(message[X0_IDX] - 'A', message[Y0_IDX] - 'A', message[X1_IDX] - 'A', message[Y1_IDX] - 'A'))
     {
       currentState = ERROR;
       extraByte = MOVEMENT_ERROR;
@@ -140,9 +164,9 @@ bool makeMove(volatile char * message)
     }
   }
   // Move type 2
-  else if (message[0] == ALIGN)
+  else if (message[OPCODE_IDX] == ALIGN)
   {
-    if(!alignPiece(message[2] - 'A', message[1] - 'A'))
+    if(!alignPiece(message[X0_IDX] - 'A', message[Y0_IDX] - 'A'))
     {
       currentState = ERROR;
       extraByte = MOVEMENT_ERROR;
@@ -150,30 +174,30 @@ bool makeMove(volatile char * message)
     }
   }
   // Move type 3 - special instructions
-  else if (message[0] == INSTRUCTION)
+  else if (message[OPCODE_IDX] == INSTRUCTION)
   {
     // Align Axis
-    if (message[1] == ALIGN)
+    if (message[ITYPE_IDX] == ALIGN)
     {
-      if (message[2] == '0')
+      if (message[EXTRA_IDX] == '0')
         alignAxis(xMotor, ZERO_POSITION);
-      else if (message[2] == '1')
+      else if (message[EXTRA_IDX] == '1')
         alignAxis(yMotor, ZERO_POSITION);
-      else if (message[2] == '2')
+      else if (message[EXTRA_IDX] == '2')
         alignAxis(xMotor, MAX_POSITION);
-      else if (message[2] == '3')
+      else if (message[EXTRA_IDX] == '3')
         alignAxis(yMotor, MAX_POSITION);
     }
     // Enable/Disable Electromagnet
-    else if (message[1] == SET_ELECTROMAGNET)
+    else if (message[ITYPE_IDX] == SET_ELECTROMAGNET)
     {
-      if (message[2] == '0')
+      if (message[EXTRA_IDX] == '0')
         digitalWrite(ELECTROMAGNET, LOW);
-      else if (message[2] == '1')
+      else if (message[EXTRA_IDX] == '1')
         ledcWrite(EM_PWM_CHANNEL, PWM_HALF);
     }
     // Retransmit last message
-    else if (message[1] == RETRANSMIT)
+    else if (message[ITYPE_IDX] == RETRANSMIT)
     {
       sendMessageToPi(sentMessage);
     }
@@ -189,6 +213,14 @@ bool makeMove(volatile char * message)
   // Move was made
   currentState = IDLE;
   return true;
+}
+
+void sendParamsToPi(volatile char currentState, volatile char extraByte, volatile char moveCount)
+{
+  sentMessage[0] = currentState;
+  sentMessage[1] = extraByte;
+  sentMessage[2] = moveCount;
+  sendMessageToPi(sentMessage);
 }
 
 void sendMessageToPi(volatile char * message)
@@ -213,6 +245,7 @@ void sendMessageToPi(volatile char * message)
     }
   }
 
+  // '~' is the delimiter for our messages
   Serial2.write('~');
   Serial2.write(message[0]);
   Serial2.write(message[1]);
