@@ -229,29 +229,19 @@ void loop()
     if (validateMessageFromPi(receivedMessagePtr))
     { 
       // Sends acknowledgement
-      sentMessage[0] = currentState;
-      sentMessage[1] = extraByte;
-      sentMessage[2] = moveCount;
-      sendMessageToPi(sentMessage);
-
+      sendParamsToPi(currentState, extraByte, moveCount);
       makeMove(receivedMessagePtr);
     }
 
     // Sends move success/error
     // These variables can be changed inside the makeMove function
-    sentMessage[0] = currentState;
-    sentMessage[1] = extraByte;
-    sentMessage[2] = moveCount;
-    sendMessageToPi(sentMessage);
+    sendParamsToPi(currentState, extraByte, moveCount);
   }
 
   // Transmit button press
   if (buttonFlag)
   {
-    sentMessage[0] = currentState;
-    sentMessage[1] = extraByte;
-    sentMessage[2] = moveCount;
-    sendMessageToPi(sentMessage);
+    sendParamsToPi(currentState, extraByte, moveCount);
     buttonFlag = false;
   }
 
@@ -259,9 +249,6 @@ void loop()
   if (uartMessageIncompleteFlag)
   {
     uartMessageIncompleteFlag = false;
-    sentMessage[0] = currentState;
-    sentMessage[1] = extraByte;
-    sentMessage[2] = moveCount;
-    sendMessageToPi(sentMessage);
+    sendParamsToPi(currentState, extraByte, moveCount);
   }
 }

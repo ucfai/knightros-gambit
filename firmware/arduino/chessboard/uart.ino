@@ -191,6 +191,14 @@ bool makeMove(volatile char * message)
   return true;
 }
 
+void sendParamsToPi(volatile char currentState, volatile char extraByte, volatile char moveCount)
+{
+  sentMessage[0] = currentState;
+  sentMessage[1] = extraByte;
+  sentMessage[2] = moveCount;
+  sendMessageToPi(sentMessage);
+}
+
 void sendMessageToPi(volatile char * message)
 {
   // Print outgoing message
