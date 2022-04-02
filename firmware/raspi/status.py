@@ -99,7 +99,7 @@ class InstructionType:
     RETRANSMIT_LAST_MSG = 'R'
 
     # Tuple of all InstructionTypes, used for checking membership
-    VALID_OPS = (ALIGN_AXIS, SET_ELECTROMAGNET, RETRANSMIT_LAST_MSG)
+    VALID_INSTRUCTIONS = (ALIGN_AXIS, SET_ELECTROMAGNET, RETRANSMIT_LAST_MSG)
 
 class ArduinoException(Exception):
     '''Helper class for custom Arduino exceptions.
