@@ -27,6 +27,7 @@ void serialEvent2()
     incomingByte = (char) Serial2.read();
 
     // Reset buffer position
+    // '~' is the delimiter for our messages
     if (incomingByte == '~')
     {
       // Send message to Pi if the previous instruction was incomplete
@@ -221,6 +222,7 @@ void sendMessageToPi(volatile char * message)
     }
   }
 
+  // '~' is the delimiter for our messages
   Serial2.write('~');
   Serial2.write(message[0]);
   Serial2.write(message[1]);
