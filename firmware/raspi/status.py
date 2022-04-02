@@ -81,13 +81,13 @@ class OpCode:
 
     MESSAGE_LENGTH = 7
 
-class OpType:
-    '''Enum of op types used to provide information about OpCode.INSTRUCTION types.
-    '''
+class InstructionType:
+    """Enum of instruction types used to provide information about OpCode.INSTRUCTION types."""
     # This code indicates Arduino should align an axis
     # Setting first info bit (e.g. msg[2]) to '0' indicates aligning x axis to zero, '1' indicates
     # aligning y axis to zero, '2' indicates aligning x axis to max, '3' indicates aligning y axis
-    # to max.
+    # to max, '4' indicates calling the Arduino's home() function, which aligns x to zero and y to
+    # zero.
     ALIGN_AXIS = 'A'
 
     # This code indicates Arduino should set the state of the electromagnet
@@ -98,8 +98,8 @@ class OpType:
     # This code used when a corrupted or misaligned message is received
     RETRANSMIT_LAST_MSG = 'R'
 
-    # Tuple of all OpTypes, used for checking membership
-    VALID_OPS = (ALIGN_AXIS, SET_ELECTROMAGNET, RETRANSMIT_LAST_MSG)
+    # Tuple of all InstructionTypes, used for checking membership
+    VALID_INSTRUCTIONS = (ALIGN_AXIS, SET_ELECTROMAGNET, RETRANSMIT_LAST_MSG)
 
 class ArduinoException(Exception):
     '''Helper class for custom Arduino exceptions.
