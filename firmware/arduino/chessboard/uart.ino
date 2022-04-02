@@ -66,6 +66,17 @@ void serialEvent2()
 // Check that the instruction is valid
 bool validateMessageFromPi(volatile char * message)
 {
+  int i;
+
+  // Print the most recent byte received
+  if (DEBUG)
+  {
+    Serial.println("Incoming message:  ");
+    for (i = 0; i < INCOMING_MESSAGE_LENGTH; i++)
+      Serial.print(receivedMessagePtr[i]);
+    Serial.println("\n");
+  }
+
   // If no error occurs to change the extraByte, it should store the opcode
   extraByte = message[0];
 
