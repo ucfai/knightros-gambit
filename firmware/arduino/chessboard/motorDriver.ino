@@ -201,7 +201,7 @@ uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
   int startCol, startRow;
 
   // Checks if the EM is aligned properly
-  if ((currPositionX % stepsPerUnitSpace) || (currPositionY % stepsPerUnitSpace))
+  if ((currPositionX % stepsPerUnitSpace)  ||  (currPositionY % stepsPerUnitSpace))
   {
     return INVALID_ALIGNMENT;
   }
@@ -309,7 +309,7 @@ uint8_t moveDiagonal(int endCol, int endRow)
   int startRow, startCol;
 
   // Checks if the EM is aligned properly
-  if ((currPositionX % stepsPerUnitSpace) || (currPositionY % stepsPerUnitSpace))
+  if ((currPositionX % stepsPerUnitSpace)  ||  (currPositionY % stepsPerUnitSpace))
   {
     return INVALID_ALIGNMENT;
   }
@@ -361,7 +361,7 @@ uint8_t moveDiagonal(int endCol, int endRow)
     eighthStepsPerPulseX = (dirX == POS_DIR) ? P_EIGHTHS_PER_WHOLE_STEP : N_EIGHTHS_PER_WHOLE_STEP;
     eighthStepsPerPulseY = (dirY == POS_DIR) ? P_EIGHTHS_PER_WHOLE_STEP : N_EIGHTHS_PER_WHOLE_STEP;
   }
-  else if (numStepsY > numStepsX && (numStepsY / numStepsX) == 2)
+  else if (numStepsY > numStepsX  &&  (numStepsY / numStepsX) == 2)
   {
     setScale(xMotor, HALF_STEPS);
     setScale(yMotor, WHOLE_STEPS);
@@ -369,7 +369,7 @@ uint8_t moveDiagonal(int endCol, int endRow)
     eighthStepsPerPulseX = (dirX == POS_DIR) ? P_EIGHTHS_PER_HALF_STEP  : N_EIGHTHS_PER_HALF_STEP;
     eighthStepsPerPulseY = (dirY == POS_DIR) ? P_EIGHTHS_PER_WHOLE_STEP : N_EIGHTHS_PER_WHOLE_STEP;
   }
-  else if (numStepsY < numStepsX && (numStepsX / numStepsY) == 2)
+  else if (numStepsY < numStepsX  &&  (numStepsX / numStepsY) == 2)
   {
     setScale(xMotor, WHOLE_STEPS);
     setScale(yMotor, HALF_STEPS);
