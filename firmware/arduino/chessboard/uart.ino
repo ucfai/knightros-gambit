@@ -9,8 +9,8 @@ void chessTimerISR()
   unsigned long currentISRTime = millis();
   
   // Check if the difference between button presses is longer than the debounce time
-  if ((currentISRTime - previousISRTime > DEBOUNCE_TIME) || 
-      (currentISRTime < previousISRTime && previousISRTime - currentISRTime > DEBOUNCE_TIME))
+  if ((currentISRTime - previousISRTime > DEBOUNCE_TIME)  ||  
+      (currentISRTime < previousISRTime  &&  previousISRTime - currentISRTime > DEBOUNCE_TIME))
   {
     previousISRTime = currentISRTime;
     buttonFlag = true;
@@ -27,7 +27,7 @@ void serialEvent2()
     incomingByte = (char) Serial2.read();
 
     // Reset buffer position
-    if (incomingByte  ==  '~')
+    if (incomingByte == '~')
     {
       // Send message to Pi if the previous instruction was incomplete
       if (byteNum != -1)
@@ -40,13 +40,13 @@ void serialEvent2()
       byteNum = 0;
     }
     // Add byte to buffer
-    else if (byteNum  !=  -1)
+    else if (byteNum != -1)
     {
       rxBufferPtr[byteNum++] = incomingByte;
     }
 
     // Check if the buffer is full, process input
-    if (byteNum  ==  INCOMING_MESSAGE_LENGTH)
+    if (byteNum == INCOMING_MESSAGE_LENGTH)
     {
       // Reset buffer position
       byteNum = -1;
@@ -68,10 +68,10 @@ bool validateMessageFromPi(volatile char * message)
   // If no error occurs to change the extraByte, it should store the opcode
   extraByte = message[0];
 
-  if (message[0] == DIRECT || message[0] == EDGES)
+  if (message[0] == DIRECT  ||  message[0] == EDGES)
   {
-    if (isInvalidCoord(message[1]) || isInvalidCoord(message[2]) ||
-        isInvalidCoord(message[3]) || isInvalidCoord(message[4]))
+    if (isInvalidCoord(message[1])  ||  isInvalidCoord(message[2]) ||
+        isInvalidCoord(message[3])  ||  isInvalidCoord(message[4]))
     {
       extraByte = INVALID_LOCATION;
       currentState = ERROR;
@@ -80,7 +80,7 @@ bool validateMessageFromPi(volatile char * message)
   }
   else if (message[0] == ALIGN)
   {
-    if (isInvalidCoord(message[1]) || isInvalidCoord(message[2]))
+    if (isInvalidCoord(message[1])  ||  isInvalidCoord(message[2]))
     {
       extraByte = INVALID_LOCATION;
       currentState = ERROR;
@@ -90,8 +90,8 @@ bool validateMessageFromPi(volatile char * message)
   else if (message[0] == INSTRUCTION)
   {
     // Check if message[1] holds an invalid instruction type or if message[2] is an invalid code
-    if ((message[1] != ALIGN_AXIS        || message[2] < '0' || message[2] > '3') && 
-        (message[1] != SET_ELECTROMAGNET || message[2] < '0' || message[2] > '1') &&
+    if ((message[1] != ALIGN_AXIS         ||  message[2] < '0'  ||  message[2] > '3')  &&  
+        (message[1] != SET_ELECTROMAGNET  ||  message[2] < '0'  ||  message[2] > '1') &&
          message[1] != RETRANSMIT)
     {
       extraByte = INVALID_LOCATION;
@@ -119,7 +119,7 @@ bool makeMove(volatile char * message)
   extraByte = message[0];
 
   // Move type 0
-  if (message[0]  ==  DIRECT)
+  if (message[0] == DIRECT)
   {
     // Since we're moving a piece, we want the magnet on, so pass in true.
     if (!moveDirect(message[2] - 'A', message[1] - 'A', message[4] - 'A', message[3] - 'A', true))
@@ -221,5 +221,5 @@ void sendMessageToPi(volatile char * message)
 
 bool isInvalidCoord (volatile char c)
 {
-  return (c < 'A' || c > 'W');
+  return (c < 'A'  ||  c > 'W');
 }

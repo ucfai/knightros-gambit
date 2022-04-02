@@ -50,58 +50,58 @@ void makeCircle(int circle, int firstQuarter)
   setScale(xMotor, EIGHTH_STEPS);
   digitalWrite(xMotor[STEP_PIN], LOW);
 
-  for (quarter = firstQuarter; quarter != firstQuarter || firstPass; quarter = (quarter + 1) % 4)
+  for (quarter = firstQuarter; quarter != firstQuarter  ||  firstPass; quarter = (quarter + 1) % 4)
   {
     firstPass = false;
 
     // Set Y-direction
-    if (quarter == QUARTER_TOP || quarter == QUARTER_LEFT)
+    if (quarter == QUARTER_TOP  ||  quarter == QUARTER_LEFT)
       digitalWrite(yMotor[DIR_PIN], NEG_DIR);
     else
       digitalWrite(yMotor[DIR_PIN], POS_DIR);
 
     // Set X-direction
-    if (quarter == QUARTER_TOP || quarter == QUARTER_RIGHT)
+    if (quarter == QUARTER_TOP  ||  quarter == QUARTER_RIGHT)
       digitalWrite(xMotor[DIR_PIN], NEG_DIR);
     else
       digitalWrite(xMotor[DIR_PIN], POS_DIR);
 
     // Set starting point for the while loop
-    if (quarter == QUARTER_TOP || quarter == QUARTER_BOTTOM)
+    if (quarter == QUARTER_TOP  ||  quarter == QUARTER_BOTTOM)
       slopeIndex = SLOPE_HORIZ_SLOW;
     else
       slopeIndex = NUM_SLOPES_PER_QUARTER_CIRCLE - 1;
 
     // Iterate through pulsesPerSlope
-    while (slopeIndex >= SLOPE_HORIZ_FAST && slopeIndex <= SLOPE_VERT_SLOW)
+    while (slopeIndex >= SLOPE_HORIZ_FAST  &&  slopeIndex <= SLOPE_VERT_SLOW)
     {
       // Y-scale
-      if (slopeIndex == SLOPE_TWO_SLOW || slopeIndex == SLOPE_QUARTER_FAST)
+      if (slopeIndex == SLOPE_TWO_SLOW  ||  slopeIndex == SLOPE_QUARTER_FAST)
         setScale(yMotor, QUARTER_STEPS);    
-      else if (slopeIndex == SLOPE_FOUR_SLOW || slopeIndex == SLOPE_HALF_FAST)
+      else if (slopeIndex == SLOPE_FOUR_SLOW  ||  slopeIndex == SLOPE_HALF_FAST)
         setScale(yMotor, HALF_STEPS);    
-      else if (slopeIndex == SLOPE_EIGHT    || slopeIndex == SLOPE_VERT_FAST || 
-               slopeIndex == SLOPE_ONE_FAST || slopeIndex == SLOPE_FOUR_FAST || 
+      else if (slopeIndex == SLOPE_EIGHT     ||  slopeIndex == SLOPE_VERT_FAST  ||  
+               slopeIndex == SLOPE_ONE_FAST  ||  slopeIndex == SLOPE_FOUR_FAST  ||  
                slopeIndex == SLOPE_TWO_FAST)
         setScale(yMotor, WHOLE_STEPS);    
       else
         setScale(yMotor, EIGHTH_STEPS);    
 
       // X-scale
-      if (slopeIndex == SLOPE_EIGHTH   || slopeIndex == SLOPE_HORIZ_FAST || 
-          slopeIndex == SLOPE_ONE_FAST || slopeIndex == SLOPE_QUARTER_FAST || 
+      if (slopeIndex == SLOPE_EIGHTH    ||  slopeIndex == SLOPE_HORIZ_FAST  ||  
+          slopeIndex == SLOPE_ONE_FAST  ||  slopeIndex == SLOPE_QUARTER_FAST  ||  
           slopeIndex == SLOPE_HALF_FAST)
         setScale(xMotor, WHOLE_STEPS);
-      else if (slopeIndex == SLOPE_QUARTER_SLOW || slopeIndex == SLOPE_TWO_FAST)
+      else if (slopeIndex == SLOPE_QUARTER_SLOW  ||  slopeIndex == SLOPE_TWO_FAST)
         setScale(xMotor, HALF_STEPS);
-      else if (slopeIndex == SLOPE_HALF_SLOW || slopeIndex == SLOPE_FOUR_FAST)
+      else if (slopeIndex == SLOPE_HALF_SLOW  ||  slopeIndex == SLOPE_FOUR_FAST)
         setScale(xMotor, QUARTER_STEPS);
       else 
         setScale(xMotor, EIGHTH_STEPS);
 
       // Send pulses for the current slopeIndex
       // Separate loops for vertical and horizontal cases to optimize performance
-      if (slopeIndex == SLOPE_VERT_SLOW || slopeIndex == SLOPE_VERT_FAST)
+      if (slopeIndex == SLOPE_VERT_SLOW  ||  slopeIndex == SLOPE_VERT_FAST)
       {
         for (int i = 0; i < pulsesPerSlope[circle][slopeIndex]; i++)
         {
@@ -111,7 +111,7 @@ void makeCircle(int circle, int firstQuarter)
           digitalWrite(yMotor[STEP_PIN], HIGH);
         }
       }
-      else if (slopeIndex == SLOPE_HORIZ_SLOW || slopeIndex == SLOPE_HORIZ_FAST)
+      else if (slopeIndex == SLOPE_HORIZ_SLOW  ||  slopeIndex == SLOPE_HORIZ_FAST)
       {
         for (i = 0; i < pulsesPerSlope[circle][slopeIndex]; i++)
         {
@@ -139,7 +139,7 @@ void makeCircle(int circle, int firstQuarter)
 
       // If the quadrant starts at the top or bottom, the slope becomes increasingly vertical
       // If the quadrant starts at the left or right, the slope becomes horizontal
-      if (quarter == QUARTER_TOP || quarter == QUARTER_BOTTOM)
+      if (quarter == QUARTER_TOP  ||  quarter == QUARTER_BOTTOM)
         slopeIndex++;
       else
         slopeIndex--;
@@ -196,7 +196,7 @@ void calculatePulsesPerSlope()
     }
 
     // Eighth slope steps
-    while (getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0/16.0 && 
+    while (getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0/16.0  &&  
           xStepsRemaining >= 8)
     {
       pulsesPerSlope[circle][SLOPE_EIGHTH]++;
@@ -205,7 +205,7 @@ void calculatePulsesPerSlope()
     }
 
     // Quarter slope steps
-    while (getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0/8.0 &&  
+    while (getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0/8.0  &&   
           xStepsRemaining >= 4)
     {
       pulsesPerSlope[circle][SLOPE_QUARTER_SLOW]++;
@@ -214,7 +214,7 @@ void calculatePulsesPerSlope()
     }
 
     // Half slope steps
-    while (getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0/4.0 &&  
+    while (getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0/4.0  &&   
           xStepsRemaining >= 2)
     {
       pulsesPerSlope[circle][SLOPE_HALF_SLOW]++;
@@ -231,7 +231,7 @@ void calculatePulsesPerSlope()
     }
 
     // Slope=2 steps
-    while (getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0 &&  
+    while (getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 3.0  &&   
           yStepsRemaining >= 2)
     {
       pulsesPerSlope[circle][SLOPE_TWO_SLOW]++;
@@ -240,7 +240,7 @@ void calculatePulsesPerSlope()
     }
 
     // Slope=4 steps
-    while (getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 6.0 &&  
+    while (getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 6.0  &&   
           yStepsRemaining >= 4)
     {
       pulsesPerSlope[circle][SLOPE_FOUR_SLOW]++;
@@ -249,7 +249,7 @@ void calculatePulsesPerSlope()
     }
 
     // Slope=8 steps
-    while (getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 12.0 &&  
+    while (getInstantaneousSlope(radius, xStepsRemaining, yStepsRemaining) < 12.0  &&   
           yStepsRemaining >= 8)
     {
       pulsesPerSlope[circle][SLOPE_EIGHT]++;
@@ -325,13 +325,13 @@ void moveToNextCircle(int currentCircle, int quarter)
   setScale(yMotor, WHOLE_STEPS);
 
   // Set Y-direction
-  if (quarter == QUARTER_TOP || quarter == QUARTER_LEFT)
+  if (quarter == QUARTER_TOP  ||  quarter == QUARTER_LEFT)
     digitalWrite(yMotor[DIR_PIN], NEG_DIR);
   else
     digitalWrite(yMotor[DIR_PIN], POS_DIR);
 
   // Set X-direction
-  if (quarter == QUARTER_TOP || quarter == QUARTER_RIGHT)
+  if (quarter == QUARTER_TOP  ||  quarter == QUARTER_RIGHT)
     digitalWrite(xMotor[DIR_PIN], NEG_DIR);
   else
     digitalWrite(xMotor[DIR_PIN], POS_DIR);
@@ -358,7 +358,7 @@ void moveToNextCircle(int currentCircle, int quarter)
   }
 
   // 2: Step down/up of left/right for the difference between circle radii to reach the next circle
-  if (quarter == QUARTER_TOP || quarter == QUARTER_BOTTOM)
+  if (quarter == QUARTER_TOP  ||  quarter == QUARTER_BOTTOM)
   {
     for (i = 0; i < circleRadius[currentCircle+1]; i++)
     {
