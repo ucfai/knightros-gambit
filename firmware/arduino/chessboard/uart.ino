@@ -12,7 +12,7 @@ enum PiMsgIndices
   X0_IDX = 2,
   Y1_IDX = 3,
   X1_IDX = 4,
-  MSG_COUNT = 5
+  MSG_COUNT_IDX = 5
 };
 
 // Send message to Pi when the chess timer is pressed
@@ -132,7 +132,7 @@ bool validateMessageFromPi(volatile char * message)
   }
 
   // Update last valid move count
-  moveCount = message[MSG_COUNT];
+  moveCount = message[MSG_COUNT_IDX];
 
   return true;
 }
