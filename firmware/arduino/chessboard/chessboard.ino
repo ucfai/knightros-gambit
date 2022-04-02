@@ -213,16 +213,6 @@ void loop()
   // Process the received message
   if (receivedMessageValidFlag)
   {
-
-    // Print the most recent byte received
-    if (DEBUG)
-    {
-      Serial.println("Incoming message:  ");
-      for (int i = 0; i < INCOMING_MESSAGE_LENGTH; i++)
-        Serial.print(receivedMessagePtr[i]);
-      Serial.println("\n");
-    }
-
     receivedMessageValidFlag = false;
 
     currentState = EXECUTING;
