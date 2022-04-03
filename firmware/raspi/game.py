@@ -98,7 +98,7 @@ class Game:
             # Wait for move in progress to finish executing
             time.sleep(1) # reduce the amount of polling while waiting for move to finish
 
-            if not self.board.ser:
+            if self.board.ser is None:
                 # Allows testing other game loop functionality with simulated connection to Arduino
                 self.board.set_status_from_arduino(status.ArduinoStatus.IDLE,
                                                    self.board.msg_queue[0].move_count,
