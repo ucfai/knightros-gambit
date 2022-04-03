@@ -46,11 +46,13 @@ def init_parameters():
         # test > debug > cli == otb == web == speech
         if args.test:
             return {"mode_of_interaction": "test",
-                    "players": [player.TestfilePlayer(args.test)]}
+                    "players": [player.TestfilePlayer(args.test)],
+                    "run_on_hardware": args.microcontroller}
 
         # Note: if args.debug specified, takes priority over other modes of operation.
         if args.debug:
-            return {"mode_of_interaction": "debug", "players": [player.CLDebugPlayer()]}
+            return {"mode_of_interaction": "debug", "players": [player.CLDebugPlayer()],
+                    "run_on_hardware": args.microcontroller}
     else:
         # Get desired piece color for human. Can be white, black, or random.
         human_plays_white_pieces = is_human_turn_at_start()
@@ -68,7 +70,8 @@ def init_parameters():
 
         return {"mode_of_interaction": mode_of_interaction,
                 "players": players,
-                "human_plays_white_pieces": human_plays_white_pieces}
+                "human_plays_white_pieces": human_plays_white_pieces,
+                "run_on_hardware": args.microcontroller}
 
     raise ValueError("Error parsing parameters...")
 
