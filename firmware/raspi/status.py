@@ -36,7 +36,8 @@ class ArduinoStatus:
             return "ERROR"
         return ""
 
-    def is_valid_code(self, code):
+    @staticmethod
+    def is_valid_code(code):
         """Returns True if provided code is a valid ArduinoStatus code, else False.
         """
         return code in (ArduinoStatus.IDLE,

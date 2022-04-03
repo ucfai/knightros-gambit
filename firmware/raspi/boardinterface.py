@@ -9,10 +9,7 @@ import chess
 
 from status import ArduinoException, ArduinoStatus, OpCode, InstructionType
 import util
-# import serial
-
-# TODO: Need to find the pi port and settings we intend to use
-# ser = serial.Serial(port = '/dev/ttyS0')
+import serial
 
 class Engine:
     '''Engine designed to be used for maintaining hardware board state.
@@ -213,7 +210,7 @@ class Board:
         graveyard: See the `Graveyard` class below: A set of coordinates and metadata about
             the dead pieces on the board (captured/spare pieces).
     '''
-    def __init__(self, human_plays_white_pieces):
+    def __init__(self, interact_w_arduino, human_plays_white_pieces):
         self.engine = Engine(human_plays_white_pieces)
         self.move_count = 0
         self.instruction_count = 0
@@ -225,6 +222,8 @@ class Board:
             self.human_plays_white_pieces = True
         else:
             self.human_plays_white_pieces = human_plays_white_pieces
+
+        self.ser = serial.Serial(port='/dev/ttyS0') if interact_w_arduino else None
 
     # TODO: Figure out mechanics of how this works. Want the message retransmitted before we do
     # anything else, but don't necessarily want to have this count as a "Move".
@@ -319,33 +318,32 @@ class Board:
         '''
         print(f"Sending message \"{str(msg)}\" to arduino")
 
-        # TODO: Comment out below when testing game loop
-        # ser.write(str.encode(msg.__str__()))
-
-        # TODO: This is for game loop dev, remove once we read from arduino
-        self.set_status_from_arduino(ArduinoStatus.EXECUTING_MOVE, msg.move_count)
+        if self.ser is not None:
+            self.ser.write(str.encode(msg.__str__()))
+        else:
+            # This simulates communication with Arduino, used for testing.
+            self.set_status_from_arduino(ArduinoStatus.EXECUTING_MOVE, msg.move_count)
 
     def get_status_from_arduino(self):
         '''Read status from Arduino over UART connection.
         '''
-        # New variable created, new_input, to store 4 bytes for UART Messages
-        # If the start byte is a ~ and the Arduino Status is valid, process the arduino status based
-        # on the new input
+        # If the start byte is a ~ and the Arduino Status is valid, process the arduino status
+        # based on the new input
         # TODO: Implement error handling. Arduino should retransmit last
         # message in the event of a parsing error
         # TODO: uncomment the next five lines when testing the game loop on the pi
-        # new_input = ser.read(4)
-        # if new_input[0] == '~' and ArduinoStatus.is_valid_code(new_input[1]):
-        #    self.arduino_status = ArduinoStatus(new_input[1], new_input[3], new_input[2])
-        # else:
-        #    raise ValueError(f"Error: received unexpected status code: {new_input[1]}...")
+        if self.ser is not None:
+            new_input = self.ser.read(4)
+            if new_input[0] == '~' and ArduinoStatus.is_valid_code(new_input[1]):
+                self.arduino_status = ArduinoStatus(new_input[1], new_input[3], new_input[2])
+            else:
+                raise ValueError(f"Error: received unexpected status code: {new_input[1]}...")
         return self.arduino_status
 
     def set_status_from_arduino(self, status, move_count, extra=None):
-        '''Placeholder function; used for game loop development only.
+        '''Placeholder function; used for simulated communication w/ Arduino.
         '''
         self.arduino_status = ArduinoStatus(status, move_count, extra)
-        # TODO: send status to Arduino
 
     def is_valid_move(self, uci_move):
         '''Returns boolean indicating if uci_move is valid in current board state.
