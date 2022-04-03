@@ -434,35 +434,21 @@ void centerPiece()
 bool statusCodeHandler(uint8_t status)
 {
   if (status == SUCCESS)
-  {
     return true;
-  }
   else if (status == HIT_POS_X_ENDSTOP)
-  {
     alignAxis(xMotor, MAX_POSITION);
-  }
   else if (status == HIT_POS_Y_ENDSTOP)
-  {
     alignAxis(yMotor, MAX_POSITION);
-  }
   else if (status == HIT_NEG_X_ENDSTOP)
-  {
     alignAxis(xMotor, ZERO_POSITION);
-  }
   else if (status == HIT_NEG_Y_ENDSTOP)
-  {
     alignAxis(yMotor, ZERO_POSITION);
-  }
   else if (status == INVALID_ALIGNMENT)
-  {
     home();
-  }
   else
-  {
     // Returns false if status code not one of those handled above, 
     // e.g. INVALID_ARGS, or if status code is invalid
     return false;
-  }
   
   return true;
 }

@@ -314,9 +314,7 @@ uint8_t moveDiagonal(uint8_t endCol, uint8_t endRow)
 
   // Checks if the EM is aligned properly
   if ((currPositionX % stepsPerUnitSpace)  ||  (currPositionY % stepsPerUnitSpace))
-  {
     return INVALID_ALIGNMENT;
-  }
 
   // Converts current position to be in terms of unit spaces instead of eighth steps
   startCol = currPositionX / (stepsPerUnitSpace * 8);
