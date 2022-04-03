@@ -1,11 +1,11 @@
 // There are 9 different slope settings per circle, 1/8 and 8 have only one setting,
 // the other seven all have small and large step settings
-int pulsesPerSlope[NUM_CIRCLES][NUM_SLOPES_PER_QUARTER_CIRCLE * 2 - 2];
+uint8_t pulsesPerSlope[NUM_CIRCLES][NUM_SLOPES_PER_QUARTER_CIRCLE * 2 - 2];
 
 // Holds each circle radius to reduce calculations when drawing the circle
 // The extra element allows the centerPiece() function to move back to the
 // center of the square using the standard moveToNextCircle() function
-int circleRadius[NUM_CIRCLES+1];
+uint8_t circleRadius[NUM_CIRCLES+1];
 
 enum SlopeToIndex
 {
@@ -38,10 +38,11 @@ enum Quarters
 // Makes a full circle of the given size (0=largest, NUM_CIRCLES-1=smallest) 
 // starting from the given quadrant (0=top, 1=left, 2=bottom, 3=right, other values are invalid).
 // calculatePulsesPerSlope() must be called before makeCircle()
-void makeCircle(int circle, int firstQuarter)
+void makeCircle(uint8_t circle, uint8_t firstQuarter)
 {
   // Loop counters
-  int slopeIndex, quarter, i;
+  uint8_t slopeIndex, quarter;
+  uint16_t i;
 
   // firstPass is used to make the loop run for the first quadrant
   // despite the fact that quarter will be equal to first quarter.
@@ -153,9 +154,8 @@ void makeCircle(int circle, int firstQuarter)
 void calculatePulsesPerSlope()
 {
   // Loop counter
-  int circle;
-
-  int outerRadius, deltaR;
+  uint8_t circle;
+  uint16_t outerRadius, deltaR;
 
   // Calculate the radius of the largest circle in eighth steps
   outerRadius = MILLIMETERS_PER_UNITSPACE * STEPS_PER_MILLIMETER * 8;
@@ -173,7 +173,7 @@ void calculatePulsesPerSlope()
   // Loop over each circle
   for (circle = 0; circle < NUM_CIRCLES; circle++)
   {
-    int radius, xStepsRemaining, yStepsRemaining;
+    uint16_t radius, xStepsRemaining, yStepsRemaining;
 
     // Radius of the current circle
     radius = outerRadius - deltaR * circle;
@@ -284,7 +284,7 @@ void calculatePulsesPerSlope()
 
 // Returns the instantaneous slope of a circle at the current x and y coordinates
 // xStepsRemaining and yStepsRemaining must be less than or equal to the radius
-float getInstantaneousSlope(int radius, int xStepsRemaining, int yStepsRemaining)
+float getInstantaneousSlope(uint16_t radius, uint16_t xStepsRemaining, uint16_t yStepsRemaining)
 {
   // Return extremely steep slope when yStepsRemaining == 0
   if (yStepsRemaining == 0)
@@ -298,7 +298,7 @@ float getInstantaneousSlope(int radius, int xStepsRemaining, int yStepsRemaining
 void moveToFirstCircle()
 {
   // Loop counter
-  int i;
+  uint16_t i;
 
   setScale(yMotor, WHOLE_STEPS);  
   digitalWrite(yMotor[DIR_PIN], POS_DIR);  
@@ -315,10 +315,10 @@ void moveToFirstCircle()
 // one radius to the next circle. 
 // 0 <= currentCircle < NUM_CIRCLES
 // quarter must be one of the following values: 0=top, 1=left, 2=bottom, 3=right
-void moveToNextCircle(int currentCircle, int quarter)
+void moveToNextCircle(uint8_t currentCircle, uint8_t quarter)
 {
   // Loop counter
-  int i;
+  uint16_t i;
 
   // Both motors move in whole steps
   setScale(xMotor, WHOLE_STEPS);  

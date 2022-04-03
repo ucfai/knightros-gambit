@@ -1,7 +1,7 @@
 char incomingByte;
 volatile unsigned long previousISRTime = 0;
 
-int byteNum = -1; // -1 indicates that the start code hasn't been received
+int8_t byteNum = -1; // -1 indicates that the start code hasn't been received
 
 enum PiMsgIndices
 {
@@ -78,7 +78,7 @@ void serialEvent2()
 // Check that the instruction is valid
 bool validateMessageFromPi(volatile char * message)
 {
-  int i;
+  uint8_t i;
 
   // Print the most recent message received
   if (DEBUG)

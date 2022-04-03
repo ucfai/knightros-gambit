@@ -33,7 +33,7 @@ enum positionExtremes
 };
 
 // Sets the scale of the motor driver corresponding to "motor"
-void setScale(uint8_t motor[], int scale)
+void setScale(uint8_t motor[], uint8_t scale)
 {
   if (scale == WHOLE_STEPS)
   {
@@ -74,11 +74,10 @@ void disableMotors()
 // Drives the motor corresponding to "motor" to be aligned properly at either the max position or 0
 void alignAxis(uint8_t motor[], uint8_t alignmentCode)
 {
-  int *currentMotorPos;
-  int eighthStepsPerPulse;
-  int i;
   uint8_t endstopPin;
-  uint16_t tempAlignWholeSteps;
+  uint8_t tempAlignWholeSteps, i;
+  int8_t eighthStepsPerPulse;
+  uint16_t *currentMotorPosPtr;
     
   // Print debug info about which motor is being aligned to where
   if (DEBUG)
@@ -92,7 +91,7 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   
   // Stores corresponding motor position based off of which motor is being aligned,
   // so that correct position can be incremented by function
-  currentMotorPos = (motor == xMotor) ? &currPositionX : &currPositionY;
+  currentMotorPosPtr = (motor == xMotor) ? &currPositionX : &currPositionY;
 
   // Loop until endstop collision, then fine tune it
   // Use POS_DIR and NEG_DIR to set correct direction of motor alignment despite axis
@@ -176,7 +175,7 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   }
 
   // Sets the motor position to either the max position or 0
-  *currentMotorPos = (alignmentCode == MAX_POSITION) ? maxPosition : 0;
+  *currentMotorPosPtr = (alignmentCode == MAX_POSITION) ? maxPosition : 0;
 }
 
 // Aligns both axis to home
@@ -191,14 +190,13 @@ void home()
 // A specific motor is passed to this function since we are only moving one here
 // Returns a 'MovementStatus' code, '0' if successful and nonzero values for various error codes
 // For all status codes, check 'MovementStatus' in chessboard.ino
-uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
+uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
 {
-  // How many steps per space
-  int dir, numSteps, unitSpaces;
-  int i;
-  int eighthStepsPerPulse;
-  int *currentMotorPos;
-  int startCol, startRow;
+  uint8_t dir, unitSpaces;
+  uint8_t startCol, startRow;
+  int8_t eighthStepsPerPulse;
+  uint16_t numSteps, i;
+  uint16_t *currentMotorPosPtr;
 
   // Checks if the EM is aligned properly
   if ((currPositionX % stepsPerUnitSpace)  ||  (currPositionY % stepsPerUnitSpace))
@@ -232,7 +230,7 @@ uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
 
   // Same as homeAxis(), sets the loop to only update a single motors position at a time
   // Direction is still determined seperately by if statements
-  currentMotorPos = (motor == xMotor) ? &currPositionX : &currPositionY;
+  currentMotorPosPtr = (motor == xMotor) ? &currPositionX : &currPositionY;
 
   // This could be two cases, x or y movement
   // Abs ensures that numSteps will be positive
@@ -290,7 +288,7 @@ uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
   // Updates current position of relevant motor
   // Not incremented inside of loop to save runtime and unneeded computation
   // If motor collides with endstop, alignAxis is triggered and fixes motor position
-  *currentMotorPos += (eighthStepsPerPulse * numSteps);
+  *currentMotorPosPtr += (eighthStepsPerPulse * numSteps);
 
   return SUCCESS;
 }
@@ -299,14 +297,12 @@ uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
 // This can move in diagonal lines of slopes: 1, 2, and 1/2
 // Returns a 'MovementStatus' code, '0' if successful and nonzero values for various error codes
 // For all status codes, check 'MovementStatus' in chessboard.ino
-uint8_t moveDiagonal(int endCol, int endRow)
+uint8_t moveDiagonal(uint8_t endCol, uint8_t endRow)
 {
-  int unitSpacesX, unitSpacesY;
-  int dirX, dirY;
-  int numStepsX, numStepsY;
-  int eighthStepsPerPulseX, eighthStepsPerPulseY;
-  int i;
-  int startRow, startCol;
+  uint8_t dirX, dirY, unitSpacesX, unitSpacesY;
+  uint8_t startRow, startCol;
+  int8_t eighthStepsPerPulseX, eighthStepsPerPulseY;
+  uint16_t numStepsX, numStepsY, i;
 
   // Checks if the EM is aligned properly
   if ((currPositionX % stepsPerUnitSpace)  ||  (currPositionY % stepsPerUnitSpace))

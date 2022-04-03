@@ -1,4 +1,4 @@
-bool moveDirect(int startCol, int startRow, int endCol, int endRow, bool enableMagnet)
+bool moveDirect(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t endRow, bool enableMagnet)
 {
   uint8_t statusCodeResult;
   uint8_t currCol, currRow;
@@ -148,16 +148,16 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow, bool enableM
 // 2. Move along X axis (optional)
 // 3. Move along Y axis (optional)
 // 4. Move to center of square from edge
-bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
+bool moveAlongEdges(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t endRow)
 {
   // There are 5 possible points total, where the first is always the passed start point and 
   // the rest can be made from the list above.
   uint8_t rows[5], cols[5];
-  int8_t diagDirX, diagDirY;
-  int8_t deltaX, deltaY, subDeltaX, subDeltaY, absDeltaX, absDeltaY;
   uint8_t pointCounter, statusCodeResult;
   uint8_t currCol, currRow;
   uint8_t numPoints = 0;
+  int8_t diagDirX, diagDirY;
+  int8_t deltaX, deltaY, subDeltaX, subDeltaY, absDeltaX, absDeltaY;
 
   // Find the signed difference between the final and initial points
   deltaX = endCol - startCol;
@@ -385,7 +385,7 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
   return (pointCounter == numPoints);
 }
 
-bool alignPiece(int col, int row)
+bool alignPiece(uint8_t col, uint8_t row)
 {
   return true;
 }
@@ -395,6 +395,7 @@ void centerPiece()
 {
   uint8_t currCol = currPositionX / (stepsPerUnitSpace * 8);
   uint8_t currRow = currPositionY / (stepsPerUnitSpace * 8);
+  uint8_t i;  // Loop counter
 
   // Print debug message about centerPiece
   if (DEBUG)
@@ -408,8 +409,6 @@ void centerPiece()
     Serial.println("\n");
   }
 
-  // Loop counter
-  int i;
 
   moveToFirstCircle();
 
