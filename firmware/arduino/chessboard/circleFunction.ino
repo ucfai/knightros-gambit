@@ -155,7 +155,6 @@ void calculatePulsesPerSlope()
 {
   // Loop counter
   uint8_t circle;
-
   uint16_t outerRadius, deltaR;
 
   // Calculate the radius of the largest circle in eighth steps

@@ -153,11 +153,11 @@ bool moveAlongEdges(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t 
   // There are 5 possible points total, where the first is always the passed start point and 
   // the rest can be made from the list above.
   uint8_t rows[5], cols[5];
-  int8_t diagDirX, diagDirY;
-  int8_t deltaX, deltaY, subDeltaX, subDeltaY, absDeltaX, absDeltaY;
   uint8_t pointCounter, statusCodeResult;
   uint8_t currCol, currRow;
   uint8_t numPoints = 0;
+  int8_t diagDirX, diagDirY;
+  int8_t deltaX, deltaY, subDeltaX, subDeltaY, absDeltaX, absDeltaY;
 
   // Find the signed difference between the final and initial points
   deltaX = endCol - startCol;

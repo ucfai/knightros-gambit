@@ -74,11 +74,10 @@ void disableMotors()
 // Drives the motor corresponding to "motor" to be aligned properly at either the max position or 0
 void alignAxis(uint8_t motor[], uint8_t alignmentCode)
 {
-  uint16_t *currentMotorPos;
-  int8_t eighthStepsPerPulse;
   uint8_t endstopPin;
-  uint8_t tempAlignWholeSteps;
-  uint8_t i;
+  uint8_t tempAlignWholeSteps, i;
+  int8_t eighthStepsPerPulse;
+  uint16_t *currentMotorPosPtr;
     
   // Print debug info about which motor is being aligned to where
   if (DEBUG)
@@ -92,7 +91,7 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   
   // Stores corresponding motor position based off of which motor is being aligned,
   // so that correct position can be incremented by function
-  currentMotorPos = (motor == xMotor) ? &currPositionX : &currPositionY;
+  currentMotorPosPtr = (motor == xMotor) ? &currPositionX : &currPositionY;
 
   // Loop until endstop collision, then fine tune it
   // Use POS_DIR and NEG_DIR to set correct direction of motor alignment despite axis
@@ -176,7 +175,7 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   }
 
   // Sets the motor position to either the max position or 0
-  *currentMotorPos = (alignmentCode == MAX_POSITION) ? maxPosition : 0;
+  *currentMotorPosPtr = (alignmentCode == MAX_POSITION) ? maxPosition : 0;
 }
 
 // Aligns both axis to home
@@ -193,12 +192,11 @@ void home()
 // For all status codes, check 'MovementStatus' in chessboard.ino
 uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
 {
-  // How many steps per space
   uint8_t dir, unitSpaces;
-  uint16_t numSteps, i;
-  int8_t eighthStepsPerPulse;
-  uint16_t *currentMotorPos;
   uint8_t startCol, startRow;
+  int8_t eighthStepsPerPulse;
+  uint16_t numSteps, i;
+  uint16_t *currentMotorPosPtr;
 
   // Checks if the EM is aligned properly
   if ((currPositionX % stepsPerUnitSpace)  ||  (currPositionY % stepsPerUnitSpace))
@@ -232,7 +230,7 @@ uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
 
   // Same as homeAxis(), sets the loop to only update a single motors position at a time
   // Direction is still determined seperately by if statements
-  currentMotorPos = (motor == xMotor) ? &currPositionX : &currPositionY;
+  currentMotorPosPtr = (motor == xMotor) ? &currPositionX : &currPositionY;
 
   // This could be two cases, x or y movement
   // Abs ensures that numSteps will be positive
@@ -290,7 +288,7 @@ uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
   // Updates current position of relevant motor
   // Not incremented inside of loop to save runtime and unneeded computation
   // If motor collides with endstop, alignAxis is triggered and fixes motor position
-  *currentMotorPos += (eighthStepsPerPulse * numSteps);
+  *currentMotorPosPtr += (eighthStepsPerPulse * numSteps);
 
   return SUCCESS;
 }
@@ -301,11 +299,10 @@ uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
 // For all status codes, check 'MovementStatus' in chessboard.ino
 uint8_t moveDiagonal(uint8_t endCol, uint8_t endRow)
 {
-  uint8_t unitSpacesX, unitSpacesY;
-  uint8_t dirX, dirY;
-  uint16_t numStepsX, numStepsY, i;
-  int8_t eighthStepsPerPulseX, eighthStepsPerPulseY;
+  uint8_t dirX, dirY, unitSpacesX, unitSpacesY;
   uint8_t startRow, startCol;
+  int8_t eighthStepsPerPulseX, eighthStepsPerPulseY;
+  uint16_t numStepsX, numStepsY, i;
 
   // Checks if the EM is aligned properly
   if ((currPositionX % stepsPerUnitSpace)  ||  (currPositionY % stepsPerUnitSpace))
