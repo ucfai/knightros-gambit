@@ -385,11 +385,6 @@ bool moveAlongEdges(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t 
   return (pointCounter == numPoints);
 }
 
-bool alignPiece(int col, int row)
-{
-  return true;
-}
-
 // Assumes that the starting position is the center of the square the piece is on
 void centerPiece()
 {
