@@ -33,7 +33,7 @@ enum positionExtremes
 };
 
 // Sets the scale of the motor driver corresponding to "motor"
-void setScale(uint8_t motor[], int scale)
+void setScale(uint8_t motor[], uint8_t scale)
 {
   if (scale == WHOLE_STEPS)
   {
@@ -74,11 +74,11 @@ void disableMotors()
 // Drives the motor corresponding to "motor" to be aligned properly at either the max position or 0
 void alignAxis(uint8_t motor[], uint8_t alignmentCode)
 {
-  int *currentMotorPos;
-  int eighthStepsPerPulse;
-  int i;
+  uint16_t *currentMotorPos;
+  int8_t eighthStepsPerPulse;
   uint8_t endstopPin;
-  uint16_t tempAlignWholeSteps;
+  uint8_t tempAlignWholeSteps;
+  uint8_t i;
     
   // Print debug info about which motor is being aligned to where
   if (DEBUG)
@@ -191,14 +191,14 @@ void home()
 // A specific motor is passed to this function since we are only moving one here
 // Returns a 'MovementStatus' code, '0' if successful and nonzero values for various error codes
 // For all status codes, check 'MovementStatus' in chessboard.ino
-uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
+uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
 {
   // How many steps per space
-  int dir, numSteps, unitSpaces;
-  int i;
-  int eighthStepsPerPulse;
-  int *currentMotorPos;
-  int startCol, startRow;
+  uint8_t dir, unitSpaces;
+  uint16_t numSteps, i;
+  int8_t eighthStepsPerPulse;
+  uint16_t *currentMotorPos;
+  uint8_t startCol, startRow;
 
   // Checks if the EM is aligned properly
   if ((currPositionX % stepsPerUnitSpace)  ||  (currPositionY % stepsPerUnitSpace))
@@ -299,14 +299,13 @@ uint8_t moveStraight(uint8_t motor[], int endCol, int endRow)
 // This can move in diagonal lines of slopes: 1, 2, and 1/2
 // Returns a 'MovementStatus' code, '0' if successful and nonzero values for various error codes
 // For all status codes, check 'MovementStatus' in chessboard.ino
-uint8_t moveDiagonal(int endCol, int endRow)
+uint8_t moveDiagonal(uint8_t endCol, uint8_t endRow)
 {
-  int unitSpacesX, unitSpacesY;
-  int dirX, dirY;
-  int numStepsX, numStepsY;
-  int eighthStepsPerPulseX, eighthStepsPerPulseY;
-  int i;
-  int startRow, startCol;
+  uint8_t unitSpacesX, unitSpacesY;
+  uint8_t dirX, dirY;
+  uint16_t numStepsX, numStepsY, i;
+  int8_t eighthStepsPerPulseX, eighthStepsPerPulseY;
+  uint8_t startRow, startCol;
 
   // Checks if the EM is aligned properly
   if ((currPositionX % stepsPerUnitSpace)  ||  (currPositionY % stepsPerUnitSpace))

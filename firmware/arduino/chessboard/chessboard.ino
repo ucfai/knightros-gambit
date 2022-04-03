@@ -170,14 +170,14 @@ volatile bool buttonFlag = false;  // Queues END_TURN transmission when the ches
 volatile bool uartMessageIncompleteFlag = false;  // Queues an error message when UART drops bytes
 
 // Number of whole steps per unit space
-int stepsPerUnitSpace;
+uint8_t stepsPerUnitSpace;
 
-// currPositionX and currPositionY measure distance from the origin (bottom left 
-// corner of the board) in eighth steps
-int currPositionX, currPositionY;
+// currPositionX and currPositionY measure distance from the origin 
+// (bottom left corner of the board) in eighth steps
+uint16_t currPositionX, currPositionY;
 
 // Maximum position that currPositionX/Y may reach
-int maxPosition;  
+uint16_t maxPosition;  
 
 void setup()
 {
