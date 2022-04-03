@@ -320,7 +320,7 @@ class Board:
         print(f"Sending message \"{str(msg)}\" to arduino")
 
         # TODO: Comment out below when testing game loop
-        # ser.write(str(msg))
+        # ser.write(str.encode(msg.__str__()))
 
         # TODO: This is for game loop dev, remove once we read from arduino
         self.set_status_from_arduino(ArduinoStatus.EXECUTING_MOVE, msg.move_count)
