@@ -41,7 +41,7 @@ enum Quarters
 void makeCircle(uint8_t circle, uint8_t firstQuarter)
 {
   // Loop counters
-  uint8_t slopeIndex, quarter
+  uint8_t slopeIndex, quarter;
   uint16_t i;
 
   // firstPass is used to make the loop run for the first quadrant
