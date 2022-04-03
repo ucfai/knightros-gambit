@@ -32,6 +32,14 @@ enum positionExtremes
   MAX_POSITION = 1
 };
 
+enum AlignmentSpacing
+{
+  MAX_X_ALIGNMENT = 15,
+  MIN_X_ALIGNMENT = 15,
+  MAX_Y_ALIGNMENT = 15,
+  MIN_Y_ALIGNMENT = 15
+};
+
 // Sets the scale of the motor driver corresponding to "motor"
 void setScale(uint8_t motor[], uint8_t scale)
 {
