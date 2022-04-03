@@ -210,6 +210,7 @@ def parse_args():
         description='These allow us to select how we want the game to be played',
         epilog='''The default is to run the chess engine using inputs from player moves detected'''
                '''by computer vision.''')
+
     parser.add_argument('-p', '--playstyle',
                         dest='playstyle',
                         default='cli',
@@ -218,10 +219,8 @@ def parse_args():
 
     parser.add_argument('-d', '--debug',
                         dest='debug',
-                        action='store_const',
-                        const=True,
-                        default=False,
-                        help='if True, allow sending arbitrary commands to board')
+                        action='store_true',
+                        help='if specified, allow sending arbitrary commands to board')
 
     parser.add_argument('-t', '--test',
                         dest='test',
@@ -231,10 +230,9 @@ def parse_args():
 
     parser.add_argument('-m', '--microcontroller',
                         dest='microcontroller',
-                        action='store_const',
-                        const=True,
-                        default=False,
-                        help='if True, sends commands over UART to Arduino')
+                        action='store_true',
+                        help="if specified, sends commands over UART to Arduino. otherwise, "
+                             "simulates communication between pi and Arduino")
 
     return parser.parse_args()
 

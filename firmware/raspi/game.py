@@ -15,14 +15,22 @@ class Game:
     The main program logic is in the `process` function. `process` should be called in a loop in
     the frontend code.
     """
-    def __init__(self, mode_of_interaction, human_plays_white_pieces=None):
+    def __init__(self, mode_of_interaction, interact_w_arduino, human_plays_white_pieces=None):
         self.mode_of_interaction = mode_of_interaction
         # TODO: Set up board with either white or black on human side.
-        self.board = Board(human_plays_white_pieces)
+        self.board = Board(interact_w_arduino, human_plays_white_pieces)
         # board.setup_board(is_human_turn)
 
-        # TODO: remove this after real Arduino communication is set up
-        self.board.set_status_from_arduino(status.ArduinoStatus.IDLE, 0, None)
+        if interact_w_arduino:
+            arduino_status = None
+            while arduino_status is None:
+                arduino_status = self.board.get_status_from_arduino()
+                time.sleep(0.5)
+                print("Waiting for Arduino initialization...")
+            print("Received initialization from Arduino!")
+        else:
+            # Simulate communication with Arduino for software testing.
+            self.board.set_status_from_arduino(status.ArduinoStatus.IDLE, 0, None)
 
     def winner(self):
         """Returns None if draw or still in progress, True if white won, False if black won.
@@ -90,10 +98,11 @@ class Game:
             # Wait for move in progress to finish executing
             time.sleep(1) # reduce the amount of polling while waiting for move to finish
 
-            # TODO: This is just so we have game loop working, remove once we read from arduino
-            self.board.set_status_from_arduino(status.ArduinoStatus.IDLE,
-                                               self.board.msg_queue[0].move_count,
-                                               self.board.msg_queue[0].op_code)
+            if self.board.ser is None:
+                # Allows testing other game loop functionality with simulated connection to Arduino
+                self.board.set_status_from_arduino(status.ArduinoStatus.IDLE,
+                                                   self.board.msg_queue[0].move_count,
+                                                   self.board.msg_queue[0].op_code)
             # Turn doesn't change, since we don't get next move if Arduino is still executing
             return False
 

@@ -46,11 +46,13 @@ def init_parameters():
         # test > debug > cli == otb == web == speech
         if args.test:
             return {"mode_of_interaction": "test",
-                    "players": [player.TestfilePlayer(args.test)]}
+                    "players": [player.TestfilePlayer(args.test)],
+                    "interact_w_arduino": args.microcontroller}
 
         # Note: if args.debug specified, takes priority over other modes of operation.
         if args.debug:
-            return {"mode_of_interaction": "debug", "players": [player.CLDebugPlayer()]}
+            return {"mode_of_interaction": "debug", "players": [player.CLDebugPlayer()],
+                    "interact_w_arduino": args.microcontroller}
     else:
         # Get desired piece color for human. Can be white, black, or random.
         human_plays_white_pieces = is_human_turn_at_start()
@@ -68,7 +70,8 @@ def init_parameters():
 
         return {"mode_of_interaction": mode_of_interaction,
                 "players": players,
-                "human_plays_white_pieces": human_plays_white_pieces}
+                "human_plays_white_pieces": human_plays_white_pieces,
+                "interact_w_arduino": args.microcontroller}
 
     raise ValueError("Error parsing parameters...")
 
@@ -93,16 +96,17 @@ def main():
     # Note: If running in test or debug, need to call `alignAxis()` for xmin and ymin explicitly.
     # All other modes perform homing before entering main game loop.
     if params["mode_of_interaction"] == "test":
-        game = Game(params["mode_of_interaction"])
+        game = Game(params["mode_of_interaction"], params["interact_w_arduino"])
         # TODO: Refactor to handle dispatching moves using the code in `process`.
         # raise ValueError("Test mode of interaction not yet implemented.")
     elif params["mode_of_interaction"] == "debug":
-        game = Game(params["mode_of_interaction"])
+        game = Game(params["mode_of_interaction"], params["interact_w_arduino"])
         # TODO: Implement debug mode of interaction
         # Should be able to use process with human as both players
         # raise ValueError("Debug mode of interaction not yet implemented.")
     elif params["mode_of_interaction"] in ("cli", "otb", "web", "speech"):
-        game = Game(params["mode_of_interaction"], params["human_plays_white_pieces"])
+        game = Game(params["mode_of_interaction"], params["interact_w_arduino"],
+                    params["human_plays_white_pieces"])
         # _, human_plays_white_pieces, board, ai_player = params
 
         # Sends instruction messages for homing (see InstructionType in status)
