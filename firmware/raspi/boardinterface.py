@@ -327,12 +327,12 @@ class Board:
     def get_status_from_arduino(self):
         '''Read status from Arduino over UART connection.
         '''
-        # If the start byte is a ~ and the Arduino Status is valid, process the arduino status
-        # based on the new input
         # TODO: Implement error handling. Arduino should retransmit last
         # message in the event of a parsing error
-        if self.ser is not None:
+        if self.ser is not None and self.ser.available():
             new_input = self.ser.read(4)
+            # If the start byte is a ~ and the Arduino Status is valid, process the arduino status
+            # based on the new input
             if new_input[0] == '~' and ArduinoStatus.is_valid_code(new_input[1]):
                 self.arduino_status = ArduinoStatus(new_input[1], new_input[3], new_input[2])
             else:

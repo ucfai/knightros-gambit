@@ -12,6 +12,8 @@ class ArduinoStatus:
     ERROR = '3'
     MESSAGE_LENGTH = 4
 
+    # TODO: Update order of fields so that it matches actual msg format. Should be status, extra,
+    # move_count, in that order.
     def __init__(self, status, move_count, extra):
         self.status = status
         self.move_count = move_count
