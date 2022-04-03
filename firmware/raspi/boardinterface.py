@@ -331,7 +331,6 @@ class Board:
         # based on the new input
         # TODO: Implement error handling. Arduino should retransmit last
         # message in the event of a parsing error
-        # TODO: uncomment the next five lines when testing the game loop on the pi
         if self.ser is not None:
             new_input = self.ser.read(4)
             if new_input[0] == '~' and ArduinoStatus.is_valid_code(new_input[1]):
