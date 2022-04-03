@@ -17,7 +17,7 @@ class TrainOptions:
     """
 
     def __init__(self, learning_rate, momentum, weight_decay, epochs, batch_size, games, device,
-                 save_path, num_saved_models, overwrite):
+                 model_saving, num_saved_models, overwrite):
         self.learning_rate = learning_rate
         self.momentum = momentum
         self.weight_decay = weight_decay
@@ -25,7 +25,7 @@ class TrainOptions:
         self.batch_size = batch_size
         self.games = games
         self.device = device
-        self.save_path = save_path
+        self.model_saving = model_saving
         self.num_saved_models = num_saved_models
         self.overwrite = overwrite
 

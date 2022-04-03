@@ -2,8 +2,17 @@
     "_comment": "PARAMS MUST BE ALPHABETIZED",
 
     "saving":{
-        "dataset_path": "datasets/stockfish_data.pt",
-        "model_path": null,
+        "dataset_saving": {
+            "load_path": "datasets/stockfish_data.pt",
+            "save_path": "datasets/stockfish_data.pt",
+            "figshare": false,
+            "figshare_name": "Dataset3"
+        },
+        "model_saving": {
+            "load_path": null,
+            "save_path": "models/models.pt",
+            "figshare": true
+        },
         "num_saved_models": 5,
         "overwrite": true
     },
@@ -17,7 +26,7 @@
     "stockfish":{
         "epochs": 10,
         "batch_size": 8,
-        "games": 10,
+        "games": 1,
         "elo": 1000,
         "depth": 5
     },

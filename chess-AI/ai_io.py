@@ -9,57 +9,93 @@ import torch
 
 import options
 from streamlit_dashboard import Dashboard
-
+from figshare_api import FigshareApi
 
 def make_dir(dataset_path):
+    
     """Create a directory for the corresponding dataset path if it does not already exist."""
     if not os.path.exists(os.path.dirname(dataset_path)):
         os.makedirs(os.path.dirname(dataset_path))
 
-
-def load_dataset(dataset_path, show_dash):
-    """Load the dataset at the provided path. If using streamlit, show a confirmation message."""
-    assert os.path.exists(dataset_path), "Dataset not found at path provided."
-
-    msg = "Dataset retrieved."
-    if show_dash:
-        Dashboard.info_message("success", msg)
+def load_dataset(dataset_saving, show_dash):
+    # see if dataset should be loaded from Figshare
+    if dataset_saving['figshare']:
+        # instance of FigshareApi to upload
+        api = FigshareApi()
+        # load article figshare_name into load_path
+        api.get_figshare_article(dataset_saving['load_path'],dataset_saving['figshare_name'])
+        return torch.load(dataset_saving['load_path'])
     else:
-        print(msg)
+        """Load the dataset at the provided path. If using streamlit, show a confirmation message."""
+        assert os.path.exists(dataset_saving['load_path']), "Dataset not found at path provided."
 
-    return torch.load(dataset_path)
+        msg = "Dataset retrieved."
+        if show_dash:
+            Dashboard.info_message("success", msg)
+        else:
+            print(msg)
 
+        return torch.load(dataset_saving['load_path'])
 
-def save_model(nnet, save_path, num_saved_models, overwrite):
+def save_dataset(dataset,dataset_saving):
+
+    torch.save(dataset, dataset_saving['save_path'])
+    # means dataset should also be saved to figshare
+    if dataset_saving['figshare']:
+        # all the fields required to publish
+        # TODO: come up with fields for this
+        title = "Dataset"
+        desc = "This is a description"
+        keys = ["placeholder1","placeholder2"]
+        categories = [1,11]
+        api = FigshareApi()
+        api.upload(title,desc,keys,categories,dataset_saving['save_path'])
+
+def save_model(nnet, model_saving, num_saved_models, overwrite):
     """Save given model parameters to external file
     """
-    if save_path is not None:
-        torch.save(nnet.state_dict(), save_path)
-    else:
-        # Iterate through the number of models saved
-        for i in range(num_saved_models):
-            if not os.path.isfile(f'./models/models-{i + 1}.pt'):
-                if overwrite and i != 0:
-                    torch.save(nnet.state_dict(), f'./models/models-{i}.pt')
-                    break
-                torch.save(nnet.state_dict(), f'./models/models-{i + 1}.pt')
-                break
-            if i == num_saved_models - 1:
-                torch.save(nnet.state_dict(), f'./models/models-{num_saved_models}.pt')
+    if model_saving['save_path'] is not None:
+        torch.save(nnet.state_dict(), model_saving['save_path'])
+        # model should be saved to figshare
+        if model_saving['figshare']:
+            # all the fields required to publish
+            # TODO: come up with fields for this
+            title = "Model"
+            desc = "This is a description"
+            keys = ["placeholder1","placeholder2"]
+            categories = [1,11]
+            api = FigshareApi()
+            api.upload(title,desc,keys,categories,model_saving['save_path'])
+        else:
+            if model_saving['save_path'] is not None:
+                torch.save(nnet.state_dict(), model_saving['save_path'])
+            else:
+                # Iterate through the number of models saved
+                for i in range(num_saved_models):
+                    if not os.path.isfile(f'./models/models-{i + 1}.pt'):
+                        if overwrite and i != 0:
+                            torch.save(nnet.state_dict(), f'./models/models-{i}.pt')
+                            break
+                        torch.save(nnet.state_dict(), f'./models/models-{i + 1}.pt')
+                        break
+                    if i == num_saved_models - 1:
+                        torch.save(nnet.state_dict(), f'./models/models-{num_saved_models}.pt')
 
-
-def load_model(nnet, model_path, num_saved_models):
+def load_model(nnet, model_saving, num_saved_models):
     """Load model parameters into given network from external file
     """
-    if model_path is not None:
-        nnet.load_state_dict(torch.load(model_path))
-    else:
-        for i in range(num_saved_models):
-            if not os.path.isfile(f'./models-{i + 2}.pt'):
-                if i != 0:
-                    nnet.load_state_dict(torch.load(f'./models-{i + 1}.pt'))
-                break
-
+    if model_saving['load_path'] is not None:
+        if model_saving['figshare']:
+            api = FigshareApi()
+            api.get_figshare_article(model_saving['load_path'],"")
+        else:
+            nnet.load_state_dict(torch.load(model_saving['load_path']))
+        
+            for i in range(num_saved_models):
+                if not os.path.isfile(f'./models-{i + 2}.pt'):
+                    if i != 0:
+                        nnet.load_state_dict(torch.load(f'./models-{i + 1}.pt'))
+                    break
 
 def init_params(nnet, device):
     '''Initialize parameters used for training.
@@ -115,8 +151,9 @@ def init_params(nnet, device):
         with open('params.json') as file:
             params = json.load(file)
 
-        model_path = params['saving']['model_path']
-        dataset_path = params['saving']['dataset_path']
+
+        model_saving = params['saving']['model_saving']
+        dataset_saving = params['saving']['dataset_saving']
 
         num_saved_models = params['saving']['num_saved_models']
         overwrite = params['saving']['overwrite']
@@ -147,7 +184,7 @@ def init_params(nnet, device):
         dashboard = Dashboard()
         # TODO: Have reasonable defaults in case certain hyperparams are not specified within the
         # streamlit dashboard. Can use the params in params.json
-        dataset_path, model_path = dashboard.load_files()
+        dataset_saving, model_path = dashboard.load_files()
 
         num_saved_models, overwrite, learning_rate, \
         momentum, weight_decay = dashboard.nnet_params()
@@ -166,28 +203,30 @@ def init_params(nnet, device):
                          "for usage instructions.")
 
     # Load in a model
-    if model_path is not None:
+    # TODO: loading in model should be from figshare or local
+    if model_saving['load_path'] is not None:
         print()
         print(model_path)
         print()
-        if not os.path.exists(os.path.dirname(model_path)):
-            os.makedirs(os.path.dirname(model_path))
-        load_model(nnet, model_path, num_saved_models)
+        if not model_saving['figshare']:  
+            if not os.path.exists(os.path.dirname(model_saving['load_path'])):
+                os.makedirs(os.path.dirname(model_saving['load_path']))
+        load_model(nnet, model_saving, num_saved_models)
 
     # Train network using stockfish evaluations
     stockfish_options = options.StockfishOptions(learning_rate, momentum, weight_decay,
                                                  stock_epochs, stock_batch_size, stock_games,
-                                                 device, model_path, num_saved_models, overwrite,
+                                                 device, model_saving, num_saved_models, overwrite,
                                                  elo, depth)
 
     mcts_options = options.MCTSOptions(learning_rate, momentum, weight_decay, mcts_epochs,
-                                       mcts_batch_size, mcts_games, device, model_path,
+                                       mcts_batch_size, mcts_games, device, model_saving,
                                        num_saved_models, overwrite, exploration, mcts_simulations,
                                        training_episodes)
 
     flags = options.TrainingFlags(
         start_train, args.dashboard, make_dataset, stockfish_train, mcts_train)
-    return (nnet, dataset_path, stockfish_options, mcts_options, flags)
+    return (nnet, dataset_saving, stockfish_options, mcts_options, flags)
 
 if __name__ == "__main__":
     print("no main for this file")

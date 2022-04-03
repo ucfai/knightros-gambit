@@ -19,7 +19,8 @@ class FigshareApi:
         # get the api key which is stored as an environment variable
         self.api_key = os.getenv('FIGSHARE_KEY')
             
-    def get_figshare_dataset(self,store_path,file_name):
+    def get_figshare_article(self,store_path,file_name):
+
         '''
         get a dataset from figshare using the path provided
         '''
@@ -32,13 +33,15 @@ class FigshareApi:
             if file_name == item['title']:
                 article_id = item['id']
                 file_data = self.issue_request('GET', endpoint.format(article_id=article_id))
+                print(file_data)
+                print("file " ,file_data)
                 download_url = file_data[0]["download_url"]
+                print(download_url)
         if not download_url:
             print("file not found")
         else:
             urlretrieve(download_url, store_path)
 
-        return torch.load(store_path)
 
     def raw_issue_request(self,method, url, data=None, binary=False):
         headers = {'Authorization': 'token ' + self.api_key}
@@ -62,13 +65,13 @@ class FigshareApi:
         return self.raw_issue_request(method, self.BASE_URL.format(endpoint=endpoint), *args, **kwargs)
 
     # create the article within figshare
-    def create_article(self,title):
+    def create_article(self,title,desc,keywords,categories):
         # NOTE: this data is just place holder , however required for publishing
         data = {
             'title': title,
-            "description": "Test description of article",
-            "keywords": ["TEST","TEST2"],
-            "categories": [ 1,10,11]
+            "description": desc,
+            "keywords": keywords,
+            "categories": categories
         }
         result = self.issue_request('POST', 'account/articles', data=data)
         print ('Created article:', result['location'], '\n')
@@ -139,10 +142,10 @@ class FigshareApi:
         print ('  Uploaded part {partNo} from {startOffset} to {endOffset}'.format(**part))
 
 
-    def upload(self,title,path):
+    def upload(self,title,desc,keywords,categories,path):
 
         # create and upload the article
-        article_id = self.create_article(title)
+        article_id = self.create_article(title,desc,keywords,categories)
         file_info = self.initiate_new_upload(article_id, path)
         self.upload_parts(file_info,path)
 

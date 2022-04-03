@@ -6,7 +6,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
-from ai_io import init_params, save_model, load_dataset, make_dir
+from ai_io import init_params, save_model,save_dataset ,load_dataset, make_dir
 from mcts import Mcts
 from nn_layout import PlayNetwork
 from output_representation import policy_converter
@@ -215,7 +215,8 @@ def train_on_dataset(dataset, nnet, options, show_dash=False):
 
     # Saves model to specified file, or a new file if not specified.
     # TODO: Figure frequency of model saving, right now it is after a defined number of epochs.
-    save_model(nnet, options.save_path, options.num_saved_models, options.overwrite)
+    # TODO: Save model should upload to figsshare
+    save_model(nnet, options.model_saving, options.num_saved_models, options.overwrite)
 
 
 def create_stockfish_dataset(sf_opt, show_dash):
@@ -262,65 +263,62 @@ def main():
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     nnet = PlayNetwork().to(device=device)
 
-    nnet, dataset_path, stockfish_options, mcts_options, flags = init_params(nnet, device)
+    nnet, dataset_saving, stockfish_options, mcts_options, flags = init_params(nnet, device)
 
-    # Need to check for dataset
-    if not dataset_path:
-        msg = "No dataset path specified"
-        if flags.show_dash:
-            Dashboard.info_message("error", msg)
-        else:
-            print(msg)
-    else:
-        # Makes parent directories if necessary
-        make_dir(dataset_path)
-
-        if flags.start_train:
-            if flags.make_dataset:
-                msg = "Dataset Creation Has Begun"
-                if flags.show_dash:
-                    Dashboard.info_message("success", msg)
-                else:
-                    print(msg)
-                dataset = create_stockfish_dataset(stockfish_options, flags.show_dash)
-                torch.save(dataset, dataset_path)
-
-                msg = "Dataset Creation completed"
-                if flags.show_dash:
-                    Dashboard.info_message("success", msg)
-                else:
-                    print(msg)
+    if flags.start_train:
+        if flags.make_dataset:
+            msg = "Dataset Creation Has Begun"
+            if flags.show_dash:
+                Dashboard.info_message("success", msg)
             else:
-                dataset = load_dataset(dataset_path, flags.show_dash)
+                print(msg)
+            dataset = create_stockfish_dataset(stockfish_options, flags.show_dash)
+            # TODO: save dataset should save locally and upload to figshare
+            if dataset_saving['save_path']:
+                # Makes parent directories if necessary
+                make_dir(dataset_saving['save_path'])
+                save_dataset(dataset,dataset_saving)
+            msg = "Dataset Creation completed"
+            if flags.show_dash:
+                Dashboard.info_message("success", msg)
+            else:
+                print(msg)
+        else:
+            # TODO: load dataset should come from figshare
+            if dataset_saving['load_path']:
+                dataset = load_dataset(dataset_saving, flags.show_dash)
+            else:
+                # load path must be specified
+                return
 
-            if flags.stockfish_train:
-                msg = "Stockfish Training Has Begun"
-                if flags.show_dash:
-                    Dashboard.info_message("success", msg)
-                else:
-                    print(msg)
-                train_on_dataset(dataset, nnet, stockfish_options)
+        if flags.stockfish_train:
+            msg = "Stockfish Training Has Begun"
+            if flags.show_dash:
+                Dashboard.info_message("success", msg)
+            else:
+                print(msg)
+            train_on_dataset(dataset, nnet, stockfish_options)
 
-                msg = "Stockfish Training completed"
-                if flags.show_dash:
-                    Dashboard.info_message("success", msg)
-                else:
-                    print(msg)
+            msg = "Stockfish Training completed"
+            if flags.show_dash:
+                Dashboard.info_message("success", msg)
+            else:
+                print(msg)
 
-            if flags.mcts_train:
-                # Train network using MCTS
-                msg = "MCTS Training has begun"
-                if flags.show_dash:
-                    Dashboard.info_message("success", msg)
-                else:
-                    print(msg)
-                train_on_mcts(nnet, mcts_options, flags.show_dash)
+        if flags.mcts_train:
+            # Train network using MCTS
+            msg = "MCTS Training has begun"
+            if flags.show_dash:
+                Dashboard.info_message("success", msg)
+            else:
+                print(msg)
+            train_on_mcts(nnet, mcts_options, flags.show_dash)
 
-                msg = "MCTS Training completed"
-                if flags.show_dash:
-                    Dashboard.info_message("success", msg)
-                else:
-                    print(msg)
+            msg = "MCTS Training completed"
+            if flags.show_dash:
+                Dashboard.info_message("success", msg)
+            else:
+                print(msg)
 
 
 if __name__ == "__main__":
