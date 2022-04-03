@@ -200,7 +200,7 @@ void home()
 // For all status codes, check 'MovementStatus' in chessboard.ino
 uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
 {
-  uint8_t dir, unitSpaces;
+  uint8_t dir, absDeltaUnitSpaces;
   uint8_t startCol, startRow;
   int8_t eighthStepsPerPulse;
   uint16_t numSteps, i;
@@ -245,7 +245,7 @@ uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
   if (endRow == startRow)
   {
     // X movement
-    unitSpaces = abs(endCol - startCol);
+    absDeltaUnitSpaces = abs(endCol - startCol);
     dir = (endCol > startCol) ? POS_DIR : NEG_DIR;
     setScale(xMotor, WHOLE_STEPS);
     // Sets motor and direction if X movement
@@ -254,7 +254,7 @@ uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
   else if (endCol == startCol)
   {
     // Y movement
-    unitSpaces = abs(endRow - startRow);
+    absDeltaUnitSpaces = abs(endRow - startRow);
     dir = (endRow > startRow) ? POS_DIR : NEG_DIR;
     setScale(yMotor, WHOLE_STEPS);
     // Sets motor and direction if Y movement
@@ -265,7 +265,7 @@ uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
     return INVALID_ARGS;
   }
 
-  numSteps = unitSpaces * stepsPerUnitSpace;
+  numSteps = absDeltaUnitSpaces * stepsPerUnitSpace;
 
   // Enable motor driver inputs/output
   enableMotors();
@@ -307,7 +307,7 @@ uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
 // For all status codes, check 'MovementStatus' in chessboard.ino
 uint8_t moveDiagonal(uint8_t endCol, uint8_t endRow)
 {
-  uint8_t dirX, dirY, unitSpacesX, unitSpacesY;
+  uint8_t dirX, dirY, absDeltaUnitSpacesX, absDeltaUnitSpacesY;
   uint8_t startRow, startCol;
   int8_t eighthStepsPerPulseX, eighthStepsPerPulseY;
   uint16_t numStepsX, numStepsY, i;
@@ -343,14 +343,14 @@ uint8_t moveDiagonal(uint8_t endCol, uint8_t endRow)
   // Sets scale and numEighthSteps for both X and Y
   // Abs ensures that numStepsX and numStepsY will be positive
   // to ensure proper for loop execution
-  unitSpacesX = abs(endCol - startCol);
+  absDeltaUnitSpacesX = abs(endCol - startCol);
   dirX = (endCol > startCol) ? POS_DIR : NEG_DIR;
 
-  unitSpacesY = abs(endRow - startRow);
+  absDeltaUnitSpacesY = abs(endRow - startRow);
   dirY = (endRow > startRow) ? POS_DIR : NEG_DIR;
 
-  numStepsX = unitSpacesX * stepsPerUnitSpace;
-  numStepsY = unitSpacesY * stepsPerUnitSpace;
+  numStepsX = absDeltaUnitSpacesX * stepsPerUnitSpace;
+  numStepsY = absDeltaUnitSpacesY * stepsPerUnitSpace;
 
   enableMotors();
 
