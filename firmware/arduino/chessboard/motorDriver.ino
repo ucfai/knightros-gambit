@@ -80,11 +80,16 @@ void disableMotors()
 }
 
 // Drives the motor corresponding to "motor" to be aligned properly at either the max position or 0
+// This function is decomposed into a set of 4 moves:
+// ================================================================
+// 1. Move to endstop corresponding with alignmentCode until collision
+// 2. Move away from that endstop with a certain offset to prepare for the next step
+// 3. Move towards that endstop using eighth-steps until collision (provides higher accuracy than step 1)
+// 4. Move away from that endstop with an offset corresponding to the nearest valid chessboard corner
 void alignAxis(uint8_t motor[], uint8_t alignmentCode)
 {
   uint8_t endstopPin;
   uint8_t tempAlignWholeSteps, i;
-  int8_t eighthStepsPerPulse;
   uint16_t *currentMotorPosPtr;
     
   // Print debug info about which motor is being aligned to where
@@ -109,13 +114,11 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   if (alignmentCode == MAX_POSITION)
   {
     digitalWrite(motor[DIR_PIN], POS_DIR);
-    eighthStepsPerPulse = P_EIGHTHS_PER_WHOLE_STEP;
     endstopPin = MAX_ENDSTOP_PIN;
   }
   else
   {
     digitalWrite(motor[DIR_PIN], NEG_DIR);
-    eighthStepsPerPulse = N_EIGHTHS_PER_WHOLE_STEP;
     endstopPin = ZERO_ENDSTOP_PIN;
   }
   setScale(motor, WHOLE_STEPS);
@@ -128,17 +131,11 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
     digitalWrite(motor[STEP_PIN], HIGH);
   }
 
-  // Flips direction again to move motor away from max or 0 to prepare for fine-tuning
+  // Flips direction to move motor away from endstop to prepare for fine-tuning
   if (alignmentCode == MAX_POSITION)
-  {
     digitalWrite(motor[DIR_PIN], NEG_DIR);
-    eighthStepsPerPulse = N_EIGHTHS_PER_WHOLE_STEP;
-  }
   else
-  {
     digitalWrite(motor[DIR_PIN], POS_DIR);
-    eighthStepsPerPulse = P_EIGHTHS_PER_WHOLE_STEP;
-  }
 
   for (i = 0; i < HOME_CALIBRATION_OFFSET; i++)
   {
@@ -147,17 +144,12 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
     digitalWrite(motor[STEP_PIN], HIGH);
   }
 
-  // Moves EM back to nearest grid edge after endstop has been triggered
+  // Slowly moves EM back to nearest endstop for fine-tuning
   if (alignmentCode == MAX_POSITION)
-  {
     digitalWrite(motor[DIR_PIN], POS_DIR);
-    eighthStepsPerPulse = P_EIGHTHS_PER_WHOLE_STEP;
-  }
   else
-  {
     digitalWrite(motor[DIR_PIN], NEG_DIR);
-    eighthStepsPerPulse = N_EIGHTHS_PER_WHOLE_STEP;
-  }
+
   setScale(motor, EIGHTH_STEPS);
   
   while (digitalRead(motor[endstopPin]) == LOW)
@@ -167,19 +159,24 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
     digitalWrite(motor[STEP_PIN], HIGH);
   }
 
-  // Moves EM back to nearest grid edge after endstop trigger and absolute alignment
+  // Moves EM back to nearest grid edge after fine-tuned alignment
+  if (alignmentCode == MAX_POSITION)
+    digitalWrite(motor[DIR_PIN], NEG_DIR);
+  else
+    digitalWrite(motor[DIR_PIN], POS_DIR);
+  
+  setScale(motor, WHOLE_STEPS);
+
   if (motor == xMotor)
     tempAlignWholeSteps = (alignmentCode == MAX_POSITION) ? MAX_X_ALIGNMENT : MIN_X_ALIGNMENT;
   else if (motor == yMotor)
     tempAlignWholeSteps = (alignmentCode == MAX_POSITION) ? MAX_Y_ALIGNMENT : MIN_Y_ALIGNMENT;
 
-  setScale(motor, WHOLE_STEPS);
-
   for (i = 0; i < tempAlignWholeSteps; i++)
   {
-      digitalWrite(motor[STEP_PIN], LOW);
-      delay(1);
-      digitalWrite(motor[STEP_PIN], HIGH);
+    digitalWrite(motor[STEP_PIN], LOW);
+    delay(1);
+    digitalWrite(motor[STEP_PIN], HIGH);
   }
 
   // Sets the motor position to either the max position or 0
@@ -208,14 +205,15 @@ uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
 
   // Checks if the EM is aligned properly
   if ((currPositionX % stepsPerUnitSpace)  ||  (currPositionY % stepsPerUnitSpace))
-  {
     return INVALID_ALIGNMENT;
-  }
 
   // Converts current position to be in terms of unit spaces instead of eighth steps
   startCol = currPositionX / (stepsPerUnitSpace * 8);
   startRow = currPositionY / (stepsPerUnitSpace * 8);
 
+  // If we want to move to where we already are, consider it successful
+  if (startCol == endCol  &&  startRow == endRow)
+    return SUCCESS;
 
   // Print debug info about straight movement
   if (DEBUG)
@@ -234,7 +232,6 @@ uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
     Serial.print( (motor == xMotor) ? "x-axis" : "y-axis");
     Serial.println("\n");
   }
-
 
   // Same as homeAxis(), sets the loop to only update a single motors position at a time
   // Direction is still determined seperately by if statements
@@ -320,6 +317,9 @@ uint8_t moveDiagonal(uint8_t endCol, uint8_t endRow)
   startCol = currPositionX / (stepsPerUnitSpace * 8);
   startRow = currPositionY / (stepsPerUnitSpace * 8);
 
+  // If we want to move to where we already are, consider it successful
+  if (startCol == endCol  &&  startRow == endRow)
+    return SUCCESS;
 
   // Print debug info about diagonal movement
   if (DEBUG)
@@ -336,7 +336,6 @@ uint8_t moveDiagonal(uint8_t endCol, uint8_t endRow)
     Serial.print(")");
     Serial.println("\n");
   }
-
 
   // Sets scale and numEighthSteps for both X and Y
   // Abs ensures that numStepsX and numStepsY will be positive
