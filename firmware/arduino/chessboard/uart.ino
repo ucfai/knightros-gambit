@@ -15,6 +15,30 @@ enum PiMsgIndices
   MSG_COUNT_IDX = 5
 };
 
+enum MoveCommandType
+{
+  DIRECT = '0',
+  EDGES = '1',
+  ALIGN = '2',
+  INSTRUCTION = '3'
+};
+
+enum ErrorCode
+{
+  NO_ERROR = '0',
+  INVALID_OP = '1',
+  INVALID_LOCATION = '2',
+  INCOMPLETE_INSTRUCTION = '3',
+  MOVEMENT_ERROR = '4'
+};
+
+enum InstructionType
+{
+  ALIGN_AXIS = 'A',
+  SET_ELECTROMAGNET = 'S',
+  RETRANSMIT = 'R'
+};
+
 // Send message to Pi when the chess timer is pressed
 void chessTimerISR()
 {

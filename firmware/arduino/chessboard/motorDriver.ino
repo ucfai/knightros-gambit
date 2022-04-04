@@ -32,6 +32,14 @@ enum positionExtremes
   MAX_POSITION = 1
 };
 
+enum AlignmentSpacing
+{
+  MAX_X_ALIGNMENT = 15,
+  MIN_X_ALIGNMENT = 15,
+  MAX_Y_ALIGNMENT = 15,
+  MIN_Y_ALIGNMENT = 15
+};
+
 // Sets the scale of the motor driver corresponding to "motor"
 void setScale(uint8_t motor[], uint8_t scale)
 {
@@ -192,7 +200,7 @@ void home()
 // For all status codes, check 'MovementStatus' in chessboard.ino
 uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
 {
-  uint8_t dir, unitSpaces;
+  uint8_t dir, absDelta;
   uint8_t startCol, startRow;
   int8_t eighthStepsPerPulse;
   uint16_t numSteps, i;
@@ -237,7 +245,7 @@ uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
   if (endRow == startRow)
   {
     // X movement
-    unitSpaces = abs(endCol - startCol);
+    absDelta = abs(endCol - startCol);
     dir = (endCol > startCol) ? POS_DIR : NEG_DIR;
     setScale(xMotor, WHOLE_STEPS);
     // Sets motor and direction if X movement
@@ -246,7 +254,7 @@ uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
   else if (endCol == startCol)
   {
     // Y movement
-    unitSpaces = abs(endRow - startRow);
+    absDelta = abs(endRow - startRow);
     dir = (endRow > startRow) ? POS_DIR : NEG_DIR;
     setScale(yMotor, WHOLE_STEPS);
     // Sets motor and direction if Y movement
@@ -257,7 +265,7 @@ uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
     return INVALID_ARGS;
   }
 
-  numSteps = unitSpaces * stepsPerUnitSpace;
+  numSteps = absDelta * stepsPerUnitSpace;
 
   // Enable motor driver inputs/output
   enableMotors();
@@ -299,16 +307,14 @@ uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
 // For all status codes, check 'MovementStatus' in chessboard.ino
 uint8_t moveDiagonal(uint8_t endCol, uint8_t endRow)
 {
-  uint8_t dirX, dirY, unitSpacesX, unitSpacesY;
+  uint8_t dirX, dirY, absDeltaX, absDeltaY;
   uint8_t startRow, startCol;
   int8_t eighthStepsPerPulseX, eighthStepsPerPulseY;
   uint16_t numStepsX, numStepsY, i;
 
   // Checks if the EM is aligned properly
   if ((currPositionX % stepsPerUnitSpace)  ||  (currPositionY % stepsPerUnitSpace))
-  {
     return INVALID_ALIGNMENT;
-  }
 
   // Converts current position to be in terms of unit spaces instead of eighth steps
   startCol = currPositionX / (stepsPerUnitSpace * 8);
@@ -335,14 +341,14 @@ uint8_t moveDiagonal(uint8_t endCol, uint8_t endRow)
   // Sets scale and numEighthSteps for both X and Y
   // Abs ensures that numStepsX and numStepsY will be positive
   // to ensure proper for loop execution
-  unitSpacesX = abs(endCol - startCol);
+  absDeltaX = abs(endCol - startCol);
   dirX = (endCol > startCol) ? POS_DIR : NEG_DIR;
 
-  unitSpacesY = abs(endRow - startRow);
+  absDeltaY = abs(endRow - startRow);
   dirY = (endRow > startRow) ? POS_DIR : NEG_DIR;
 
-  numStepsX = unitSpacesX * stepsPerUnitSpace;
-  numStepsY = unitSpacesY * stepsPerUnitSpace;
+  numStepsX = absDeltaX * stepsPerUnitSpace;
+  numStepsY = absDeltaY * stepsPerUnitSpace;
 
   enableMotors();
 

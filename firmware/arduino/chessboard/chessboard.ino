@@ -5,7 +5,7 @@
 // Debug flag for enabling printing error messages to the serial monitor
 #define DEBUG 1
 
-enum UART
+enum UARTMisc
 {
   RX2 = 16,
   TX2 = 17,
@@ -53,6 +53,16 @@ enum YMotorPins
 };
 uint8_t yMotor[6] = {Y_MOTOR_STEP, Y_MOTOR_DIR, Y_MOTOR_MS1, 
                      Y_MOTOR_MS2, Y_AXIS_MAX_ENDSTOP, Y_AXIS_ZERO_ENDSTOP};
+                  
+enum MotorArrayIndicies
+{
+  STEP_PIN = 0,
+  DIR_PIN = 1,
+  MS1_PIN = 2,
+  MS2_PIN = 3,
+  ZERO_ENDSTOP_PIN = 4,
+  MAX_ENDSTOP_PIN = 5
+};
 
 enum SharedMotorPins
 {
@@ -69,30 +79,6 @@ enum ArduinoState
   ERROR = '3'
 };
 volatile char currentState = IDLE;
-
-enum MoveCommandType
-{
-  DIRECT = '0',
-  EDGES = '1',
-  ALIGN = '2',
-  INSTRUCTION = '3'
-};
-
-enum ErrorCode
-{
-  NO_ERROR = '0',
-  INVALID_OP = '1',
-  INVALID_LOCATION = '2',
-  INCOMPLETE_INSTRUCTION = '3',
-  MOVEMENT_ERROR = '4'
-};
-
-enum InstructionType
-{
-  ALIGN_AXIS = 'A',
-  SET_ELECTROMAGNET = 'S',
-  RETRANSMIT = 'R'
-};
 
 enum DistanceConstants
 {
@@ -117,24 +103,6 @@ enum StepSize
   HALF_STEPS = 2,
   QUARTER_STEPS = 4,
   EIGHTH_STEPS = 8
-};
-
-enum MotorArrayIndicies
-{
-  STEP_PIN = 0,
-  DIR_PIN = 1,
-  MS1_PIN = 2,
-  MS2_PIN = 3,
-  ZERO_ENDSTOP_PIN = 4,
-  MAX_ENDSTOP_PIN = 5
-};
-
-enum AlignmentSpacing
-{
-  MAX_X_ALIGNMENT = 15,
-  MIN_X_ALIGNMENT = 15,
-  MAX_Y_ALIGNMENT = 15,
-  MIN_Y_ALIGNMENT = 15
 };
 
 enum CircleFunctionConsts
