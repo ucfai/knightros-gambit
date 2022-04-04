@@ -216,6 +216,10 @@ uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
   startCol = currPositionX / (stepsPerUnitSpace * 8);
   startRow = currPositionY / (stepsPerUnitSpace * 8);
 
+  // If we want to move to where we already are, consider it successful
+  if (startCol == endCol  &&  startRow == endRow)
+    return SUCCESS;
+
   // Print debug info about straight movement
   if (DEBUG)
   {
@@ -317,6 +321,10 @@ uint8_t moveDiagonal(uint8_t endCol, uint8_t endRow)
   // Converts current position to be in terms of unit spaces instead of eighth steps
   startCol = currPositionX / (stepsPerUnitSpace * 8);
   startRow = currPositionY / (stepsPerUnitSpace * 8);
+
+  // If we want to move to where we already are, consider it successful
+  if (startCol == endCol  &&  startRow == endRow)
+    return SUCCESS;
 
   // Print debug info about diagonal movement
   if (DEBUG)
