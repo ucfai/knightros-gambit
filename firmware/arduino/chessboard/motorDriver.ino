@@ -80,6 +80,12 @@ void disableMotors()
 }
 
 // Drives the motor corresponding to "motor" to be aligned properly at either the max position or 0
+// This function is decomposed into a set of 4 moves:
+// ================================================================
+// 1. Move to endstop corresponding with alignmentCode until collision
+// 2. Move away from that endstop with a certain offset to prepare for the next step
+// 3. Move towards that endstop using eighth-steps until collision (provides higher accuracy than step 1)
+// 4. Move away from that endstop with an offset corresponding to the nearest valid chessboard corner
 void alignAxis(uint8_t motor[], uint8_t alignmentCode)
 {
   uint8_t endstopPin;
