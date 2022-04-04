@@ -44,7 +44,6 @@ class StockfishPlayer:
 #     def select_move(self, board, fen):
 #         '''Sets stockfish state from provided fen and returns best move.
 #         '''
-#         # TODO: need to implement using past n (AlphaZero uses 7?) board states as input to NN.
 #         return mcts.get_best_move(fen, model)
 
 class CLHumanPlayer:
@@ -55,6 +54,8 @@ class CLHumanPlayer:
 
     def select_move(self, board):
         '''Prompts user to select a move.
+
+        Note: board argument included for consistency with `Player` select_move api.
         '''
         uci_move = None
         while uci_move is None:
@@ -85,15 +86,11 @@ class CLHumanPlayer:
 #         pass
 
 class CLDebugPlayer:
-    # TODO: fix docstring
-    '''"Human" class that allows playing with the chessboard through CLI.
-    '''
+    """"Human" class that allows playing with the chessboard through CLI."""
     def __init__(self):
         pass
 
     def select_move(self, board):
-        # TODO: update this function to handle uci moves or debug style messages
-
         '''Prompts user to select a move.
         '''
         msg = None
@@ -103,11 +100,11 @@ class CLDebugPlayer:
             if len(input_move) in (4, 5) and board.is_valid_move(input_move):
                 msg = input_move
                 break
-            elif len(input_move) == OpCode.MESSAGE_LENGTH:
+            if len(input_move) == OpCode.MESSAGE_LENGTH:
                 msg = input_move
                 break
             print(f"The move {input_move} is invalid. Please enter a uci move (xyxy) or an "
-                   "opcode type message (~<OPCODE>xxxx<MOVE_COUNT>).")
+                  "opcode type message (~<OPCODE>xxxx<MOVE_COUNT>).")
         return msg
 
     def __str__(self):

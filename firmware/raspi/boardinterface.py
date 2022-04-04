@@ -57,9 +57,9 @@ class Engine:
         self.board_fens.append(self.fen())
         self.board_grids.append(util.get_2d_board(self.fen()))
 
-    def get_past_n_states(self, n):
+    def get_past_n_states(self, n_states):
         '''Returns past n board states if at least n available, else all past board states.'''
-        return self.board_fens[-n:]
+        return self.board_fens[-n_states:]
 
     def fen(self):
         '''Return fen string representation of current board state.
@@ -103,7 +103,6 @@ class Engine:
         # BoardCell (util.Const.UPPER_RIGHT_OFFSET, util.Const.UPPER_RIGHT_OFFSET). Vice versa for
         # black pieces. Below logic converts chess coordinates to board coordinates.
 
-        # TODO: remove magic numbers
         if self.human_plays_white_pieces:
             return util.BoardCell(
                 (sq_to_xy.row * util.Const.CELLS_PER_SQ) + util.Const.OFFSET_SIZE,
@@ -123,7 +122,6 @@ class Engine:
             raise ValueError("Expected a boardcell corresponding to center of chess sq, but got "
                              f"{boardcell}")
 
-        # TODO: remove magic numbers
         if self.human_plays_white_pieces:
             row = (util.Const.UPPER_RIGHT_OFFSET - boardcell.row) // util.Const.CELLS_PER_SQ
             col = (util.Const.UPPER_RIGHT_OFFSET - boardcell.col) // util.Const.CELLS_PER_SQ
@@ -225,8 +223,6 @@ class Board:
 
         self.ser = serial.Serial(port='/dev/ttyS0') if interact_w_arduino else None
 
-    # TODO: Figure out mechanics of how this works. Want the message retransmitted before we do
-    # anything else, but don't necessarily want to have this count as a "Move".
     def retransmit_last_msg(self):
         """Create message to request Arduino retransmit last message and add to msg_queue.
         """

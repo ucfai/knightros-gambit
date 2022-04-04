@@ -14,7 +14,7 @@ class BoardStateDetector:
         # self.col_classifier = torch.load(path_to_piece_classifier_model)
         # Note: col_classifier returns 0, 1, 2; convert to '.', 'w', or 'b' respectively
         self.col_map = {0: '.', 1: 'w', 2: 'b'}
-        self.trans_M, self.max_w, self.max_h = self.compute_img_trans_matrix(calibration_img)
+        self.trans_m, self.max_w, self.max_h = self.compute_img_trans_matrix(calibration_img)
         self.img_dim = (800, 800)
         self.sq_size = int(self.img_dim[0] / 8)
 
@@ -113,7 +113,7 @@ class BoardStateDetector:
                 source = [val for val in diff[-1] if val[1] != dest[1]][0]
         else:
             raise RuntimeError("Computer vision detected an invalid change in board state."
-                              f"Diff generated between subsequent states = {diff}")
+                               f"Diff generated between subsequent states = {diff}")
 
         return util.uci_move_from_boardcells(util.BoardCell(*source), util.BoardCell(*dest))
 
@@ -133,7 +133,7 @@ class BoardStateDetector:
         Then, math is used to splice out each board cell and these are stored in a 2d array where
         each element of the array corresponds to a cell containing at most a single piece.
         '''
-        # trans_img = cv.warpPerspective(curr_board_img, self.trans_M, (self.max_w, self.max_h))
+        # trans_img = cv.warpPerspective(curr_board_img, self.trans_m, (self.max_w, self.max_h))
         # reduc_trans_img = cv.resize(trans_img, self.img_dim, interpolation = cv.INTER_AREA)
         # img_arr_2d = [[None for _ in range(self.board_size)] for _ in range(self.board_size)]
         # for i in range(self.board_size):

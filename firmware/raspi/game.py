@@ -79,8 +79,6 @@ class Game:
                                       "Should we loop until move is valid? What if "
                                       "the board is messed up? Need to revisit.")
 
-    # TODO: this makes implicit assumption that we do human vs. ai. Try to factor that out
-    # TODO: convert to class based and store all passed parameters as class members
     def process(self, player):
         '''One iteration of main game loop.
 

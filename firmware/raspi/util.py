@@ -24,8 +24,7 @@ class BoardCell:
         self.col = col if col else 0
 
     def __str__(self):
-        # TODO: Update this to have a clearer naming scheme for the indexing.
-        return f"{chr(self.row + ord('a'))}{chr(self.col + ord('a'))}"
+        return f"{chr(self.row + ord('A'))}{chr(self.col + ord('A'))}"
 
     def get_coords(self):
         '''Returns tuple of row and col indices.
