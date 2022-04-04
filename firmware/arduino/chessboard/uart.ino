@@ -138,7 +138,7 @@ bool validateMessageFromPi(volatile char * message)
   else if (message[OPCODE_IDX] == INSTRUCTION)
   {
     // Check if message[1] holds an invalid instruction type or if message[2] is an invalid code
-    if ((message[ITYPE_IDX] != ALIGN_AXIS         ||  message[EXTRA_IDX] < '0'  ||  message[EXTRA_IDX] > '3')  &&  
+    if ((message[ITYPE_IDX] != ALIGN_AXIS         ||  message[EXTRA_IDX] < '0'  ||  message[EXTRA_IDX] > '4')  &&  
         (message[ITYPE_IDX] != SET_ELECTROMAGNET  ||  message[EXTRA_IDX] < '0'  ||  message[EXTRA_IDX] > '1')  &&
          message[ITYPE_IDX] != RETRANSMIT)
     {
@@ -211,6 +211,8 @@ bool makeMove(volatile char * message)
         alignAxis(xMotor, MAX_POSITION);
       else if (message[EXTRA_IDX] == '3')
         alignAxis(yMotor, MAX_POSITION);
+      else if (message[EXTRA_IDX] == '4')
+        home();
     }
     // Enable/Disable Electromagnet
     else if (message[ITYPE_IDX] == SET_ELECTROMAGNET)
