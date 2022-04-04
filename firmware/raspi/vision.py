@@ -1,5 +1,5 @@
-'''Helper file to get board state from images of board.
-'''
+"""Helper file to get board state from images of board.
+"""
 # import cv2 as cv
 
 import util
@@ -56,9 +56,9 @@ class BoardStateDetector:
         # return M, maxWidth, maxHeight
 
     def get_occupancy_grid(self, img_arr_2d):
-        '''
+        """
         '.': empty, 'w': white piece, 'b': black piece.
-        '''
+        """
         return [[0 for i in range(self.board_size)] for j in range(self.board_size)]
         # TODO: After classifier is trained/loaded in constructor, can uncomment below.
         # return [[self.col_map[self.col_classifier.predict(img_arr_2d[i, j])]
@@ -126,13 +126,13 @@ class BoardStateDetector:
 
     # TODO: Implement
     def align_and_segment_image(self, curr_board_img):
-        '''Takes in image of board and returns 2d np array of straightened/segmented image.
+        """Takes in image of board and returns 2d np array of straightened/segmented image.
 
         First, the corners are detected (or hard coded definition of corners are used), then the
         image is transformed s.t. all four corners of the board are the four corners of the image.
         Then, math is used to splice out each board cell and these are stored in a 2d array where
         each element of the array corresponds to a cell containing at most a single piece.
-        '''
+        """
         # trans_img = cv.warpPerspective(curr_board_img, self.trans_m, (self.max_w, self.max_h))
         # reduc_trans_img = cv.resize(trans_img, self.img_dim, interpolation = cv.INTER_AREA)
         # img_arr_2d = [[None for _ in range(self.board_size)] for _ in range(self.board_size)]

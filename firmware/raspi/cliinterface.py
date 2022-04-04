@@ -1,5 +1,5 @@
-'''CLI entry point for the Knightr0's Gambit software that controls automatic chessboard.
-'''
+"""CLI entry point for the Knightr0's Gambit software that controls automatic chessboard.
+"""
 import random
 
 from game import Game
@@ -9,8 +9,8 @@ from util import parse_args
 
 
 def assign_human_turn_at_start():
-    '''Assigns piece color for human and returns boolean accordingly.
-    '''
+    """Assigns piece color for human and returns boolean accordingly.
+    """
     while True:
         start = input("Choose piece color ([w]hite, [b]lack, or [r]andom): ").lower()
         if start == 'r':
@@ -72,14 +72,14 @@ def init_parameters():
     raise ValueError("Error parsing parameters...")
 
 def player_wants_rematch():
-    '''Skeleton method for querying player about rematch.
-    '''
+    """Skeleton method for querying player about rematch.
+    """
     # TODO: implement
     return False
 
 def main():
-    '''Main driver loop for running Knightro's Gambit.
-    '''
+    """Main driver loop for running Knightro's Gambit.
+    """
     # Set random seed for program
     random.seed()
 
