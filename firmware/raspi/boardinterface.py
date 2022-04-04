@@ -5,9 +5,9 @@ this file also manages the game state, move validation, etc.
 """
 from collections import deque
 
-import chess
+import chess  # pylint: disable=import-error
+import serial  # pylint: disable=import-error
 
-import serial
 from status import ArduinoException, ArduinoStatus, OpCode, InstructionType
 import util
 

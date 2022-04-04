@@ -5,8 +5,8 @@ import io
 import os
 import platform
 
-import chess.pgn
-from stockfish import Stockfish
+import chess.pgn  # pylint: disable=import-error
+from stockfish import Stockfish  # pylint: disable=import-error
 
 class BoardCell:
     """Helper class for indexing entirety of board.
