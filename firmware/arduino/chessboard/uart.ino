@@ -54,7 +54,7 @@ void chessTimerISR()
 }
 
 // Wait for input
-void serialEvent2()
+void checkForInput()
 {
   // Loop through all available bytes
   while (Serial2.available())
@@ -95,6 +95,9 @@ void serialEvent2()
 
       // Tell game loop to process input
       receivedMessageValidFlag = true;
+      
+      // Return to ensure that the completed input is proccessed, even if the rx buffer isn't empty
+      return;
     }
   }
 }

@@ -200,6 +200,8 @@ void setup()
 
 void loop()
 {
+  checkForInput();
+
   // Process the received message
   if (receivedMessageValidFlag)
   {
