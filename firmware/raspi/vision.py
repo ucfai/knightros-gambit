@@ -5,6 +5,7 @@
 import util
 
 class BoardStateDetector:
+    """Utility class used in main game loop to convert board images into state representations."""
     def __init__(self, calibration_img):
         self.prev_occ_grid = None
         self.board_size = 8
@@ -21,9 +22,11 @@ class BoardStateDetector:
     # TODO: Implement detecting image corners, 1) hard code them or 2) compute at startup.
     @staticmethod
     def get_board_corners(board_img):
-        pass
+        """Given board, returns four-tuple of indices corresponding to chessboard corners."""
+        return []
 
     def compute_img_trans_matrix(self, calibration_img):
+        """Given calibration board img, returns transformation matrix to straighten skewed img."""
         return None, None, None
         # TODO: Once we figure out how to detect corners, can uncomment below
 
@@ -56,7 +59,8 @@ class BoardStateDetector:
         # return M, maxWidth, maxHeight
 
     def get_occupancy_grid(self, img_arr_2d):
-        """
+        """Creates an occupancy grid representing pieces on the chessboard.
+
         '.': empty, 'w': white piece, 'b': black piece.
         """
         return [[0 for i in range(self.board_size)] for j in range(self.board_size)]
@@ -65,8 +69,10 @@ class BoardStateDetector:
         #          for i in range(self.board_size)] for j in range(self.board_size)]
 
     def get_occupancy_diff(self, curr_occ_grid, prev_occ_grid):
-        # curr_occ_grid[i][j] is either 'b', 'w', or '.' if empty.
-        # Same for prev_occ_grid.
+        """Given two occupancy grids (see get_occupancy_grid), computes indices with diff as a set.
+
+        Assumes curr_occ_grid[i][j] is either 'b', 'w', or '.' if empty; same for prev_occ_grid.
+        """
         diff = {}
         for i in range(self.board_size):
             for j in range(self.board_size):
@@ -87,6 +93,7 @@ class BoardStateDetector:
 
     @staticmethod
     def get_move_from_diff(diff):
+        """Given index set of squares with different vals at t and t+1, computes a UCI move."""
         source, dest = None, None
         # Normal move, includes captures
         if len(diff[-1]) == 1:
@@ -118,7 +125,7 @@ class BoardStateDetector:
         return util.uci_move_from_boardcells(util.BoardCell(*source), util.BoardCell(*dest))
 
     def get_piece_type_from_square_img(self, square_img):
-        # Use classifier to identify and return piece type at specified square in curr_board_img
+        """Uses classifier to identify and return piece type at specified square in img."""
         val = 0
         # TODO: After classifier is trained/loaded in constructor, can uncomment below.
         # val = self.type_classifier.predict(square_img)
@@ -143,7 +150,8 @@ class BoardStateDetector:
         #                                            :]
         return curr_board_img
 
-    def get_current_board_state(self, prev_board_fen, curr_board_img):
+    def get_current_board_move(self, prev_board_fen, curr_board_img):
+        """Given the previous board fen and image of the current board, returns UCI move made."""
         img_arr_2d = self.align_and_segment_image(curr_board_img)
         curr_occ_grid = self.get_occupancy_grid(img_arr_2d)
         move = BoardStateDetector.get_move_from_diff(self.get_occupancy_diff(curr_occ_grid,
@@ -158,9 +166,9 @@ class BoardStateDetector:
         self.prev_occ_grid = curr_occ_grid
         return move
 
-def main():
-    # TODO: Add tests of occupancy grid logic
-    pass
+# def main():
+#     # TODO: Add tests of occupancy grid logic
+#     pass
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()
