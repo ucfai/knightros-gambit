@@ -90,7 +90,6 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
 {
   uint8_t endstopPin;
   uint8_t tempAlignWholeSteps, i;
-  int8_t eighthStepsPerPulse;
   uint16_t *currentMotorPosPtr;
     
   // Print debug info about which motor is being aligned to where
@@ -115,13 +114,11 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   if (alignmentCode == MAX_POSITION)
   {
     digitalWrite(motor[DIR_PIN], POS_DIR);
-    eighthStepsPerPulse = P_EIGHTHS_PER_WHOLE_STEP;
     endstopPin = MAX_ENDSTOP_PIN;
   }
   else
   {
     digitalWrite(motor[DIR_PIN], NEG_DIR);
-    eighthStepsPerPulse = N_EIGHTHS_PER_WHOLE_STEP;
     endstopPin = ZERO_ENDSTOP_PIN;
   }
   setScale(motor, WHOLE_STEPS);
@@ -136,15 +133,9 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
 
   // Flips direction to move motor away from endstop to prepare for fine-tuning
   if (alignmentCode == MAX_POSITION)
-  {
     digitalWrite(motor[DIR_PIN], NEG_DIR);
-    eighthStepsPerPulse = N_EIGHTHS_PER_WHOLE_STEP;
-  }
   else
-  {
     digitalWrite(motor[DIR_PIN], POS_DIR);
-    eighthStepsPerPulse = P_EIGHTHS_PER_WHOLE_STEP;
-  }
 
   for (i = 0; i < HOME_CALIBRATION_OFFSET; i++)
   {
@@ -155,15 +146,10 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
 
   // Slowly moves EM back to nearest endstop for fine-tuning
   if (alignmentCode == MAX_POSITION)
-  {
     digitalWrite(motor[DIR_PIN], POS_DIR);
-    eighthStepsPerPulse = P_EIGHTHS_PER_WHOLE_STEP;
-  }
   else
-  {
     digitalWrite(motor[DIR_PIN], NEG_DIR);
-    eighthStepsPerPulse = N_EIGHTHS_PER_WHOLE_STEP;
-  }
+
   setScale(motor, EIGHTH_STEPS);
   
   while (digitalRead(motor[endstopPin]) == LOW)
@@ -175,15 +161,10 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
 
   // Moves EM back to nearest grid edge after fine-tuned alignment
   if (alignmentCode == MAX_POSITION)
-  {
     digitalWrite(motor[DIR_PIN], NEG_DIR);
-    eighthStepsPerPulse = N_EIGHTHS_PER_WHOLE_STEP;
-  }
   else
-  {
     digitalWrite(motor[DIR_PIN], POS_DIR);
-    eighthStepsPerPulse = P_EIGHTHS_PER_WHOLE_STEP;
-  }
+  
   setScale(motor, WHOLE_STEPS);
 
   if (motor == xMotor)
