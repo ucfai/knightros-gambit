@@ -2,9 +2,9 @@
 """
 
 class ArduinoStatus:
-    '''Wrapper around messages received from Arduino.
+    """Wrapper around messages received from Arduino.
     # TODO: add in some more documentation here w.r.t. message formatting.
-    '''
+    """
     # Status codes used to indicate current status of Arduino controlling physical board.
     IDLE = '0'
     EXECUTING_MOVE = '1'
@@ -48,17 +48,17 @@ class ArduinoStatus:
                         ArduinoStatus.ERROR)
 
 class Status:
-    '''Helper class that stores current status of game, along with related metadata.
-    '''
+    """Helper class that stores current status of game, along with related metadata.
+    """
     @staticmethod
     def write_game_status_to_disk(board):
-        '''Write pgn to disk, also write associated metadata about board state.
-        '''
+        """Write pgn to disk, also write associated metadata about board state.
+        """
         raise NotImplementedError("Not implemented")
 
 class OpCode:
-    '''Enum of op codes used to provide information about type of move Arduino should make.
-    '''
+    """Enum of op codes used to provide information about type of move Arduino should make.
+    """
     # This code indicates Arduino should use straight-line path, diagonals allowed
     MOVE_PIECE_IN_STRAIGHT_LINE = '0'
 
@@ -105,8 +105,8 @@ class InstructionType:
     VALID_INSTRUCTIONS = (ALIGN_AXIS, SET_ELECTROMAGNET, RETRANSMIT_LAST_MSG)
 
 class ArduinoException(Exception):
-    '''Helper class for custom Arduino exceptions.
-    '''
+    """Helper class for custom Arduino exceptions.
+    """
     NO_ERROR = '0'
     INVALID_OP = '1'
     INVALID_LOCATION = '2'

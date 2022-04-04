@@ -1,8 +1,8 @@
-'''Main game class that serves as backend for controlling automatic chessboard.
+"""Main game class that serves as backend for controlling automatic chessboard.
 
 Can be used with multiple different front end options, `cliinterface.py`, many others still being
 developed (web, speech, otb).
-'''
+"""
 import time
 
 from boardinterface import Board
@@ -43,8 +43,8 @@ class Game:
         return self.board.engine.fen()
 
     def is_white_turn(self):
-        '''Return True if it is white's turn, False otherwise.
-        '''
+        """Return True if it is white's turn, False otherwise.
+        """
         return self.board.engine.is_white_turn()
 
     def last_made_move(self):
@@ -60,8 +60,8 @@ class Game:
         return self.board.engine.chess_board.is_game_over()
 
     def reset_board(self):
-        '''Skeleton method for resetting board after play.
-        '''
+        """Skeleton method for resetting board after play.
+        """
         # TODO: implement
         print("Resetting board")
 
@@ -79,10 +79,8 @@ class Game:
                                       "Should we loop until move is valid? What if "
                                       "the board is messed up? Need to revisit.")
 
-    # TODO: this makes implicit assumption that we do human vs. ai. Try to factor that out
-    # TODO: convert to class based and store all passed parameters as class members
     def process(self, player):
-        '''One iteration of main game loop.
+        """One iteration of main game loop.
 
         Note: expects caller to check game.is_game_over before calling.
         There may be moves remaining on self.board.msg_queue after game is over, so it is legal to
@@ -90,7 +88,7 @@ class Game:
 
         Returns:
             made_move: boolean that is True if turn changes, otherwise False.
-        '''
+        """
         arduino_status = self.board.get_status_from_arduino()
         print(f"\nBoard Status: {arduino_status}")
 
