@@ -216,7 +216,6 @@ uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
   startCol = currPositionX / (stepsPerUnitSpace * 8);
   startRow = currPositionY / (stepsPerUnitSpace * 8);
 
-
   // Print debug info about straight movement
   if (DEBUG)
   {
@@ -234,7 +233,6 @@ uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
     Serial.print( (motor == xMotor) ? "x-axis" : "y-axis");
     Serial.println("\n");
   }
-
 
   // Same as homeAxis(), sets the loop to only update a single motors position at a time
   // Direction is still determined seperately by if statements
@@ -320,7 +318,6 @@ uint8_t moveDiagonal(uint8_t endCol, uint8_t endRow)
   startCol = currPositionX / (stepsPerUnitSpace * 8);
   startRow = currPositionY / (stepsPerUnitSpace * 8);
 
-
   // Print debug info about diagonal movement
   if (DEBUG)
   {
@@ -336,7 +333,6 @@ uint8_t moveDiagonal(uint8_t endCol, uint8_t endRow)
     Serial.print(")");
     Serial.println("\n");
   }
-
 
   // Sets scale and numEighthSteps for both X and Y
   // Abs ensures that numStepsX and numStepsY will be positive
