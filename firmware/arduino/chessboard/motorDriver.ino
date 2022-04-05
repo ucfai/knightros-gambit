@@ -93,7 +93,7 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   uint16_t *currentMotorPosPtr;
     
   // Print debug info about which motor is being aligned to where
-  if (DEBUG)
+  if (DEBUG >= FUNCTION_LEVEL)
   {
     Serial.print("Aligning ");
     Serial.print( (motor == xMotor) ? "x-axis motor" : "y-axis motor");
@@ -216,7 +216,7 @@ uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
     return SUCCESS;
 
   // Print debug info about straight movement
-  if (DEBUG)
+  if (DEBUG >= FUNCTION_LEVEL)
   {
     Serial.println("The following is in the form (col, row)");
     Serial.print("Moving straight from (");
@@ -322,7 +322,7 @@ uint8_t moveDiagonal(uint8_t endCol, uint8_t endRow)
     return SUCCESS;
 
   // Print debug info about diagonal movement
-  if (DEBUG)
+  if (DEBUG >= FUNCTION_LEVEL)
   {
     Serial.println("The following is in the form (col, row)");
     Serial.print("Moving diagonal from (");

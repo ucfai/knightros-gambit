@@ -108,7 +108,7 @@ bool validateMessageFromPi(volatile char * message)
   uint8_t i;
 
   // Print the most recent message received
-  if (DEBUG)
+  if (DEBUG >= UART_LEVEL)
   {
     Serial.println("Incoming message:  ");
     for (i = 0; i < INCOMING_MESSAGE_LENGTH; i++)
@@ -255,7 +255,7 @@ void sendParamsToPi(volatile char currentState, volatile char extraByte, volatil
 void sendMessageToPi(volatile char * message)
 {
   // Print outgoing message
-  if (DEBUG)
+  if (DEBUG >= FUNCTION_LEVEL)
   {
     Serial.println("Outgoing Message:  ");
     Serial.print(message[0]);
