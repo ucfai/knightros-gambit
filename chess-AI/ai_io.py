@@ -19,12 +19,14 @@ def make_dir(dataset_path):
 
 def load_dataset(dataset_saving, show_dash):
     # see if dataset should be loaded from Figshare
-    if dataset_saving['figshare']:
+    if dataset_saving['figshare']['figshare_load']:
         # instance of FigshareApi to upload
         api = FigshareApi()
         # load article figshare_name into load_path
-        api.get_figshare_article(dataset_saving['load_path'],dataset_saving['figshare_name'])
-        return torch.load(dataset_saving['load_path'])
+        if api.get_figshare_article(dataset_saving['load_path'],dataset_saving['figshare']['name']):
+            print("Figshare File found")
+        else:
+            print("File not found")    
     else:
         """Load the dataset at the provided path. If using streamlit, show a confirmation message."""
         assert os.path.exists(dataset_saving['load_path']), "Dataset not found at path provided."
@@ -34,22 +36,22 @@ def load_dataset(dataset_saving, show_dash):
             Dashboard.info_message("success", msg)
         else:
             print(msg)
-
-        return torch.load(dataset_saving['load_path'])
+    torch.load(dataset_saving['load_path'])
 
 def save_dataset(dataset,dataset_saving):
-
-    torch.save(dataset, dataset_saving['save_path'])
-    # means dataset should also be saved to figshare
-    if dataset_saving['figshare']:
-        # all the fields required to publish
-        # TODO: come up with fields for this
-        title = "Dataset"
-        desc = "This is a description"
-        keys = ["placeholder1","placeholder2"]
-        categories = [1,11]
-        api = FigshareApi()
-        api.upload(title,desc,keys,categories,dataset_saving['save_path'])
+    # make sure a path was specicified
+    if dataset_saving['save_path'] is not None:
+        torch.save(dataset, dataset_saving['save_path'])
+        # means dataset should also be saved to figshare
+        if dataset_saving['figshare']['figshare_save']:
+            # all the fields required to publish
+            # TODO: autogenerate these fields
+            title = "Dataset"
+            desc = "This is a description"
+            keys = ["placeholder1","placeholder2"]
+            categories = [1,11]
+            api = FigshareApi()
+            api.upload(title,desc,keys,categories,dataset_saving['save_path'])
 
 def save_model(nnet, model_saving, num_saved_models, overwrite):
     """Save given model parameters to external file
@@ -57,45 +59,46 @@ def save_model(nnet, model_saving, num_saved_models, overwrite):
     if model_saving['save_path'] is not None:
         torch.save(nnet.state_dict(), model_saving['save_path'])
         # model should be saved to figshare
-        if model_saving['figshare']:
+        if model_saving['figshare']['figshare_save']:
             # all the fields required to publish
-            # TODO: come up with fields for this
-            title = "Model"
+            # TODO: autogenerate these fields
+            title = "New Model"
             desc = "This is a description"
             keys = ["placeholder1","placeholder2"]
             categories = [1,11]
             api = FigshareApi()
             api.upload(title,desc,keys,categories,model_saving['save_path'])
         else:
-            if model_saving['save_path'] is not None:
-                torch.save(nnet.state_dict(), model_saving['save_path'])
-            else:
-                # Iterate through the number of models saved
-                for i in range(num_saved_models):
-                    if not os.path.isfile(f'./models/models-{i + 1}.pt'):
-                        if overwrite and i != 0:
-                            torch.save(nnet.state_dict(), f'./models/models-{i}.pt')
-                            break
-                        torch.save(nnet.state_dict(), f'./models/models-{i + 1}.pt')
+            # Iterate through the number of models saved
+            for i in range(num_saved_models):
+                if not os.path.isfile(f'./models/models-{i + 1}.pt'):
+                    if overwrite and i != 0:
+                        torch.save(nnet.state_dict(), f'./models/models-{i}.pt')
                         break
-                    if i == num_saved_models - 1:
-                        torch.save(nnet.state_dict(), f'./models/models-{num_saved_models}.pt')
+                    torch.save(nnet.state_dict(), f'./models/models-{i + 1}.pt')
+                    break
+                if i == num_saved_models - 1:
+                    torch.save(nnet.state_dict(), f'./models/models-{num_saved_models}.pt')
 
 def load_model(nnet, model_saving, num_saved_models):
     """Load model parameters into given network from external file
     """
     if model_saving['load_path'] is not None:
-        if model_saving['figshare']:
+
+        if model_saving['figshare']['figshare_load']:
             api = FigshareApi()
-            api.get_figshare_article(model_saving['load_path'],"")
+            if api.get_figshare_article(model_saving['load_path'],model_saving['figshare']['name']):
+                print("File Retrieved")
+            else:
+                print("File Not Found")
         else:
-            nnet.load_state_dict(torch.load(model_saving['load_path']))
-        
             for i in range(num_saved_models):
                 if not os.path.isfile(f'./models-{i + 2}.pt'):
                     if i != 0:
                         nnet.load_state_dict(torch.load(f'./models-{i + 1}.pt'))
                     break
+    nnet.load_state_dict(torch.load(model_saving['load_path']))      
+
 
 def init_params(nnet, device):
     '''Initialize parameters used for training.
@@ -151,7 +154,6 @@ def init_params(nnet, device):
         with open('params.json') as file:
             params = json.load(file)
 
-
         model_saving = params['saving']['model_saving']
         dataset_saving = params['saving']['dataset_saving']
 
@@ -184,7 +186,7 @@ def init_params(nnet, device):
         dashboard = Dashboard()
         # TODO: Have reasonable defaults in case certain hyperparams are not specified within the
         # streamlit dashboard. Can use the params in params.json
-        dataset_saving, model_path = dashboard.load_files()
+        dataset_saving, model_saving = dashboard.load_files()
 
         num_saved_models, overwrite, learning_rate, \
         momentum, weight_decay = dashboard.nnet_params()
@@ -204,13 +206,9 @@ def init_params(nnet, device):
 
     # Load in a model
     # TODO: loading in model should be from figshare or local
-    if model_saving['load_path'] is not None:
-        print()
-        print(model_path)
-        print()
-        if not model_saving['figshare']:  
-            if not os.path.exists(os.path.dirname(model_saving['load_path'])):
-                os.makedirs(os.path.dirname(model_saving['load_path']))
+    if model_saving['load_path'] is not None:   
+        if not os.path.exists(os.path.dirname(model_saving['load_path'])):
+            os.makedirs(os.path.dirname(model_saving['load_path']))
         load_model(nnet, model_saving, num_saved_models)
 
     # Train network using stockfish evaluations

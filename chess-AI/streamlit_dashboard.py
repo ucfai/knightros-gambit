@@ -55,18 +55,56 @@ class Dashboard:
     def load_files(self):
         """Create buttons to upload a dataset and a model through the dashboard.
         """
-        self.col1.title("Streamlit Training Dashboard")
+        self.col1.title("Knightr0's Gambit")
+        self.col2.title("Training Dashboard")
 
-        self.col1.title("Upload Dataset")
-        dataset = self.col1.file_uploader("Dataset")
+        self.col1.title("Get Dataset")
+        self.col2.title("Get Model")
 
-        self.col1.title("Upload Model")
-        model = self.col1.file_uploader("Model")
+        ds_load_figshare = self.col1.checkbox("Load dataset from Figshare") 
+        m_load_figshare = self.col2.checkbox( "Load model from Figshare")
 
-        dataset_path = dataset.name if dataset else None
-        model_path = model.name if model else None
+        ds_name = None
+        m_name = None
 
-        return dataset_path, model_path
+        if ds_load_figshare: 
+            ds_name = self.col1.text_input("Dataset Name","Dataset")
+        ds_load_path = self.col1.text_input("Dataset Path","datasets/dataset.pt")
+            
+        if m_load_figshare:   
+            m_name = self.col2.text_input("Model name","Model")
+        m_load_path = self.col2.text_input("Model Path","models/model.pt")
+
+        self.col1.title("Save Dataset")
+        self.col2.title("Save Model")
+
+        ds_save_figshare = self.col1.checkbox("Save dataset to Figshare") 
+        m_save_figshare = self.col2.checkbox("Save model to Figshare")
+
+        ds_save_path = self.col1.text_input("Dataset Save Path","datasets/dataset.pt")
+        m_save_path = self.col2.text_input("Model Save Path","models/model.pt")
+
+        dataset_saving = {
+            "load_path": ds_load_path,
+            "save_path": ds_save_path,
+            "figshare": {
+                "name": ds_name,
+                "figshare_load":  ds_load_figshare,
+                "figshare_save": ds_save_figshare
+            }
+        }
+
+        model_saving = {
+            "load_path": m_load_path,
+            "save_path": m_save_path,
+            "figshare": {
+                "name": m_name,
+                "figshare_load":  m_load_figshare,
+                "figshare_save":  m_save_figshare
+            }
+        }
+
+        return dataset_saving,model_saving
 
     def stockfish_params(self):
         """Sets all the necessary parameters for stockfish.

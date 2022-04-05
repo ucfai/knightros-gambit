@@ -20,28 +20,27 @@ class FigshareApi:
         self.api_key = os.getenv('FIGSHARE_KEY')
             
     def get_figshare_article(self,store_path,file_name):
-
         '''
         get a dataset from figshare using the path provided
         '''
         endpoint = "account/articles/{article_id}/files"
         results = self.get_articles()
         download_url = None
-
         # find the file we want to download
         for item in results:
             if file_name == item['title']:
                 article_id = item['id']
                 file_data = self.issue_request('GET', endpoint.format(article_id=article_id))
-                print(file_data)
-                print("file " ,file_data)
-                download_url = file_data[0]["download_url"]
-                print(download_url)
+                # make sure file_data is not empty
+                if len(file_data) > 0:
+                    download_url = file_data[0]["download_url"]
         if not download_url:
-            print("file not found")
+            # means downloading failed
+            return False
         else:
+            # sucessfully downloaded file
             urlretrieve(download_url, store_path)
-
+        return True
 
     def raw_issue_request(self,method, url, data=None, binary=False):
         headers = {'Authorization': 'token ' + self.api_key}
