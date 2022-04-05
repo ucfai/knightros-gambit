@@ -186,7 +186,7 @@ void setup()
   // that are used in the `makeCircle()` function in circleFunction.ino
   calculatePulsesPerSlope();
 
-  Serial2.begin(115200, SERIAL_8N1, RX2, TX2);
+  Serial2.begin(9600, SERIAL_8N1, RX2, TX2);
   Serial.begin(115200);
 
   if (DEBUG)
