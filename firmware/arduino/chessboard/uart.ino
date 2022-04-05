@@ -102,6 +102,11 @@ void checkForInput()
         // Return to ensure that the completed input is proccessed, even if the rx buffer isn't empty
         return;
       }
+
+      // Clear all input when a duplicate occurs
+      else
+        while (Serial2.available())
+            Serial2.read();
     }
   }
 }
@@ -130,6 +135,7 @@ bool validateMessageFromPi(volatile char * message)
     {
       extraByte = INVALID_LOCATION;
       currentState = ERROR;
+
       return false;
     }
   }
