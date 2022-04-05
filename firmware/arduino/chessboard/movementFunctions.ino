@@ -28,7 +28,7 @@ bool moveDirect(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t endR
 
   // Print debug info about moveDirect moving to start position
   // Make sure to only print the "moving to start position" message in the first recursive call
-  if (DEBUG  &&  currCol != startCol  &&  currRow != startRow)
+  if (DEBUG >= FUNCTION_LEVEL  &&  currCol != startCol  &&  currRow != startRow)
   {
     Serial.println("The following is in the form (col, row)");
     Serial.print("Moving to starting position from (");
@@ -60,7 +60,7 @@ bool moveDirect(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t endR
     return false;
 
   // Print debug info about moveDirect main movement
-  if (DEBUG)
+  if (DEBUG >= FUNCTION_LEVEL)
   {
     Serial.println("The following is in the form (col, row)");
     Serial.print("Moving directly from (");
@@ -188,7 +188,7 @@ bool moveAlongEdges(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t 
   currRow = currPositionY / (stepsPerUnitSpace * 8);
 
   // Print debug info about moveAlongEdges moving to start position
-  if (DEBUG)
+  if (DEBUG >= FUNCTION_LEVEL)
   {
     Serial.println("The following is in the form (col, row)");
     Serial.print("Moving to starting position from (");
@@ -209,7 +209,7 @@ bool moveAlongEdges(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t 
     return false;
 
   // Print debug info about moveAlongEdges main movement
-  if (DEBUG)
+  if (DEBUG >= FUNCTION_LEVEL)
   {
     Serial.println("The following is in the form (col, row)");
     Serial.print("Moving along edges from (");
@@ -398,7 +398,7 @@ void centerPiece()
   uint8_t i;  // Loop counter
 
   // Print debug message about centerPiece
-  if (DEBUG)
+  if (DEBUG >= FUNCTION_LEVEL)
   {
     Serial.println("The following is in the form (col, row)");
     Serial.print("Centering piece on: (");

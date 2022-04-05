@@ -2,8 +2,21 @@
 // START: Constant definitons
 // ==========================================
 
-// Debug flag for enabling printing error messages to the serial monitor
+// Debug flag for enabling printing debug messages to the serial monitor
+// This will have different debug levels for different groups of debug data
+// (Note: Each level will print messages from the previous level(s) as well)
+
+// Current Debug Levels:
+// 0. This level is used to specify that no messages should be printed
+// 1. UART_LEVEL:     This level will be used to print uart messages
+// 2. FUNCTION_LEVEL: This level will be used to print information about importantt funciton calls 
 #define DEBUG 1
+
+enum DebugLevels
+{
+  UART_LEVEL = 1,
+  FUNCTION_LEVEL = 2
+}
 
 enum UARTMisc
 {
@@ -189,7 +202,7 @@ void setup()
   Serial2.begin(9600, SERIAL_8N1, RX2, TX2);
   Serial.begin(115200);
 
-  if (DEBUG)
+  if (DEBUG >= UART_LEVEL)
   {
     Serial.println();
     Serial.println("Starting Program...");
