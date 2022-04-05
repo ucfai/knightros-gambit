@@ -88,16 +88,20 @@ void checkForInput()
       // Reset buffer position
       byteNum = -1;
 
-      // Swap rxBufferPtr and receivedMessagePtr pointers
-      tempCharPtr = rxBufferPtr;
-      rxBufferPtr = receivedMessagePtr;
-      receivedMessagePtr = tempCharPtr;
+      // Swap buffers and raise flag if it's not a repeated message
+      if (rxBufferPtr[OPCODE_IDX] != receivedMessagePtr[OPCODE_IDX] || 
+          rxBufferPtr[MSG_COUNT_IDX] != receivedMessagePtr[MSG_COUNT_IDX])
+      {
+        tempCharPtr = rxBufferPtr;
+        rxBufferPtr = receivedMessagePtr;
+        receivedMessagePtr = tempCharPtr;
 
-      // Tell game loop to process input
-      receivedMessageValidFlag = true;
+        // Tell game loop to process input
+        receivedMessageValidFlag = true;
       
-      // Return to ensure that the completed input is proccessed, even if the rx buffer isn't empty
-      return;
+        // Return to ensure that the completed input is proccessed, even if the rx buffer isn't empty
+        return;
+      }
     }
   }
 }
