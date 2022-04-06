@@ -1,7 +1,6 @@
 """
 Main training program
 """
-import time
 import chess
 import numpy as np
 import torch
@@ -237,7 +236,7 @@ def create_stockfish_dataset(sf_opt, show_dash):
     return create_dataset(sf_opt.games, stocktrain_moves, stocktrain_value_approximator, show_dash)
 
 
-def train_on_mcts(nnet, mcts_opt, save_freq=10, show_dash=False):
+def train_on_mcts(nnet, mcts_opt, show_dash=False):
     """Use MCTS to improve value and move output of network
 
     Attributes:
@@ -254,7 +253,7 @@ def train_on_mcts(nnet, mcts_opt, save_freq=10, show_dash=False):
                                                          temperature=5)
 
         dataset = create_dataset(mcts_opt.games, mcts_moves)
-        train_on_dataset(dataset, nnet, mcts_opt, iteration=(i+1), save=(i % save_freq == 0),
+        train_on_dataset(dataset, nnet, mcts_opt, iteration=(i+1), save=(i % mcts_opt.save_freq == 0),
                          show_dash=show_dash)
 
 

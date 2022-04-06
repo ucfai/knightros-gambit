@@ -5,6 +5,7 @@
         "dataset_path": "datasets/stockfish_data.pt",
         "model_path": "models",
         "num_saved_models": 5,
+        "save_freq": 10,
         "overwrite": true
     },
 
