@@ -3,25 +3,18 @@
 
     "saving":{
 
-        "dataset_saving": {
+        "ds_saving": {
             "load_path": "datasets/stockfish_data.pt",
-            "figshare": {
-                "name": "Testing",
-                "figshare_load": false,
-                "figshare_name": "Dataset3"
-            }
+            "save_path": "datasets/",
+            "figshare_load":true,
+            "figshare_save":true
         },
-        "model_saving": {
-            "load_path": "datasets/stockfish_data.pt",
-            "figshare": {
-                "name": "Testing",
-                "figshare_load": false,
-                "figshare_save": false,
-                "figshare_name": "Dataset3"
-            }
-        },
-        "num_saved_models": 5,
-        "overwrite": true
+        "m_saving": {
+            "load_path": null,
+            "save_path": "datasets/",
+            "figshare_load":false,
+            "figshare_save":true
+        }
     },
 
     "misc_params": {

@@ -64,15 +64,7 @@ class Dashboard:
         ds_load_figshare = self.col1.checkbox("Load dataset from Figshare") 
         m_load_figshare = self.col2.checkbox( "Load model from Figshare")
 
-        ds_name = None
-        m_name = None
-
-        if ds_load_figshare: 
-            ds_name = self.col1.text_input("Dataset Name","Dataset")
         ds_load_path = self.col1.text_input("Dataset Path","datasets/dataset.pt")
-            
-        if m_load_figshare:   
-            m_name = self.col2.text_input("Model name","Model")
         m_load_path = self.col2.text_input("Model Path","models/model.pt")
 
         self.col1.title("Save Dataset")
@@ -84,27 +76,21 @@ class Dashboard:
         ds_save_path = self.col1.text_input("Dataset Save Path","datasets/dataset.pt")
         m_save_path = self.col2.text_input("Model Save Path","models/model.pt")
 
-        dataset_saving = {
+        ds_saving = {
             "load_path": ds_load_path,
             "save_path": ds_save_path,
-            "figshare": {
-                "name": ds_name,
-                "figshare_load":  ds_load_figshare,
-                "figshare_save": ds_save_figshare
-            }
+            "figshare_load": ds_load_figshare,
+            "figshare_save": ds_save_figshare
         }
 
-        model_saving = {
+        m_saving = {
             "load_path": m_load_path,
             "save_path": m_save_path,
-            "figshare": {
-                "name": m_name,
-                "figshare_load":  m_load_figshare,
-                "figshare_save":  m_save_figshare
-            }
+            "figshare_load": m_load_figshare,
+            "figshare_save": m_save_figshare
         }
 
-        return dataset_saving,model_saving
+        return ds_saving,m_saving
 
     def stockfish_params(self):
         """Sets all the necessary parameters for stockfish.
@@ -135,13 +121,11 @@ class Dashboard:
         """Sets all the neural network hyperparameters.
         """
         self.col2.title("NNET Hyperparameters")
-        saved_models = self.col2.number_input("Number of Saved Models", value=0)
-        overwrite = self.col2.checkbox("Overwrite")
         learning_rate = self.col2.number_input("Learning Rate", value=0.01)
         momentum = self.col2.number_input("Momentum", value=0.01)
         weight_decay = self.col2.number_input("Weight Decay", value=0.01)
 
-        return saved_models, overwrite, learning_rate, momentum, weight_decay
+        return learning_rate, momentum, weight_decay
 
 
     def train_flags(self):

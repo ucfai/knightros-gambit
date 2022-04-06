@@ -216,7 +216,7 @@ def train_on_dataset(dataset, nnet, options, show_dash=False):
     # Saves model to specified file, or a new file if not specified.
     # TODO: Figure frequency of model saving, right now it is after a defined number of epochs.
     # TODO: Save model should upload to figsshare
-    save_model(nnet, options.model_saving, options.num_saved_models, options.overwrite)
+    save_model(nnet, options.m_saving)
 
 
 def create_stockfish_dataset(sf_opt, show_dash):

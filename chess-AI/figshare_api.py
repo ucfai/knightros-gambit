@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from email.mime import base
 import os
 import hashlib
 import json
@@ -10,6 +9,7 @@ import torch
 import requests
 from requests.exceptions import HTTPError
 
+
 class FigshareApi:
 
     CHUNK_SIZE = 1048576
@@ -19,27 +19,35 @@ class FigshareApi:
         # get the api key which is stored as an environment variable
         self.api_key = os.getenv('FIGSHARE_KEY')
             
-    def get_figshare_article(self,store_path,file_name):
-        '''
-        get a dataset from figshare using the path provided
-        '''
+    def get_figshare_article(self,store_path,base_path,file_name):
+        """Get a dataset from figshare using the path provided"""
+        # api endpoint
         endpoint = "account/articles/{article_id}/files"
-        results = self.get_articles()
         download_url = None
-        # find the file we want to download
+        # get all the articles within figshare
+        results = self.get_articles()
+        # find the file the we are are looking for
         for item in results:
-            if file_name == item['title']:
-                article_id = item['id']
-                file_data = self.issue_request('GET', endpoint.format(article_id=article_id))
-                # make sure file_data is not empty
-                if len(file_data) > 0:
+            # find the figshare item with matching title
+            article_id = item['id']
+            # get the data from the file
+            file_data = self.issue_request('GET', endpoint.format(article_id=article_id))
+            # ensure file data is not empty
+            if len(file_data) > 0:
+                figshare_file = file_data[0]['name']
+                # check to see if file has the same name
+                if figshare_file == file_name:
                     download_url = file_data[0]["download_url"]
+                    break
+        # means no file was found        
         if not download_url:
-            # means downloading failed
+            print("File %s not found in Figshare" % (file_name))
             return False
-        else:
-            # sucessfully downloaded file
+        # found file in figshare    
+        else:        
             urlretrieve(download_url, store_path)
+            print("File %s downloaded to %s" % (file_name,store_path))
+        # return true to signify file was found    
         return True
 
     def raw_issue_request(self,method, url, data=None, binary=False):
@@ -78,8 +86,6 @@ class FigshareApi:
         result = self.raw_issue_request('GET', result['location'])
         return result['id']
 
-
-    # ensure file is good to be uploaded
     def get_file_check_data(self,file_name):
         with open(file_name, 'rb') as fin:
             md5 = hashlib.md5()
@@ -92,8 +98,6 @@ class FigshareApi:
 
             return md5.hexdigest(), size
 
-
-    # upload the file to figshare
     def initiate_new_upload(self,article_id, file_name):
         endpoint = 'account/articles/{}/files'
         endpoint = endpoint.format(article_id)
@@ -140,17 +144,13 @@ class FigshareApi:
         self.raw_issue_request('PUT', url, data=data, binary=True)
         print ('  Uploaded part {partNo} from {startOffset} to {endOffset}'.format(**part))
 
-
     def upload(self,title,desc,keywords,categories,path):
-
         # create and upload the article
         article_id = self.create_article(title,desc,keywords,categories)
         file_info = self.initiate_new_upload(article_id, path)
         self.upload_parts(file_info,path)
-
         # We return to the figshare API to complete the file upload process.
         self.complete_upload(article_id, file_info['id'])
-
         # article must be published to be downloaded
         self.issue_request('POST', 'account/articles/{}/publish'.format(article_id))
 

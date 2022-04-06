@@ -17,7 +17,7 @@ class TrainOptions:
     """
 
     def __init__(self, learning_rate, momentum, weight_decay, epochs, batch_size, games, device,
-                 model_saving, num_saved_models, overwrite):
+                 m_saving):
         self.learning_rate = learning_rate
         self.momentum = momentum
         self.weight_decay = weight_decay
@@ -25,9 +25,7 @@ class TrainOptions:
         self.batch_size = batch_size
         self.games = games
         self.device = device
-        self.model_saving = model_saving
-        self.num_saved_models = num_saved_models
-        self.overwrite = overwrite
+        self.m_saving = m_saving
 
 
 class MCTSOptions(TrainOptions):
@@ -40,10 +38,10 @@ class MCTSOptions(TrainOptions):
     """
 
     def __init__(self, learning_rate, momentum, weight_decay, epochs, batch_size, games, device,
-                 save_path, num_saved_models, overwrite, exploration, simulations,
+                 save_path, exploration, simulations,
                  training_episodes):
         TrainOptions.__init__(self, learning_rate, momentum, weight_decay, epochs, batch_size,
-                              games, device, save_path, num_saved_models, overwrite)
+                              games, device, save_path)
 
         self.exploration = exploration
         self.simulations = simulations
@@ -59,9 +57,9 @@ class StockfishOptions(TrainOptions):
     """
 
     def __init__(self, learning_rate, momentum, weight_decay, epochs, batch_size, games, device,
-                 save_path, num_saved_models, overwrite, elo, depth):
+                 save_path, elo, depth):
         TrainOptions.__init__(self, learning_rate, momentum, weight_decay, epochs, batch_size,
-                              games, device, save_path, num_saved_models, overwrite)
+                              games, device, save_path)
 
         self.elo = elo
         self.depth = depth
