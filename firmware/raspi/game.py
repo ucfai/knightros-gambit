@@ -109,6 +109,9 @@ class Game:
             raise ValueError("Unimplemented, need to handle errors")
 
         if arduino_status.status == status.ArduinoStatus.IDLE:
+            # Don't spam new Arduino messages too frequently if waiting for Arduino status to update
+            time.sleep(1)
+
             if self.board.msg_queue:
                 # We have a separate move counter for moves and instructions; to resolve conflicts
                 # we check both OpType (to identify whether we are checking for an instruction or
