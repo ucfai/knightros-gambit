@@ -96,11 +96,13 @@ class CLDebugPlayer:
         msg = None
         # uci_move = None
         while msg is None:
-            input_move = input("Please input your move (xyxy): ").lower()
-            if len(input_move) in (4, 5) and board.is_valid_move(input_move):
-                msg = input_move
+            input_move = input("Please enter a uci move (xyxy) or an opcode type message "
+                               "(~<OPCODE>xxxx<MOVE_COUNT>): ")
+            if len(input_move) in (4, 5) and board.is_valid_move(input_move.lower()):
+                msg = input_move.lower()
                 break
             if len(input_move) == OpCode.MESSAGE_LENGTH:
+                # TODO: Consider doing validation of the inputted opcode message here.
                 msg = input_move
                 break
             print(f"The move {input_move} is invalid. Please enter a uci move (xyxy) or an "
