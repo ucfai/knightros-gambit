@@ -38,10 +38,10 @@ class MCTSOptions(TrainOptions):
     """
 
     def __init__(self, learning_rate, momentum, weight_decay, epochs, batch_size, games, device,
-                 save_path, exploration, simulations,
+                 m_saving, exploration, simulations,
                  training_episodes):
         TrainOptions.__init__(self, learning_rate, momentum, weight_decay, epochs, batch_size,
-                              games, device, save_path)
+                              games, device, m_saving)
 
         self.exploration = exploration
         self.simulations = simulations

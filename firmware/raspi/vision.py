@@ -1,10 +1,11 @@
-'''Helper file to get board state from images of board.
-'''
+"""Helper file to get board state from images of board.
+"""
 # import cv2 as cv
 
 import util
 
 class BoardStateDetector:
+    """Utility class used in main game loop to convert board images into state representations."""
     def __init__(self, calibration_img):
         self.prev_occ_grid = None
         self.board_size = 8
@@ -14,16 +15,18 @@ class BoardStateDetector:
         # self.col_classifier = torch.load(path_to_piece_classifier_model)
         # Note: col_classifier returns 0, 1, 2; convert to '.', 'w', or 'b' respectively
         self.col_map = {0: '.', 1: 'w', 2: 'b'}
-        self.trans_M, self.max_w, self.max_h = self.compute_img_trans_matrix(calibration_img)
+        self.trans_m, self.max_w, self.max_h = self.compute_img_trans_matrix(calibration_img)
         self.img_dim = (800, 800)
         self.sq_size = int(self.img_dim[0] / 8)
 
     # TODO: Implement detecting image corners, 1) hard code them or 2) compute at startup.
     @staticmethod
     def get_board_corners(board_img):
-        pass
+        """Given board, returns four-tuple of indices corresponding to chessboard corners."""
+        return []
 
     def compute_img_trans_matrix(self, calibration_img):
+        """Given calibration board img, returns transformation matrix to straighten skewed img."""
         return None, None, None
         # TODO: Once we figure out how to detect corners, can uncomment below
 
@@ -56,17 +59,20 @@ class BoardStateDetector:
         # return M, maxWidth, maxHeight
 
     def get_occupancy_grid(self, img_arr_2d):
-        '''
+        """Creates an occupancy grid representing pieces on the chessboard.
+
         '.': empty, 'w': white piece, 'b': black piece.
-        '''
+        """
         return [[0 for i in range(self.board_size)] for j in range(self.board_size)]
         # TODO: After classifier is trained/loaded in constructor, can uncomment below.
         # return [[self.col_map[self.col_classifier.predict(img_arr_2d[i, j])]
         #          for i in range(self.board_size)] for j in range(self.board_size)]
 
     def get_occupancy_diff(self, curr_occ_grid, prev_occ_grid):
-        # curr_occ_grid[i][j] is either 'b', 'w', or '.' if empty.
-        # Same for prev_occ_grid.
+        """Given two occupancy grids (see get_occupancy_grid), computes indices with diff as a set.
+
+        Assumes curr_occ_grid[i][j] is either 'b', 'w', or '.' if empty; same for prev_occ_grid.
+        """
         diff = {}
         for i in range(self.board_size):
             for j in range(self.board_size):
@@ -87,6 +93,7 @@ class BoardStateDetector:
 
     @staticmethod
     def get_move_from_diff(diff):
+        """Given index set of squares with different vals at t and t+1, computes a UCI move."""
         source, dest = None, None
         # Normal move, includes captures
         if len(diff[-1]) == 1:
@@ -113,12 +120,12 @@ class BoardStateDetector:
                 source = [val for val in diff[-1] if val[1] != dest[1]][0]
         else:
             raise RuntimeError("Computer vision detected an invalid change in board state."
-                              f"Diff generated between subsequent states = {diff}")
+                               f"Diff generated between subsequent states = {diff}")
 
         return util.uci_move_from_boardcells(util.BoardCell(*source), util.BoardCell(*dest))
 
     def get_piece_type_from_square_img(self, square_img):
-        # Use classifier to identify and return piece type at specified square in curr_board_img
+        """Uses classifier to identify and return piece type at specified square in img."""
         val = 0
         # TODO: After classifier is trained/loaded in constructor, can uncomment below.
         # val = self.type_classifier.predict(square_img)
@@ -126,14 +133,14 @@ class BoardStateDetector:
 
     # TODO: Implement
     def align_and_segment_image(self, curr_board_img):
-        '''Takes in image of board and returns 2d np array of straightened/segmented image.
+        """Takes in image of board and returns 2d np array of straightened/segmented image.
 
         First, the corners are detected (or hard coded definition of corners are used), then the
         image is transformed s.t. all four corners of the board are the four corners of the image.
         Then, math is used to splice out each board cell and these are stored in a 2d array where
         each element of the array corresponds to a cell containing at most a single piece.
-        '''
-        # trans_img = cv.warpPerspective(curr_board_img, self.trans_M, (self.max_w, self.max_h))
+        """
+        # trans_img = cv.warpPerspective(curr_board_img, self.trans_m, (self.max_w, self.max_h))
         # reduc_trans_img = cv.resize(trans_img, self.img_dim, interpolation = cv.INTER_AREA)
         # img_arr_2d = [[None for _ in range(self.board_size)] for _ in range(self.board_size)]
         # for i in range(self.board_size):
@@ -143,7 +150,8 @@ class BoardStateDetector:
         #                                            :]
         return curr_board_img
 
-    def get_current_board_state(self, prev_board_fen, curr_board_img):
+    def get_current_board_move(self, prev_board_fen, curr_board_img):
+        """Given the previous board fen and image of the current board, returns UCI move made."""
         img_arr_2d = self.align_and_segment_image(curr_board_img)
         curr_occ_grid = self.get_occupancy_grid(img_arr_2d)
         move = BoardStateDetector.get_move_from_diff(self.get_occupancy_diff(curr_occ_grid,
@@ -158,9 +166,9 @@ class BoardStateDetector:
         self.prev_occ_grid = curr_occ_grid
         return move
 
-def main():
-    # TODO: Add tests of occupancy grid logic
-    pass
+# def main():
+#     # TODO: Add tests of occupancy grid logic
+#     pass
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()

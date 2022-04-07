@@ -14,10 +14,8 @@
             "save_path": "datasets/",
             "figshare_load":false,
             "figshare_save":true,
-            "checkpointing": {
-                
-
-            }
+            "save_freq": 10,
+            "overwrite": true
         }
     },
 

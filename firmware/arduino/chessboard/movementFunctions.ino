@@ -1,4 +1,4 @@
-bool moveDirect(int startCol, int startRow, int endCol, int endRow, bool enableMagnet)
+bool moveDirect(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t endRow, bool enableMagnet)
 {
   uint8_t statusCodeResult;
   uint8_t currCol, currRow;
@@ -20,11 +20,28 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow, bool enableM
     return true;
 
   // Checks if the EM is aligned properly
-  if ((currPositionX % stepsPerUnitSpace) || (currPositionY % stepsPerUnitSpace))
+  if ((currPositionX % stepsPerUnitSpace)  ||  (currPositionY % stepsPerUnitSpace))
     return false;
 
   currCol = currPositionX / (stepsPerUnitSpace * 8);
   currRow = currPositionY / (stepsPerUnitSpace * 8);
+
+  // Print debug info about moveDirect moving to start position
+  // Make sure to only print the "moving to start position" message in the first recursive call
+  if (DEBUG >= FUNCTION_LEVEL  &&  currCol != startCol  &&  currRow != startRow)
+  {
+    Serial.println("The following is in the form (col, row)");
+    Serial.print("Moving to starting position from (");
+    Serial.print(currCol);
+    Serial.print(", ");
+    Serial.print(currRow);
+    Serial.print(") to (");
+    Serial.print(startCol);
+    Serial.print(", ");
+    Serial.print(startRow);
+    Serial.print(") ");
+    Serial.println("\n");
+  }
 
   // Make initial move to first position and move directly since it's faster.
   // Since we're moving to the initial position, we want the magnet off, so pass in false.
@@ -41,6 +58,25 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow, bool enableM
   // 5. After being moved to the start point, we perform the move from the initial call.
   if (!moveDirect(currCol, currRow, startCol, startRow, false))
     return false;
+
+  // Print debug info about moveDirect main movement
+  if (DEBUG >= FUNCTION_LEVEL)
+  {
+    Serial.println("The following is in the form (col, row)");
+    Serial.print("Moving directly from (");
+    Serial.print(startCol);
+    Serial.print(", ");
+    Serial.print(startRow);
+    Serial.print(") to (");
+    Serial.print(endCol);
+    Serial.print(", ");
+    Serial.print(endRow);
+    Serial.print(")");
+    Serial.print("    ");
+    Serial.print("Electromagnet State: ");
+    Serial.print( (enableMagnet ? "On" : "Off"));
+    Serial.println("\n");
+  }
 
   // Enable electromagnet
   if (enableMagnet)
@@ -112,16 +148,16 @@ bool moveDirect(int startCol, int startRow, int endCol, int endRow, bool enableM
 // 2. Move along X axis (optional)
 // 3. Move along Y axis (optional)
 // 4. Move to center of square from edge
-bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
+bool moveAlongEdges(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t endRow)
 {
   // There are 5 possible points total, where the first is always the passed start point and 
   // the rest can be made from the list above.
   uint8_t rows[5], cols[5];
-  int8_t diagDirX, diagDirY;
-  int8_t deltaX, deltaY, subDeltaX, subDeltaY, absDeltaX, absDeltaY;
   uint8_t pointCounter, statusCodeResult;
   uint8_t currCol, currRow;
   uint8_t numPoints = 0;
+  int8_t diagDirX, diagDirY;
+  int8_t deltaX, deltaY, subDeltaX, subDeltaY, absDeltaX, absDeltaY;
 
   // Find the signed difference between the final and initial points
   deltaX = endCol - startCol;
@@ -145,16 +181,48 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
     return true;
     
   // Checks if the EM is aligned properly
-  if ((currPositionX % stepsPerUnitSpace) || (currPositionY % stepsPerUnitSpace))
+  if ((currPositionX % stepsPerUnitSpace)  ||  (currPositionY % stepsPerUnitSpace))
     return false;
 
   currCol = currPositionX / (stepsPerUnitSpace * 8);
   currRow = currPositionY / (stepsPerUnitSpace * 8);
 
+  // Print debug info about moveAlongEdges moving to start position
+  if (DEBUG >= FUNCTION_LEVEL)
+  {
+    Serial.println("The following is in the form (col, row)");
+    Serial.print("Moving to starting position from (");
+    Serial.print(currCol);
+    Serial.print(", ");
+    Serial.print(currRow);
+    Serial.print(") to (");
+    Serial.print(startCol);
+    Serial.print(", ");
+    Serial.print(startRow);
+    Serial.print(") ");
+    Serial.println("\n");
+  }
+
   // Make initial move to first position. Move diagonally since it's faster.
   // Since we're moving to the initial position, we want the magnet off, so pass in false.
   if (!moveDirect(currCol, currRow, startCol, startRow, false))
     return false;
+
+  // Print debug info about moveAlongEdges main movement
+  if (DEBUG >= FUNCTION_LEVEL)
+  {
+    Serial.println("The following is in the form (col, row)");
+    Serial.print("Moving along edges from (");
+    Serial.print(startCol);
+    Serial.print(", ");
+    Serial.print(startRow);
+    Serial.print(") to (");
+    Serial.print(endCol);
+    Serial.print(", ");
+    Serial.print(endRow);
+    Serial.print(")");
+    Serial.println("\n");
+  }
 
   // Calculate a list of up to 4 new points (including the start point) 
   // We use previous points to calculate subsequent points, since they're on the same path
@@ -317,7 +385,7 @@ bool moveAlongEdges(int startCol, int startRow, int endCol, int endRow)
   return (pointCounter == numPoints);
 }
 
-bool alignPiece(int col, int row)
+bool alignPiece(uint8_t col, uint8_t row)
 {
   return true;
 }
@@ -325,8 +393,22 @@ bool alignPiece(int col, int row)
 // Assumes that the starting position is the center of the square the piece is on
 void centerPiece()
 {
-  // Loop counter
-  int i;
+  uint8_t currCol = currPositionX / (stepsPerUnitSpace * 8);
+  uint8_t currRow = currPositionY / (stepsPerUnitSpace * 8);
+  uint8_t i;  // Loop counter
+
+  // Print debug message about centerPiece
+  if (DEBUG >= FUNCTION_LEVEL)
+  {
+    Serial.println("The following is in the form (col, row)");
+    Serial.print("Centering piece on: (");
+    Serial.print(currRow);
+    Serial.print(", ");
+    Serial.print(currCol);
+    Serial.print(")");
+    Serial.println("\n");
+  }
+
 
   moveToFirstCircle();
 
@@ -352,35 +434,21 @@ void centerPiece()
 bool statusCodeHandler(uint8_t status)
 {
   if (status == SUCCESS)
-  {
     return true;
-  }
   else if (status == HIT_POS_X_ENDSTOP)
-  {
     alignAxis(xMotor, MAX_POSITION);
-  }
   else if (status == HIT_POS_Y_ENDSTOP)
-  {
     alignAxis(yMotor, MAX_POSITION);
-  }
   else if (status == HIT_NEG_X_ENDSTOP)
-  {
     alignAxis(xMotor, ZERO_POSITION);
-  }
   else if (status == HIT_NEG_Y_ENDSTOP)
-  {
     alignAxis(yMotor, ZERO_POSITION);
-  }
   else if (status == INVALID_ALIGNMENT)
-  {
     home();
-  }
   else
-  {
     // Returns false if status code not one of those handled above, 
     // e.g. INVALID_ARGS, or if status code is invalid
     return false;
-  }
   
   return true;
 }
