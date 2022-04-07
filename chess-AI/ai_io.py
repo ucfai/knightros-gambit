@@ -11,6 +11,8 @@ import options
 from streamlit_dashboard import Dashboard
 from figshare_api import FigshareApi
 
+figshare_api = FigshareApi()
+
 def file_from_path(path):
     """ Splits up the full file path into the directory and file"""
     base_path,file_name = os.path.split(path)
@@ -30,8 +32,6 @@ def make_dir(dataset_path):
 def load_dataset(ds_saving, show_dash):
     # see if dataset should be loaded from Figshare
     if ds_saving['figshare_load']:
-        # instance of FigshareApi to upload
-        figshare_api = FigshareApi()
         # get the base path and file name
         base_path,file_name = file_from_path(ds_saving['load_path'])
         # ensure file exists in figshare
@@ -94,7 +94,6 @@ def load_model(nnet, m_saving, show_dash):
     if m_saving['load_path'] is not None:
         # if model is from figshare
         if m_saving['figshare_load']:
-            figshare_api = FigshareApi()
             base_path,file_name = file_from_path(m_saving['load_path'])
         # ensure file exists in figshare
             assert figshare_api.get_figshare_article(m_saving['load_path'],base_path,file_name), \

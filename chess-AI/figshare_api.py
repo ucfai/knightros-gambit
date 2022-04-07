@@ -9,7 +9,6 @@ import torch
 import requests
 from requests.exceptions import HTTPError
 
-
 class FigshareApi:
 
     CHUNK_SIZE = 1048576

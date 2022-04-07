@@ -13,7 +13,11 @@
             "load_path": null,
             "save_path": "datasets/",
             "figshare_load":false,
-            "figshare_save":true
+            "figshare_save":true,
+            "checkpointing": {
+                
+
+            }
         }
     },
 
