@@ -16,7 +16,7 @@ enum DebugLevels
 {
   UART_LEVEL = 1,
   FUNCTION_LEVEL = 2
-}
+};
 
 enum UARTMisc
 {
