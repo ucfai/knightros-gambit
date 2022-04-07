@@ -318,7 +318,8 @@ class OpCode3Page(BaseFrame):
         default_text = "Indicates that the Arduino should align an axis.\n" \
                        "Setting the Extra field (e.g. msg[2]) to '0' indicates aligning x axis\n" \
                        " to zero, '1' indicates aligning y axis to zero, '2' indicates aligning\n" \
-                       "x axis to max, '3' indicates aligning y axis to max."
+                       "x axis to max, '3' indicates aligning y axis to max, '4' indicates\n" \
+                       "calling the Arduino's home() function, which aligns both x and y to zero."
         self.label = tkinter.Label(self, text=default_text, font = GUI.DEFAULT_FONT)
 
         self.compute_btn = tkinter.Button(self, text="Compute", command=self.callable)
@@ -378,7 +379,7 @@ class OpCode3Page(BaseFrame):
         extra = self.textbox.get("1.0",tkinter.END)[0]
         idx = self.instruction_types.index(self.variable2.get())
         if idx == 0:
-            if extra in ('0', '1', '2', '3'):
+            if extra in ('0', '1', '2', '3', '4'):
                 opcodemsg = f"~3{self.variable2.get()[0]}{extra}00{self.controller.msg_count}"
                 self.controller.msg_count = (self.controller.msg_count + 1) % 2
             else:
