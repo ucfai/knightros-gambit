@@ -119,6 +119,7 @@ def init_params(nnet, device):
         dataset_path = params['saving']['dataset_path']
 
         num_saved_models = params['saving']['num_saved_models']
+        save_freq = params['saving']['save_freq']
         overwrite = params['saving']['overwrite']
         learning_rate = params['misc_params']['lr']
         momentum = params['misc_params']['momentum']
@@ -182,7 +183,7 @@ def init_params(nnet, device):
 
     mcts_options = options.MCTSOptions(learning_rate, momentum, weight_decay, mcts_epochs,
                                        mcts_batch_size, mcts_games, device, model_path,
-                                       num_saved_models, overwrite, exploration, mcts_simulations,
+                                       num_saved_models, save_freq, overwrite, exploration, mcts_simulations,
                                        training_episodes)
 
     flags = options.TrainingFlags(

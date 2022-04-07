@@ -128,7 +128,7 @@ def create_dataset(games, move_approximator, val_approximator=None, show_dash=Fa
     return dataset
 
 
-def train_on_dataset(dataset, nnet, options, show_dash=False):
+def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=False):
     """Train with the specified dataset
 
     Attributes:
@@ -214,8 +214,9 @@ def train_on_dataset(dataset, nnet, options, show_dash=False):
         Dashboard.visualize_losses(average_pol_loss, average_val_loss)
 
     # Saves model to specified file, or a new file if not specified.
-    # TODO: Figure frequency of model saving, right now it is after a defined number of epochs.
-    save_model(nnet, options.save_path, options.num_saved_models, options.overwrite)
+    if save:
+        save_model(nnet, options.save_path + "/model_{}".format(iteration), options.num_saved_models,
+                   options.overwrite)
 
 
 def create_stockfish_dataset(sf_opt, show_dash):
@@ -247,12 +248,13 @@ def train_on_mcts(nnet, mcts_opt, show_dash=False):
     mcts = Mcts(mcts_opt.exploration, mcts_opt.device)
 
     # Will iterate through the number of training episodes
-    for _ in range(mcts_opt.training_episodes):
+    for i in range(mcts_opt.training_episodes):
         mcts_moves = lambda board: mcts.get_tree_results(mcts_opt.simulations, nnet, board,
                                                          temperature=5)
 
         dataset = create_dataset(mcts_opt.games, mcts_moves)
-        train_on_dataset(dataset, nnet, mcts_opt, show_dash)
+        train_on_dataset(dataset, nnet, mcts_opt, iteration=(i+1), save=(i % mcts_opt.save_freq == 0),
+                         show_dash=show_dash)
 
 
 def main():
@@ -299,7 +301,7 @@ def main():
                     Dashboard.info_message("success", msg)
                 else:
                     print(msg)
-                train_on_dataset(dataset, nnet, stockfish_options)
+                train_on_dataset(dataset, nnet, stockfish_options, iteration=0, save=True)
 
                 msg = "Stockfish Training completed"
                 if flags.show_dash:
