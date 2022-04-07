@@ -177,7 +177,7 @@ class OpCode0and1Page(BaseFrame):
                 else:
                     color = GUI.WHITEHEX
                 buttonij = tkinter.Button(
-                    self.button_area, text="  o  ", highlightbackground=color,
+                    self.button_area, text="  o  ", bg=color, highlightbackground=color,
                     command=lambda tmp=msg, row=i, col=j: self.callable(
                         tmp, row, col))
                 buttonij.grid(row=i, column=j)
@@ -191,40 +191,40 @@ class OpCode0and1Page(BaseFrame):
         # Clear buttons if two selected before selecting new button
         if self.src_btn_info is not None and self.dest_btn_info is not None:
             # reset buttons
-            self.src_btn_info.button.config(relief="raised", font=GUI.DEFAULT_FONT,
+            self.src_btn_info.button.config(font=GUI.DEFAULT_FONT,
+                                            bg=self.src_btn_info.orig_color,
                                             highlightbackground=self.src_btn_info.orig_color)
             self.src_btn_info = None
 
-            self.dest_btn_info.button.config(relief="raised", font=GUI.DEFAULT_FONT,
+            self.dest_btn_info.button.config(font=GUI.DEFAULT_FONT,
+                                             bg=self.dest_btn_info.orig_color,
                                              highlightbackground=self.dest_btn_info.orig_color)
             self.dest_btn_info = None
 
         button = self.button_grid[row][col]
 
         if self.src_btn_info is not None and button == self.src_btn_info.button:
-            self.src_btn_info.button.config(relief="raised", font=GUI.DEFAULT_FONT,
+            self.src_btn_info.button.config(font=GUI.DEFAULT_FONT,
+                                            bg=self.src_btn_info.orig_color,
                                             highlightbackground=self.src_btn_info.orig_color)
             self.src_btn_info = None
             return
 
-        # If selecting a button that is already selected
-        if button.config('relief')[-1] == 'sunken':
-            button.config(relief="raised", font=GUI.DEFAULT_FONT)
+        if self.dest_btn_info is not None and button == self.dest_btn_info.button:
+            self.dest_btn_info.button.config(font=GUI.DEFAULT_FONT,
+                                             bg=self.dest_btn_info.orig_color,
+                                             highlightbackground=self.dest_btn_info.orig_color)
+            self.dest_btn_info = None
+            return
 
-            if self.dest_btn_info is not None:
-                self.dest_btn_info = None
-            else:
-                self.src_btn_info = None
-        # If no buttons already selected, store selected button as src, else dest
+        if self.src_btn_info is None:
+            self.src_btn_info = ButtonInfo(button, msg, row, col,
+                                           button.cget("highlightbackground"))
         else:
-            if self.src_btn_info is None:
-                self.src_btn_info = ButtonInfo(button, msg, row, col,
-                                               button.cget("highlightbackground"))
-            else:
-                self.dest_btn_info = ButtonInfo(button, msg, row, col,
-                                                button.cget("highlightbackground"))
+            self.dest_btn_info = ButtonInfo(button, msg, row, col,
+                                            button.cget("highlightbackground"))
 
-            button.config(relief="sunken", font=GUI.BOLD_FONT, highlightbackground=GUI.REDHEX)
+        button.config(font=GUI.BOLD_FONT, bg=GUI.REDHEX, highlightbackground=GUI.REDHEX)
 
         # Compute opcode if two buttons selected
         if self.src_btn_info is not None and self.dest_btn_info is not None:
@@ -246,6 +246,8 @@ class OpCode2Page(BaseFrame):
 
         self.controller = controller
 
+        self.update_status("Please select a single square...")
+
         # button grid
         self.btn_info = None
 
@@ -265,7 +267,7 @@ class OpCode2Page(BaseFrame):
                 else:
                     color = GUI.WHITEHEX
                 buttonij = tkinter.Button(
-                    self.button_area, text="  o  ", highlightbackground=color,
+                    self.button_area, text="  o  ", bg=color, highlightbackground=color,
                     command=lambda tmp=msg, row=i, col=j: self.callable(
                         tmp, row, col))
                 buttonij.grid(row=i, column=j)
@@ -280,20 +282,14 @@ class OpCode2Page(BaseFrame):
 
         if self.btn_info is not None:
             tmp = self.btn_info
-            self.btn_info.button.config(relief="raised", font=GUI.DEFAULT_FONT,
-                                            highlightbackground=self.btn_info.orig_color)
+            self.btn_info.button.config(font=GUI.DEFAULT_FONT, bg=self.btn_info.orig_color,
+                                        highlightbackground=self.btn_info.orig_color)
             self.btn_info = None
             if tmp.button == button:
                 return
 
-        # If selecting a button that is already selected
-        if button.config('relief')[-1] == 'sunken':
-            button.config(relief="raised", font=GUI.DEFAULT_FONT)
-            self.btn_info = None
-            return
-
         self.btn_info = ButtonInfo(button, msg, row, col, button.cget("highlightbackground"))
-        button.config(relief="sunken", font=GUI.BOLD_FONT, highlightbackground=GUI.REDHEX)
+        button.config(font=GUI.BOLD_FONT, bg=GUI.REDHEX, highlightbackground=GUI.REDHEX)
 
         # create opcodemsg
         opcode = self.opcodes.index(self.variable.get())
