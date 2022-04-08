@@ -191,28 +191,24 @@ class OpCode0and1Page(BaseFrame):
         # Clear buttons if two selected before selecting new button
         if self.src_btn_info is not None and self.dest_btn_info is not None:
             # reset buttons
-            self.src_btn_info.button.config(font=GUI.DEFAULT_FONT,
-                                            bg=self.src_btn_info.orig_color,
+            self.src_btn_info.button.config(bg=self.src_btn_info.orig_color,
                                             highlightbackground=self.src_btn_info.orig_color)
             self.src_btn_info = None
 
-            self.dest_btn_info.button.config(font=GUI.DEFAULT_FONT,
-                                             bg=self.dest_btn_info.orig_color,
+            self.dest_btn_info.button.config(bg=self.dest_btn_info.orig_color,
                                              highlightbackground=self.dest_btn_info.orig_color)
             self.dest_btn_info = None
 
         button = self.button_grid[row][col]
 
         if self.src_btn_info is not None and button == self.src_btn_info.button:
-            self.src_btn_info.button.config(font=GUI.DEFAULT_FONT,
-                                            bg=self.src_btn_info.orig_color,
+            self.src_btn_info.button.config(bg=self.src_btn_info.orig_color,
                                             highlightbackground=self.src_btn_info.orig_color)
             self.src_btn_info = None
             return
 
         if self.dest_btn_info is not None and button == self.dest_btn_info.button:
-            self.dest_btn_info.button.config(font=GUI.DEFAULT_FONT,
-                                             bg=self.dest_btn_info.orig_color,
+            self.dest_btn_info.button.config(bg=self.dest_btn_info.orig_color,
                                              highlightbackground=self.dest_btn_info.orig_color)
             self.dest_btn_info = None
             return
