@@ -10,6 +10,8 @@ class ArduinoStatus:
     EXECUTING_MOVE = '1'
     END_TURN_BUTTON_PRESSED = '2'
     ERROR = '3'
+
+    # Incoming message length from Arduino
     MESSAGE_LENGTH = 4
 
     # TODO: Update order of fields so that it matches actual msg format. Should be status, extra,

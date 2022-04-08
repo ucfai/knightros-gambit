@@ -326,9 +326,10 @@ class Board:
         # TODO: Implement error handling. Arduino should retransmit last
         # message in the event of a parsing error
         if self.ser is not None and self.ser.in_waiting:
-            new_input = self.ser.read(4)
+            new_input = self.ser.read(4).decode()
             # If the start byte is a ~ and the Arduino Status is valid, process the arduino status
             # based on the new input
+            print(f"Received message: {new_input}")
             if new_input[0] == '~' and ArduinoStatus.is_valid_code(new_input[1]):
                 self.arduino_status = ArduinoStatus(new_input[1], new_input[3], new_input[2])
             else:
