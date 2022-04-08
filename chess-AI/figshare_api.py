@@ -26,7 +26,7 @@ class FigshareApi:
         # get all the articles within figshare
         results = self.get_articles()
         # find the file the we are are looking for
-        for item in results:
+        for item in results:            
             # find the figshare item with matching title
             article_id = item['id']
             # get the data from the file

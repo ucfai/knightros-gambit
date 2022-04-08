@@ -215,8 +215,7 @@ def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=Fal
 
     # Saves model to specified file, or a new file if not specified.
     if save:
-        save_model(nnet, options.save_path + "/model_{}".format(iteration) ,
-                   options.overwrite)
+        save_model(nnet,options.m_saving,True,"model_{}".format(iteration))
 
 
 def create_stockfish_dataset(sf_opt, show_dash):
@@ -298,7 +297,7 @@ def main():
                 Dashboard.info_message("success", msg)
             else:
                 print(msg)
-            train_on_dataset(dataset, nnet, stockfish_options)
+            train_on_dataset(dataset, nnet, stockfish_options,0)
 
             msg = "Stockfish Training completed"
             if flags.show_dash:
@@ -321,6 +320,8 @@ def main():
             else:
                 print(msg)
 
+        if mcts_options.m_saving['save_path'] is not None:
+            save_model(nnet,mcts_options.m_saving,False)
 
 if __name__ == "__main__":
     main()

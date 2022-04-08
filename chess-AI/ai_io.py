@@ -65,28 +65,36 @@ def save_dataset(dataset,ds_saving):
             title = "dataset-" + date_string
             # TODO: autogenerate these fields
             desc = "This is a description"
-            keys = ["placeholder1","placeholder2"]
-            categories = [1,11]
+            keys = ["Dataset","Chess"]
+            # 179 is category, Artificial Intelligence and Image Processing
+            categories = [179]
             figshare_api = FigshareApi()
             figshare_api.upload(title,desc,keys,categories,full_path)
 
-def save_model(nnet, m_saving):
+def save_model(nnet, m_saving, checkpointing, file_name=None):
     """Save given model parameters to external file
     """
     if m_saving['save_path'] is not None:
-        date_string = create_date_string()
-        full_path = m_saving['save_path'] + "model-" +  date_string + ".pt" 
-        torch.save(nnet.state_dict(), full_path)
-        # model should be saved to figshare
-        if m_saving['figshare_save']:
-            # all the fields required to publish
-            # TODO: autogenerate these fields
-            title = "model-" + date_string
-            desc = "This is a description"
-            keys = ["placeholder1","placeholder2"]
-            categories = [1,11]
-            api = FigshareApi()
-            api.upload(title,desc,keys,categories,full_path)
+        if checkpointing:
+            assert file_name is not None , " For checkpointing \
+            a file name msut be specified"
+            full_path = m_saving['checkpoint_path'] + file_name + ".pt"
+            torch.save(nnet.state_dict(),full_path)
+        else:
+            date_string = create_date_string()
+            full_path = m_saving['save_path'] + "model-" +  date_string + ".pt" 
+            torch.save(nnet.state_dict(), full_path)
+            # model should be saved to figshare
+            if m_saving['figshare_save']:
+                # all the fields required to publish
+                # TODO: autogenerate these fields
+                title = "model-" + date_string
+                desc = "This is a description"
+                keys = ["Neural Network","Chess"]
+                # 179 is category, Artificial Intelligence and Image Processing
+                categories = [179]
+                api = FigshareApi()
+                api.upload(title,desc,keys,categories,full_path)
 
 def load_model(nnet, m_saving, show_dash):
     """Load model parameters into given network from external file
@@ -222,7 +230,12 @@ def init_params(nnet, device):
              "Model not found at path provided. To load a model you must provide a valid path"
         load_model(nnet, m_saving,args.dashboard)
 
-    # Train network using stockfish evaluations
+    # add checkpoint folder property
+    if m_saving['save_path'] is not None:
+        m_saving["checkpoint_path"] = m_saving['save_path'] \
+        + "checkpoint-" + create_date_string() + '/'
+        make_dir(m_saving["checkpoint_path"])
+
     stockfish_options = options.StockfishOptions(learning_rate, momentum, weight_decay,
                                                  stock_epochs, stock_batch_size, stock_games,
                                                  device, m_saving, elo, depth)

@@ -4,18 +4,17 @@
     "saving":{
 
         "ds_saving": {
-            "load_path": "datasets/stockfish_data.pt",
+            "load_path": "datasets/dataset-06-04-22:19.pt",
             "save_path": "datasets/",
             "figshare_load":true,
             "figshare_save":true
         },
         "m_saving": {
             "load_path": null,
-            "save_path": "datasets/",
+            "save_path": "models/",
             "figshare_load":false,
             "figshare_save":true,
-            "save_freq": 10,
-            "overwrite": true
+            "save_freq": 10          
         }
     },
 
@@ -34,12 +33,12 @@
     },
 
     "mcts":{
-        "epochs": 100,
+        "epochs": 1,
         "batch_size": 8,
-        "games": 100,
+        "games": 10,
         "exploration": 5,
         "training_episodes": 5,
-        "simulations": 10
+        "simulations": 2
     },
 
     "currently_unused": {
