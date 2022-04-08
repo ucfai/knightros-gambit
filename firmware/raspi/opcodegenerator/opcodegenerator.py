@@ -278,7 +278,7 @@ class OpCode2Page(BaseFrame):
 
         if self.btn_info is not None:
             tmp = self.btn_info
-            self.btn_info.button.config(font=GUI.DEFAULT_FONT, bg=self.btn_info.orig_color,
+            self.btn_info.button.config(bg=self.btn_info.orig_color,
                                         highlightbackground=self.btn_info.orig_color)
             self.btn_info = None
             if tmp.button == button:
