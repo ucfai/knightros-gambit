@@ -224,7 +224,7 @@ class OpCode0and1Page(BaseFrame):
             self.dest_btn_info = ButtonInfo(button, msg, row, col,
                                             button.cget("highlightbackground"))
 
-        button.config(font=GUI.BOLD_FONT, bg=GUI.REDHEX, highlightbackground=GUI.REDHEX)
+        button.config(bg=GUI.REDHEX, highlightbackground=GUI.REDHEX)
 
         # Compute opcode if two buttons selected
         if self.src_btn_info is not None and self.dest_btn_info is not None:
@@ -289,7 +289,7 @@ class OpCode2Page(BaseFrame):
                 return
 
         self.btn_info = ButtonInfo(button, msg, row, col, button.cget("highlightbackground"))
-        button.config(font=GUI.BOLD_FONT, bg=GUI.REDHEX, highlightbackground=GUI.REDHEX)
+        button.config(bg=GUI.REDHEX, highlightbackground=GUI.REDHEX)
 
         # create opcodemsg
         opcode = self.opcodes.index(self.variable.get())
