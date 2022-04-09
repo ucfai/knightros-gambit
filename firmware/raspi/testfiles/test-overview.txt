@@ -1,0 +1,25 @@
+Needs to be tested:
+
+Normal moves
+	Movement status code handler
+	Scaling, slope, moveDiagonal when slope not automatic
+
+Promotion
+
+Captures
+
+Moving to/from graveyard
+
+Castling
+	similar to move to/from graveyard where one piece is put into temp position
+
+Endstop collision
+	aligning/homing
+
+Set up Debug game test to run through and verify ai, mc, and cv code
+
+
+Previous test cases (testN file names represent these cases):
+1. Scholar's mate
+2. this file corresponds to test1.pgn with some added instructions for turning electromagnet on and off and requesting message retransmission
+3. 
