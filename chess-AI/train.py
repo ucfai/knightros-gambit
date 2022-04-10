@@ -215,7 +215,7 @@ def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=Fal
 
     # Saves model to specified file, or a new file if not specified.
     if save:
-        save_model(nnet,options.m_saving,True,"model_{}".format(iteration))
+        save_model(nnet,options.m_saving,True,f"model_{iteration}")
 
 
 def create_stockfish_dataset(sf_opt, show_dash):
@@ -273,9 +273,7 @@ def main():
             else:
                 print(msg)
             dataset = create_stockfish_dataset(stockfish_options, flags.show_dash)
-            # TODO: save dataset should save locally and upload to figshare
             if dataset_saving['save_path']:
-                # Makes parent directories if necessary
                 make_dir(dataset_saving['save_path'])
                 save_dataset(dataset,dataset_saving)
             msg = "Dataset Creation completed"
@@ -284,11 +282,10 @@ def main():
             else:
                 print(msg)
         else:
-            # TODO: load dataset should come from figshare
             if dataset_saving['load_path']:
                 dataset = load_dataset(dataset_saving, flags.show_dash)
+            # load path must be specified
             else:
-                # load path must be specified
                 return
 
         if flags.stockfish_train:

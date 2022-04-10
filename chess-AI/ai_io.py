@@ -14,33 +14,42 @@ from figshare_api import FigshareApi
 figshare_api = FigshareApi()
 
 def file_from_path(path):
-    """ Splits up the full file path into the directory and file"""
+    """ Splits up the full file path into the directory and file
+    """
     base_path,file_name = os.path.split(path)
-    return base_path,file_name
+    return file_name
 
 def create_date_string():
-    """ Gets a date string for the file names"""
+    """ Gets a date string used for file naming
+    """
     # get the current time
     curr_time = datetime.now()
     return curr_time.strftime("%d-%m-%y:%S")
 
 def make_dir(dataset_path):
-    """Create a directory for the corresponding dataset path if it does not already exist."""
+    """Create a directory for the corresponding dataset path
+    if it does not already exist."""
     if not os.path.exists(os.path.dirname(dataset_path)):
         os.makedirs(os.path.dirname(dataset_path))
 
 def load_dataset(ds_saving, show_dash):
-    # see if dataset should be loaded from Figshare
+    """ Load a dataset from Figshare or locally
+
+    If figshare_load is true then the file name for load_path
+    will be loaded into the path
+    """
+
+    # See if dataset should be loaded from Figshare
     if ds_saving['figshare_load']:
-        # get the base path and file name
-        base_path,file_name = file_from_path(ds_saving['load_path'])
+        # Get the base path and file name
+        file_name = file_from_path(ds_saving['load_path'])
         # ensure file exists in figshare
-        assert figshare_api.get_figshare_article(ds_saving['load_path'],base_path,file_name), \
+        assert figshare_api.get_figshare_article(ds_saving['load_path'],file_name), \
                "File not found in figshare"
-        msg = "%s downloaded from figshare" % (file_name)         
+        msg = f"{file_name} downloaded from figshare"
     else:
-        """Load the dataset at the provided path. If using streamlit,
-        show a confirmation message."""
+        # Load the dataset at the provided path. If using streamlit,
+        # show a confirmation message.'''
         assert os.path.exists(ds_saving['load_path']),\
              "Dataset not found at path provided. You must provide a path to an existing \
              dataset"
@@ -49,47 +58,57 @@ def load_dataset(ds_saving, show_dash):
         Dashboard.info_message("success", msg)
     else:
         print(msg)
-    # load the dataset into memory        
+    # load the dataset into the path specified
     return torch.load(ds_saving['load_path'])
 
 def save_dataset(dataset,ds_saving):
+    """ Save a dataset to Figshare or Locally
+
+    The save_path refers to the directory where the file
+    will be saved. For saving to Figshare, the file still needs to
+    be saved locally first
+    """
+
     # make sure a path was specicified
     if ds_saving['save_path'] is not None:
         date_string = create_date_string()
         # get the full file path to save
-        full_path = ds_saving['save_path'] + "dataset-" +  date_string + ".pt" 
+        full_path = ds_saving['save_path'] + "dataset-" +  date_string + ".pt"
         # save the dataset
         torch.save(dataset, full_path)
         # means dataset should also be saved to figshare
         if ds_saving['figshare_save']:
             title = "dataset-" + date_string
-            # TODO: autogenerate these fields
-            desc = "This is a description"
+            desc = "This description is a placeholder"
             keys = ["Dataset","Chess"]
-            # 179 is category, Artificial Intelligence and Image Processing
+            # 179 is category [Artificial Intelligence and Image Processing]
             categories = [179]
-            figshare_api = FigshareApi()
             figshare_api.upload(title,desc,keys,categories,full_path)
 
 def save_model(nnet, m_saving, checkpointing, file_name=None):
-    """Save given model parameters to external file
+    """ Save a model to Figshare or Locally
+
+    The save_path refers to the directory where the file
+    will be saved. For saving to Figshare, the file still needs to
+    be saved locally first
     """
+
+    # A save path must be specified for the model to be saved
     if m_saving['save_path'] is not None:
+        # Check if model is being saved as part of checkpointing
         if checkpointing:
-            assert file_name is not None , " For checkpointing \
+            assert file_name is not None , " For checkpointing, \
             a file name msut be specified"
             full_path = m_saving['checkpoint_path'] + file_name + ".pt"
             torch.save(nnet.state_dict(),full_path)
         else:
             date_string = create_date_string()
-            full_path = m_saving['save_path'] + "model-" +  date_string + ".pt" 
+            full_path = m_saving['save_path'] + "model-" +  date_string + ".pt"
             torch.save(nnet.state_dict(), full_path)
-            # model should be saved to figshare
+            # Check if model should be saved to Figshare
             if m_saving['figshare_save']:
-                # all the fields required to publish
-                # TODO: autogenerate these fields
                 title = "model-" + date_string
-                desc = "This is a description"
+                desc = "This description is a placeholder"
                 keys = ["Neural Network","Chess"]
                 # 179 is category, Artificial Intelligence and Image Processing
                 categories = [179]
@@ -97,29 +116,29 @@ def save_model(nnet, m_saving, checkpointing, file_name=None):
                 api.upload(title,desc,keys,categories,full_path)
 
 def load_model(nnet, m_saving, show_dash):
-    """Load model parameters into given network from external file
+    """Load model parameters from Figshare or locally
     """
+
+    # A load path must be specified to laod a file
     if m_saving['load_path'] is not None:
-        # if model is from figshare
+        # Check if model should be loaded from Figshare
         if m_saving['figshare_load']:
             base_path,file_name = file_from_path(m_saving['load_path'])
-        # ensure file exists in figshare
+            # Ensure file exists in figshare
             assert figshare_api.get_figshare_article(m_saving['load_path'],base_path,file_name), \
-            "File not found in figshare"   
-            msg = "%s downloaded from figshare" % (file_name)   
+            "File not found in figshare"
+            msg = f"{file_name} downloaded from figshare"
         else:
             assert os.path.exists(m_saving['load_path']),\
-             "Dataset not found at path provided. You must provide a path to an existing \
-             dataset"
-            msg = "Dataset retrieved."
-
+             "Model not found at path provided. You must provide a path to an existing \
+             model"
+            msg = "Model retrieved."
         if show_dash:
             Dashboard.info_message("success", msg)
         else:
             print(msg)
-
-        # load the model into memory    
-        nnet.load_state_dict(torch.load(m_saving['load_path']))      
+        # load the model into memory
+        nnet.load_state_dict(torch.load(m_saving['load_path'])) 
 
 def init_params(nnet, device):
     '''Initialize parameters used for training.
@@ -223,11 +242,11 @@ def init_params(nnet, device):
                          "for usage instructions.")
 
     # want to wait until training has begun before model can be loaded
-    if start_train and m_saving['load_path'] is not None:   
+    if start_train and m_saving['load_path'] is not None:
         # if model is not coming from figshare then it must exist
         if not m_saving['figshare_load']:
-             assert os.path.exists(m_saving['load_path']), \
-             "Model not found at path provided. To load a model you must provide a valid path"
+            assert os.path.exists(m_saving['load_path']), \
+            "Model not found at path provided. To load a model you must provide a valid path"
         load_model(nnet, m_saving,args.dashboard)
 
     # add checkpoint folder property
