@@ -18,6 +18,40 @@ Endstop collision
 
 Set up Debug game test to run through and verify ai, mc, and cv code
 
+Error handling
+	MOTOR DRIVER
+	moveStraight		
+		currposition not divisible by stepsPerUnitSpace
+		if endRow/Col == startRow/Col
+	moveDiagonal
+		""
+		if numStepsX != y, numStepsX/Y / numStepsY/X != 2
+
+
+	MOVEMENT FUNCTIONS
+	moveDirect
+		statusCodeHandler(statusCodeResult when :
+		statusCoderesult = moveStraight(endCol/Row), moveDiagonal(endCol/Row), moveDiagonal(startRow/Col + diagSpacesX/Y)
+	moveAlongEdges
+		if current position x/y isn't divisible by stepsPerUnitSpace(not aligned properly)
+		moveDirect(currCol/Row to startCol/Row)
+		if absdx/y <= 2 call moveDirect instead
+		if absdx/y == 0 call single motor moveDirect instead
+		statusCodeHandler( when statusCodeResult = :
+			statusCodeResult = moveStraight(x/ymotor, cols/rows[each point moved to throughout function call 0, 1, 2, 3, 4], moveDiagonal(rows/cols[""])
+	statusCodeHandler(status when:
+		status = hit+-xyEndstop, align to appropriate axis
+	
+	UART
+	checkForInput
+		byteNum != -1
+	validateMessageFromPi
+		isInvalidCoord(message[xi, xf, yi, or yf] > W or < A)
+		if message[instructionType] != A, S, or R, and appropriaate extra field is determined (a; 0-4, s; 0||1, r; nothing)
+		invalid OpCode
+	makeMove
+		if you input message the positions for xi, xf, yi, or yf into moveDirect, moveAlong Edges, or alignPiece they must be valid
+		
 
 Previous test cases (testN file names represent these cases):
 1. Scholar's mate
