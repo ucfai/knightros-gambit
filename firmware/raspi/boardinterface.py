@@ -326,7 +326,7 @@ class Board:
         # TODO: Implement error handling. Arduino should retransmit last
         # message in the event of a parsing error
         if self.ser is not None and self.ser.in_waiting:
-            new_input = self.ser.read(4).decode()
+            new_input = self.ser.read(ArduinoStatus.MESSAGE_LENGTH).decode()
             # If the start byte is a ~ and the Arduino Status is valid, process the arduino status
             # based on the new input
             print(f"Received message: {new_input}")
@@ -508,16 +508,16 @@ class Board:
     def add_move_to_queue(self, source, dest, op_code):
         """Increment move count and add Move to self.msg_queue.
         """
-        self.move_count += 1
-        move = Move(self.move_count % 2, source, dest, op_code)
+        move = Move(str(self.move_count % 2), source, dest, op_code)
         self.msg_queue.append(move)
+        self.move_count += 1
 
     def add_instruction_to_queue(self, op_type, extra='0'):
         """Add Instruction to self.msg_queue.
         """
-        self.instruction_count += 1
-        instruction = Instruction(op_type, self.instruction_count % 2, extra)
+        instruction = Instruction(op_type, str(self.instruction_count % 2), extra)
         self.add_message_to_queue(instruction, add_to_front=True)
+        self.instruction_count += 1
 
     def add_message_to_queue(self, message, add_to_front=False):
         """Add a message directly to the queue.
