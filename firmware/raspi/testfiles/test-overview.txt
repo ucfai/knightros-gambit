@@ -5,6 +5,7 @@ Normal moves
 	Scaling, slope, moveDiagonal when slope not automatic
 
 Promotion
+	Where are preset promotion pieces stored?
 
 Captures
 
