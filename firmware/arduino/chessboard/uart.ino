@@ -66,14 +66,6 @@ void checkForInput()
     // '~' is the delimiter for our messages
     if (incomingByte == '~')
     {
-      // Send message to Pi if the previous instruction was incomplete
-      if (byteNum != -1)
-      {
-        currentState = ERROR;
-        extraByte = INCOMPLETE_INSTRUCTION;
-        uartMessageIncompleteFlag = true;
-      }
-
       byteNum = 0;
     }
     // Add byte to buffer
