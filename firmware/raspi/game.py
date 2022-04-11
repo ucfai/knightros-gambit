@@ -22,12 +22,7 @@ class Game:
         # board.setup_board(is_human_turn)
 
         if interact_w_arduino:
-            arduino_status = None
-            while arduino_status is None:
-                arduino_status = self.board.get_status_from_arduino()
-                time.sleep(0.5)
-                print("Waiting for Arduino initialization...")
-            print("Received initialization from Arduino!")
+            arduino_status = self.board.get_status_from_arduino()
         else:
             # Simulate communication with Arduino for software testing.
             self.board.set_status_from_arduino(status.ArduinoStatus.IDLE, 0, None)
