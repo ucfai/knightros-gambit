@@ -28,8 +28,7 @@ enum ErrorCode
   NO_ERROR = '0',
   INVALID_OP = '1',
   INVALID_LOCATION = '2',
-  INCOMPLETE_INSTRUCTION = '3',
-  MOVEMENT_ERROR = '4'
+  MOVEMENT_ERROR = '3'
 };
 
 enum InstructionType
