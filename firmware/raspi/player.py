@@ -9,6 +9,7 @@ Note: To encapsulate player mechanics in Game class, all players accept a python
 # import torch
 
 # from mcts import MCTS
+from tkinter import simpledialog
 from status import OpCode
 from util import create_stockfish_wrapper, parse_test_file
 
@@ -23,7 +24,10 @@ class StockfishPlayer:
         """Sets stockfish state from provided fen and returns best move.
         """
         self.stockfish.set_fen_position(board.fen())
-        return self.stockfish.get_best_move()
+        print("We are in Stockfish Player getting the move!")
+        move = self.stockfish.get_best_move()
+        print("this is the move chosen: ", move)
+        return move
 
     def __str__(self):
         return "StockfishPlayer"
@@ -68,6 +72,28 @@ class CLHumanPlayer:
 
     def __str__(self):
         return "CLHumanPlayer"
+
+class GUIPlayer:
+    '''"GUI" class that allows playing with the chessboard through the gui.
+    '''
+    def __init__(self):
+        pass
+
+    def select_move(self, board):
+        '''Prompts user to select a move.
+        '''
+        uci_move = None
+        while uci_move is None:
+            input_move = simpledialog.askstring(title="Choose Piece Color",
+                                  prompt="Please input your move (xyxy): ").lower()
+            if board.is_valid_move(input_move):
+                uci_move = input_move
+            else:
+                print(f"The move {input_move} is invalid; please use format (xyxy) e.g., d2d4")
+        return uci_move
+
+    def __str__(self):
+        return "GUIPlayer"
 
 # class PhysicalHumanPlayer:
 #     def __init__(self):
