@@ -207,8 +207,6 @@ void setup()
     Serial.println();
     Serial.println("Starting Program...");
   }
-  
-  attachInterrupt(digitalPinToInterrupt(CHESS_TIMER_BUTTON), chessTimerISR, RISING);
 }
 
 void loop()

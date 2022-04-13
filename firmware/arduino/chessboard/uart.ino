@@ -1,5 +1,6 @@
 char incomingByte;
 volatile unsigned long previousISRTime = 0;
+bool humanMoveValid = 0;
 
 int8_t byteNum = -1; // -1 indicates that the start code hasn't been received
 
@@ -25,17 +26,17 @@ enum MoveCommandType
 
 enum ErrorCode
 {
-  NO_ERROR = '0',
-  INVALID_OP = '1',
-  INVALID_LOCATION = '2',
-  MOVEMENT_ERROR = '3'
+  INVALID_OP = '0',
+  INVALID_LOCATION = '1',
+  MOVEMENT_ERROR = '2'
 };
 
 enum InstructionType
 {
   ALIGN_AXIS = 'A',
   SET_ELECTROMAGNET = 'S',
-  RETRANSMIT = 'R'
+  RETRANSMIT = 'R',
+  SET_HUMAN_MOVE_VALID = 'M'
 };
 
 // Send message to Pi when the chess timer is pressed
@@ -144,7 +145,9 @@ bool validateMessageFromPi(volatile char * message)
     // Check if message[1] holds an invalid instruction type or if message[2] is an invalid code
     if ((message[ITYPE_IDX] != ALIGN_AXIS         ||  message[EXTRA_IDX] < '0'  ||  message[EXTRA_IDX] > '4')  &&  
         (message[ITYPE_IDX] != SET_ELECTROMAGNET  ||  message[EXTRA_IDX] < '0'  ||  message[EXTRA_IDX] > '1')  &&
-         message[ITYPE_IDX] != RETRANSMIT)
+        (message[ITYPE_IDX] != RETRANSMIT) &&
+        (message[ITYPE_IDX] != SET_HUMAN_MOVE_VALID || message[EXTRA_IDX] < '0' || message[EXTRA_IDX] > '1')
+      )
     {
       extraByte = INVALID_LOCATION;
       currentState = ERROR;
@@ -230,6 +233,19 @@ bool makeMove(volatile char * message)
     else if (message[ITYPE_IDX] == RETRANSMIT)
     {
       sendMessageToPi(sentMessage);
+    }
+    else if (message[ITYPE_IDX] == SET_HUMAN_MOVE_VALID)
+    {
+      if (message[EXTRA_IDX] == '1' && !humanMoveValid)
+      {
+        attachInterrupt(digitalPinToInterrupt(CHESS_TIMER_BUTTON), chessTimerISR, RISING);
+        humanMoveValid = 1;
+      }
+      else if (message[EXTRA_IDX] == '0' && humanMoveValid)
+      {
+        detachInterrupt(digitalPinToInterrupt(CHESS_TIMER_BUTTON));
+        humanMoveValid = 0;
+      }
     }
   }
   else
