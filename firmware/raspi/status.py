@@ -11,6 +11,12 @@ class ArduinoStatus:
     END_TURN_BUTTON_PRESSED = '2'
     ERROR = '3'
 
+    # Arduino Error Codes
+    NO_ERROR = '0'
+    INVALID_OP = '1'
+    INVALID_LOCATION = '2'
+    MOVEMENT_ERROR = '3'
+
     # Incoming message length from Arduino
     MESSAGE_LENGTH = 4
 
