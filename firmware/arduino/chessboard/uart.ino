@@ -50,6 +50,10 @@ void chessTimerISR()
   {
     previousISRTime = currentISRTime;
     buttonFlag = true;
+
+    // Disable button until a command from the Pi re-enables it
+    detachInterrupt(digitalPinToInterrupt(CHESS_TIMER_BUTTON));
+    humanMoveValid = 0;
   }
 }
 
