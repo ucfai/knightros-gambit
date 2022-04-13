@@ -242,6 +242,20 @@ class Board:
 
         self.add_instruction_to_queue(InstructionType.SET_ELECTROMAGNET, turn_on)
 
+    def set_human_move_valid(self, turn_on):
+        """Create message to set HUMAN_MOVE_VALID flag, and add to msg_queue.
+
+        Attributes:
+            turn_on: char, if '0', sets flag to '0', elif '1', '1'.
+
+        Raises:
+            ValueError if turn_on not in ('0', '1')
+        """
+        if turn_on not in ('0', '1'):
+            raise ValueError("Received unexpected code", turn_on)
+
+        self.add_instruction_to_queue(InstructionType.SET_HUMAN_MOVE_VALID, turn_on)
+
     def align_axis(self, alignment_code):
         """Create message to align axis and add to msg_queue.
 
