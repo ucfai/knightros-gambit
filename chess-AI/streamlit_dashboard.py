@@ -61,7 +61,7 @@ class Dashboard:
         self.col1.title("Get Dataset")
         self.col2.title("Get Model")
 
-        ds_load_figshare = self.col1.checkbox("Load dataset from Figshare") 
+        ds_load_figshare = self.col1.checkbox("Load dataset from Figshare")
         m_load_figshare = self.col2.checkbox( "Load model from Figshare")
 
         ds_load_path = self.col1.text_input("Dataset Path","datasets/dataset.pt")
@@ -70,7 +70,7 @@ class Dashboard:
         self.col1.title("Save Dataset")
         self.col2.title("Save Model")
 
-        ds_save_figshare = self.col1.checkbox("Save dataset to Figshare") 
+        ds_save_figshare = self.col1.checkbox("Save dataset to Figshare")
         m_save_figshare = self.col2.checkbox("Save model to Figshare")
 
         ds_save_path = self.col1.text_input("Dataset Save Path","datasets/dataset.pt")
@@ -129,7 +129,7 @@ class Dashboard:
 
 
     def train_flags(self):
-        """ Gets the make dataset flag, stockfish train flag, and mcts train 
+        """ Gets the make dataset flag, stockfish train flag, and mcts train
         flag from the dashboard
         """
         self.col1.title("Training Flags")
@@ -138,3 +138,4 @@ class Dashboard:
         mcts_train_flag = self.col1.checkbox("MCTS Train", value=True)
 
         return make_dataset_flag, stockfish_train_flag, mcts_train_flag
+        
