@@ -1,0 +1,8 @@
+% In correspondence with test3.pgn
+% Promotion testing for White queen
+
+% FenString
+8/P7/8/8/8/8/8/8
+
+% TestfilePlayer made move: a7a8
+~0QESE0

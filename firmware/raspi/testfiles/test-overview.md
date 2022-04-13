@@ -5,11 +5,13 @@ Normal moves
 	Scaling, slope, moveDiagonal when slope not automatic
 
 Promotion
-	Where are preset promotion pieces stored?
+	Test one to each type of promotion for both colors
+	Tests 3 - 
 
 Captures
 
 Moving to/from graveyard
+	how to simulate this? need to know where pieces are in graveyard
 
 Castling
 	similar to move to/from graveyard where one piece is put into temp position
