@@ -121,9 +121,9 @@ def load_model(nnet, m_saving, show_dash):
     if m_saving['load_path'] is not None:
         # Check if model should be loaded from Figshare
         if m_saving['figshare_load']:
-            base_path, file_name = file_from_path(m_saving['load_path'])
+            file_name = file_from_path(m_saving['load_path'])
             # Ensure file exists in figshare
-            assert figshare_api.get_figshare_article(m_saving['load_path'], base_path, file_name), \
+            assert figshare_api.get_figshare_article(m_saving['load_path'], file_name), \
                    "File not found in figshare"
             msg = f"{file_name} downloaded from figshare"
         else:
