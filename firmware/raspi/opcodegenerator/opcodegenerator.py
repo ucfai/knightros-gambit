@@ -324,6 +324,7 @@ class OpCode3Page(BaseFrame):
         self.instruction_types = [
             "A: ALIGN_AXIS",
             "S: SET_ELECTROMAGNET",
+            "M: SET_HUMAN_MOVE_VALID",
             "R: RETRANSMIT_LAST_MSG"
         ]
         self.previous_instruction_idx = -1
@@ -358,6 +359,10 @@ class OpCode3Page(BaseFrame):
                    "electromagnet. Setting the Extra field (e.g. msg[2]) to '0' indicates OFF,\n" \
                    "'1' indicates ON."
         elif idx == 2:
+            text = "A code used to set the human_move_valid_flag, which guards button presses.\n" \
+                   "When the Extra byte is '1', allows button presses; when '0', disallows\n" \
+                   "button presses (for the chess timer, which signals end of human turn)."
+        elif idx == 3:
             text = "Indicates that the Arduino should retransmit the last message.\n" \
                    "This code is used when a corrupted or misaligned message is received.\n" \
                    "The Extra field is ignored."
@@ -384,6 +389,12 @@ class OpCode3Page(BaseFrame):
             else:
                 opcodemsg = "Received invalid value for extra, expected value in ('0', '1')"
         elif idx == 2:
+            if extra in ('0', '1'):
+                opcodemsg = f"~3{self.variable2.get()[0]}000{self.controller.msg_count}"
+                self.controller.msg_count = (self.controller.msg_count + 1) % 2
+            else:
+                opcodemsg = "Received invalid value for extra, expected value in ('0', '1')"
+        elif idx == 3:
             opcodemsg = f"~3{self.variable2.get()[0]}000{self.controller.msg_count}"
             self.controller.msg_count = (self.controller.msg_count + 1) % 2
         else:
