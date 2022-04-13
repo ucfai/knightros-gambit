@@ -35,8 +35,8 @@ enum InstructionType
 {
   ALIGN_AXIS = 'A',
   SET_ELECTROMAGNET = 'S',
-  RETRANSMIT = 'R',
-  SET_HUMAN_MOVE_VALID = 'M'
+  SET_HUMAN_MOVE_VALID = 'M',
+  RETRANSMIT = 'R'
 };
 
 // Send message to Pi when the chess timer is pressed
