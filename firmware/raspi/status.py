@@ -11,6 +11,11 @@ class ArduinoStatus:
     END_TURN_BUTTON_PRESSED = '2'
     ERROR = '3'
 
+    # Arduino Error Codes
+    INVALID_OP = '0'
+    INVALID_LOCATION = '1'
+    MOVEMENT_ERROR = '2'
+
     # Incoming message length from Arduino
     MESSAGE_LENGTH = 4
 
@@ -98,6 +103,11 @@ class InstructionType:
     # This code indicates Arduino should set the state of the electromagnet
     # Setting first info bit (e.g. msg[2]) to '0' indicates OFF, '1' indicates ON
     SET_ELECTROMAGNET = 'S'
+
+    # A code used to set the human_move_valid_flag, which guards button presses. When the Extra byte
+    # is '1', allows button presses; when '0', disallows button presses (for the chess timer, which
+    # signals end of human turn).
+    SET_HUMAN_MOVE_VALID = 'M'
 
     # This code indicates Arduino should retransmit last message
     # This code used when a corrupted or misaligned message is received
