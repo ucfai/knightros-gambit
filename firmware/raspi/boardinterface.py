@@ -105,12 +105,12 @@ class Engine:
 
         if self.human_plays_white_pieces:
             return util.BoardCell(
-                (sq_to_xy.row * util.Const.CELLS_PER_SQ) + util.Const.OFFSET_SIZE,
-                (sq_to_xy.col * util.Const.CELLS_PER_SQ) + util.Const.OFFSET_SIZE)
+                util.Const.UPPER_RIGHT_OFFSET - (sq_to_xy.row * util.Const.CELLS_PER_SQ),
+                util.Const.UPPER_RIGHT_OFFSET - (sq_to_xy.col * util.Const.CELLS_PER_SQ))
 
         return util.BoardCell(
-            util.Const.UPPER_RIGHT_OFFSET - (sq_to_xy.row * util.Const.CELLS_PER_SQ),
-            util.Const.UPPER_RIGHT_OFFSET - (sq_to_xy.col * util.Const.CELLS_PER_SQ))
+            (sq_to_xy.row * util.Const.CELLS_PER_SQ) + util.Const.OFFSET_SIZE,
+            (sq_to_xy.col * util.Const.CELLS_PER_SQ) + util.Const.OFFSET_SIZE)
 
     def get_chess_sq_from_boardcell(self, boardcell):
         """Returns string representing chess sq from board cell.
@@ -387,7 +387,7 @@ class Board:
         Sends pawn to graveyard, then sends promotion piece to board.
         """
         square = self.engine.get_board_coords_from_square(uci_move[2:4])
-        color = self.engine.get_piece_info_from_square(uci_move[2:4])[0]
+        color = self.engine.get_piece_info_from_square(uci_move[0:2])[0]
         piece_type = uci_move[4]
 
         if self.graveyard.dead_piece_counts[color + piece_type] == 0:
