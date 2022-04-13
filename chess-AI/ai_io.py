@@ -12,22 +12,25 @@ from figshare_api import FigshareApi
 import options
 from streamlit_dashboard import Dashboard
 
+
 figshare_api = FigshareApi()
 
 def file_from_path(path):
     """Splits up the full file path into the directory and file."""
-    base_path, file_name = os.path.split(path)
-    return file_name
+    return os.path.split(path)[0]
+
 
 def create_date_string():
     """Gets a date string used for file naming."""
     curr_time = datetime.now()
     return curr_time.strftime("%d-%m-%y:%S")
 
+
 def make_dir(dataset_path):
     """Create a directory for the corresponding dataset path if it does not already exist."""
     if not os.path.exists(os.path.dirname(dataset_path)):
         os.makedirs(os.path.dirname(dataset_path))
+
 
 def load_dataset(ds_saving, show_dash):
     """Load a dataset from Figshare or locally.
@@ -56,17 +59,18 @@ def load_dataset(ds_saving, show_dash):
     # load the dataset into the path specified
     return torch.load(ds_saving['load_path'])
 
+
 def save_dataset(dataset, ds_saving):
     """ Save a dataset to Figshare or Locally
 
     The save_path refers to the directory where the file
     will be saved. For saving to Figshare, the file still needs to
-    be saved locally first
+    be saved locally first.
     """
     # make sure a path was specified
     if ds_saving['save_path'] is None:
         return
-        
+
     date_string = create_date_string()
     # get the full file path to save
     full_path = ds_saving['save_path'] + "dataset-" +  date_string + ".pt"
@@ -82,6 +86,7 @@ def save_dataset(dataset, ds_saving):
         categories = [179]
         figshare_api.upload(title, desc, keys, categories, full_path)
 
+
 def save_model(nnet, m_saving, checkpointing, file_name=None):
     """Save a model to Figshare or Locally.
 
@@ -94,7 +99,7 @@ def save_model(nnet, m_saving, checkpointing, file_name=None):
         if checkpointing:
             assert file_name is not None, " For checkpointing, a file name msut be specified"
             full_path = m_saving['checkpoint_path'] + file_name + ".pt"
-            torch.save(nnet.state_dict(),full_path)
+            torch.save(nnet.state_dict(), full_path)
         else:
             date_string = create_date_string()
             full_path = m_saving['save_path'] + "model-" +  date_string + ".pt"
@@ -109,13 +114,14 @@ def save_model(nnet, m_saving, checkpointing, file_name=None):
                 api = FigshareApi()
                 api.upload(title, desc, keys, categories, full_path)
 
+
 def load_model(nnet, m_saving, show_dash):
     """Load model parameters from Figshare or locally."""
     # A load path must be specified to load a file
     if m_saving['load_path'] is not None:
         # Check if model should be loaded from Figshare
         if m_saving['figshare_load']:
-            base_path,file_name = file_from_path(m_saving['load_path'])
+            base_path, file_name = file_from_path(m_saving['load_path'])
             # Ensure file exists in figshare
             assert figshare_api.get_figshare_article(m_saving['load_path'], base_path, file_name), \
                    "File not found in figshare"
@@ -129,7 +135,8 @@ def load_model(nnet, m_saving, show_dash):
         else:
             print(msg)
         # load the model into memory
-        nnet.load_state_dict(torch.load(m_saving['load_path'])) 
+        nnet.load_state_dict(torch.load(m_saving['load_path']))
+
 
 def init_params(nnet, device):
     '''Initialize parameters used for training.
@@ -257,6 +264,7 @@ def init_params(nnet, device):
     flags = options.TrainingFlags(
         start_train, args.dashboard, make_dataset, stockfish_train, mcts_train)
     return (nnet, ds_saving, stockfish_options, mcts_options, flags)
+
 
 if __name__ == "__main__":
     print("no main for this file")
