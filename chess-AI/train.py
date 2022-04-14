@@ -236,20 +236,44 @@ def create_stockfish_dataset(sf_opt, show_dash):
     return create_dataset(sf_opt.games, stocktrain_moves, stocktrain_value_approximator, show_dash)
 
 
-def train_on_mcts(nnet, mcts_opt, show_dash=False):
+def nnet_stockfish_mix(nnet, stockfish, beta, board, device):
+    """Mixes stockfish evaluations into network output to kickstart training
+
+    Attributes:
+        nnet: Network to be trained
+        stockfish: Stockfish instance to obtain evaluations from
+        beta: Mixing coefficient (how much to weight stockfish evals)
+        board: Board state to evaluate
+        device: device to train on
+    """
+
+    nnet_policy, nnet_value = nnet(get_cnn_input(board).to(device=device))
+    stockfish_legal_moves, stockfish_move_probs, _ = stockfish.get_move_probs(board)
+    stockfish_value = stockfish.get_value(board)
+    stockfish_policy = policy_converter.compute_full_search_probs(stockfish_legal_moves, stockfish_move_probs, board)
+
+    return (1 - beta) * nnet_policy + beta * stockfish_policy, (1 - beta) * nnet_value + beta * stockfish_value
+
+
+def train_on_mcts(nnet, mcts_opt, sf_opt, show_dash=False):
     """Use MCTS to improve value and move output of network
 
     Attributes:
         nnet: Network to be trained
         mcts_opt: Options for MCTS training
+        sf_opt: Options for Stockfish training, used for stockfish heuristic
         show_dash: If true display info on dashboard
     """
 
     mcts = Mcts(mcts_opt.exploration, mcts_opt.device)
+    stockfish = StockfishTrain(sf_opt.elo, sf_opt.depth)
 
     # Will iterate through the number of training episodes
     for i in range(mcts_opt.training_episodes):
-        mcts_moves = lambda board: mcts.get_tree_results(mcts_opt.simulations, nnet, board,
+        beta = 0.2 / (1 + np.log(i+1))
+        heuristic_supplier = lambda board: nnet_stockfish_mix(nnet, stockfish, beta, board, mcts_opt.device)
+
+        mcts_moves = lambda board: mcts.get_tree_results(mcts_opt.simulations, heuristic_supplier, board,
                                                          temperature=5)
 
         dataset = create_dataset(mcts_opt.games, mcts_moves)
@@ -316,7 +340,7 @@ def main():
                     Dashboard.info_message("success", msg)
                 else:
                     print(msg)
-                train_on_mcts(nnet, mcts_options, flags.show_dash)
+                train_on_mcts(nnet, mcts_options, stockfish_options, flags.show_dash)
 
                 msg = "MCTS Training completed"
                 if flags.show_dash:

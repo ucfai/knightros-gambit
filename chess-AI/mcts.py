@@ -35,12 +35,12 @@ class Mcts:
         # The search_probs corresponding to each fen_string
         self.p_values = {}
 
-    def get_best_move(self, mcts_simulations, board, nnet):
+    def get_best_move(self, mcts_simulations, board, heuristic_supplier):
         """Get best possible move after running given number of simulations"""
         fen_string = board.fen()
 
         for _ in range(mcts_simulations):
-            self.search(board, nnet)
+            self.search(board, heuristic_supplier)
 
         values = self.state_values[fen_string].values()
         moves = list(self.state_values[fen_string].keys())
@@ -51,10 +51,10 @@ class Mcts:
 
         return best_move
 
-    def get_tree_results(self, mcts_simulations, nnet, board, temperature):
+    def get_tree_results(self, mcts_simulations, heuristic_supplier, board, temperature):
         """Runs MCTS searches on the board and returns the final policy and move to take"""
         for _ in range(mcts_simulations):
-            self.search(board, nnet)
+            self.search(board, heuristic_supplier)
 
         return self.find_search_probs(board.fen(), temperature)
 
@@ -115,7 +115,7 @@ class Mcts:
         # Return list of uci_moves and corresponding search probabilities
         return list(self.state_values[fen_string].keys()), search_probs, move
 
-    def search(self, board, nnet):
+    def search(self, board, heuristic_supplier):
         """Descends on the search tree and expands unvisited states"""
         fen_string = board.fen()
 
@@ -128,7 +128,7 @@ class Mcts:
             self.states_visited.append(fen_string)
 
             # Get predictions and value from the nnet at the current state
-            policy, value = nnet(get_cnn_input(board).to(device=self.device))
+            policy, value = heuristic_supplier(board)
             policy_legal = policy_converter.find_value_of_all_legal_moves(policy, board)
 
             # Update P with network's policy output
@@ -140,7 +140,7 @@ class Mcts:
 
         # Obtain backed up leaf node evaluation
         board.push(move)
-        value = self.search(board, nnet)
+        value = self.search(board, heuristic_supplier)
         board.pop()
 
         # Update the Q and N values with the new evaluation
