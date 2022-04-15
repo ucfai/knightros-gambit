@@ -3,17 +3,20 @@
 
     "saving":{
         "ds_saving": {
-            "load_path": "datasets/dataset-06-04-22:19.pt",
-            "save_path": "datasets/",
-            "figshare_load":true,
-            "figshare_save":true
+            "data_dir": "datasets/",
+            "file_name": "dataset-06-04-22:19.pt",
+            "figshare_load": false,
+            "local_load": false,
+            "figshare_save":false
         },
+
         "m_saving": {
-            "load_path": null,
-            "save_path": "models/",
-            "figshare_load":false,
-            "figshare_save":true,
-            "save_freq": 10          
+            "model_dir": "models/",
+            "file_name": "model-06-04-22:32.pt",
+            "figshare_load":true,
+            "local_load": false,
+            "figshare_save":false,
+            "mcts_check_freq": 10
         }
     },
 

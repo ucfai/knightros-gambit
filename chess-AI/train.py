@@ -252,7 +252,7 @@ def train_on_mcts(nnet, mcts_opt, show_dash=False):
                                                          temperature=5)
 
         dataset = create_dataset(mcts_opt.games, mcts_moves)
-        train_on_dataset(dataset, nnet, mcts_opt, iteration=(i+1), save=(i % mcts_opt.m_saving['save_freq'] == 0),
+        train_on_dataset(dataset, nnet, mcts_opt, iteration=(i+1), save=(i % mcts_opt.m_saving['mcts_check_freq'] == 0),
                          show_dash=show_dash)
 
 
@@ -263,7 +263,7 @@ def main():
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     nnet = PlayNetwork().to(device=device)
 
-    nnet, dataset_saving, stockfish_options, mcts_options, flags = init_params(nnet, device)
+    nnet, ds_saving, stockfish_options, mcts_options, flags = init_params(nnet, device)
 
     if flags.start_train:
         if flags.make_dataset:
@@ -273,21 +273,20 @@ def main():
             else:
                 print(msg)
             dataset = create_stockfish_dataset(stockfish_options, flags.show_dash)
-            if dataset_saving['save_path']:
-                make_dir(dataset_saving['save_path'])
-                save_dataset(dataset,dataset_saving)
+            make_dir(ds_saving['data_dir'])
+            save_dataset(dataset,ds_saving)
             msg = "Dataset Creation completed"
             if flags.show_dash:
                 Dashboard.info_message("success", msg)
             else:
                 print(msg)
         else:
-            if dataset_saving['load_path']:
-                dataset = load_dataset(dataset_saving, flags.show_dash)
+            if ds_saving['local_load'] or ds_saving['figshare_load']:
+                dataset = load_dataset(ds_saving, flags.show_dash)
             # load path must be specified
             else:
-                return
-
+                raise ValueError("If not making dataset either local load or figshare \
+                load must be specified")
         if flags.stockfish_train:
             msg = "Stockfish Training Has Begun"
             if flags.show_dash:
@@ -317,7 +316,7 @@ def main():
             else:
                 print(msg)
 
-        if mcts_options.m_saving['save_path'] is not None:
+        if mcts_options.m_saving['model_dir'] is not None:
             save_model(nnet,mcts_options.m_saving,False)
 
 if __name__ == "__main__":

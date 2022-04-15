@@ -14,6 +14,7 @@ class TrainOptions:
         device: the device being used to train (either CPU or GPU)
         save_path: path for model checkpointing
         num_saved_models: number of models to store
+        m_saving: parameters for model saving
     """
 
     def __init__(self, learning_rate, momentum, weight_decay, epochs, batch_size, games, device,

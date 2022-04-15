@@ -22,7 +22,7 @@ class FigshareApi:
         # API key needs to be stored as an environment variable
         self.api_key = os.getenv('FIGSHARE_KEY')
 
-    def get_figshare_article(self,store_path,file_name):
+    def get_figshare_article(self,store_dir,file_name):
         """Get an article from figshare and store it in
         store_path.
 
@@ -32,6 +32,7 @@ class FigshareApi:
 
         endpoint = "account/articles/{article_id}/files"
         download_url = None
+        store_path = store_dir + file_name
         # Get all the articles within figshare
         articles = self.get_articles()
         # Iterate through all the returned articles
