@@ -45,8 +45,8 @@ void chessTimerISR()
   unsigned long currentISRTime = millis();
   
   // Check if the difference between button presses is longer than the debounce time
-  if ((currentISRTime - previousISRTime > DEBOUNCE_TIME)  ||  
-      (currentISRTime < previousISRTime  &&  previousISRTime - currentISRTime > DEBOUNCE_TIME))
+  if (humanMoveValid && ((currentISRTime - previousISRTime > DEBOUNCE_TIME)  ||  
+      (currentISRTime < previousISRTime  &&  previousISRTime - currentISRTime > DEBOUNCE_TIME)))
   {
     previousISRTime = currentISRTime;
     buttonFlag = true;
