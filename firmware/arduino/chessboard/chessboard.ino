@@ -10,7 +10,7 @@
 // 0. This level is used to specify that no messages should be printed
 // 1. UART_LEVEL:     This level will be used to print uart messages
 // 2. FUNCTION_LEVEL: This level will be used to print information about importantt funciton calls 
-#define DEBUG 1
+#define DEBUG 2
 
 enum DebugLevels
 {
@@ -79,9 +79,12 @@ enum MotorArrayIndicies
 
 enum SharedMotorPins
 {
-  MOTOR_ENABLE = 4,
-  MOTOR_RESET = 2,
-  MOTOR_SLEEP = 15
+  X_MOTOR_ENABLE = 18,
+  X_MOTOR_RESET = 4,
+  X_MOTOR_SLEEP = 15,
+  Y_MOTOR_ENABLE = 19,
+  Y_MOTOR_RESET = 5,
+  Y_MOTOR_SLEEP = 2
 };
 
 enum ArduinoState
@@ -163,10 +166,13 @@ uint16_t maxPosition;
 void setup()
 {
   // Define our pinModes
-  pinMode(MOTOR_RESET, OUTPUT);
-  pinMode(MOTOR_SLEEP, OUTPUT);
-  pinMode(MOTOR_ENABLE, OUTPUT);
-  
+  pinMode(X_MOTOR_RESET, OUTPUT);
+  pinMode(X_MOTOR_SLEEP, OUTPUT);
+  pinMode(X_MOTOR_ENABLE, OUTPUT);
+  pinMode(Y_MOTOR_RESET, OUTPUT);
+  pinMode(Y_MOTOR_SLEEP, OUTPUT);
+  pinMode(Y_MOTOR_ENABLE, OUTPUT);
+
   pinMode(X_MOTOR_MS1, OUTPUT);
   pinMode(X_MOTOR_MS2, OUTPUT);
   pinMode(X_MOTOR_DIR, OUTPUT);
@@ -201,6 +207,7 @@ void setup()
 
   Serial2.begin(9600, SERIAL_8N1, RX2, TX2);
   Serial.begin(115200);
+  disableMotors();
 
   if (DEBUG >= UART_LEVEL)
   {

@@ -67,16 +67,24 @@ void setScale(uint8_t motor[], uint8_t scale)
 
 void enableMotors()
 {
-  digitalWrite(MOTOR_SLEEP, HIGH);
-  digitalWrite(MOTOR_RESET, HIGH);
-  digitalWrite(MOTOR_ENABLE, LOW);
+  digitalWrite(X_MOTOR_SLEEP, HIGH);
+  digitalWrite(X_MOTOR_RESET, HIGH);
+  digitalWrite(X_MOTOR_ENABLE, LOW);
+  
+  digitalWrite(Y_MOTOR_SLEEP, HIGH);
+  digitalWrite(Y_MOTOR_RESET, HIGH);
+  digitalWrite(Y_MOTOR_ENABLE, LOW);
 }
 
 void disableMotors()
 {
-  digitalWrite(MOTOR_SLEEP, LOW);
-  digitalWrite(MOTOR_RESET, LOW);
-  digitalWrite(MOTOR_ENABLE, HIGH);
+  digitalWrite(X_MOTOR_SLEEP, LOW);
+  digitalWrite(X_MOTOR_RESET, LOW);
+  digitalWrite(X_MOTOR_ENABLE, HIGH);
+
+  digitalWrite(Y_MOTOR_SLEEP, LOW);
+  digitalWrite(Y_MOTOR_RESET, LOW);
+  digitalWrite(Y_MOTOR_ENABLE, HIGH);
 }
 
 // Drives the motor corresponding to "motor" to be aligned properly at either the max position or 0
