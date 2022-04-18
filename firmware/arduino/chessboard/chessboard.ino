@@ -79,10 +79,10 @@ enum MotorArrayIndicies
 
 enum SharedMotorPins
 {
-  X_MOTOR_ENABLE = 19,
+  X_MOTOR_ENABLE = 18,
   X_MOTOR_RESET = 4,
   X_MOTOR_SLEEP = 15,
-  Y_MOTOR_ENABLE = 18,
+  Y_MOTOR_ENABLE = 19,
   Y_MOTOR_RESET = 5,
   Y_MOTOR_SLEEP = 2
 };
