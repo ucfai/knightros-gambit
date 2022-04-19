@@ -9,7 +9,6 @@ Note: To encapsulate player mechanics in Game class, all players accept a python
 # import torch
 
 # from mcts import MCTS
-from tkinter import simpledialog
 from status import OpCode
 from util import create_stockfish_wrapper, parse_test_file
 
@@ -24,9 +23,7 @@ class StockfishPlayer:
         """Sets stockfish state from provided fen and returns best move.
         """
         self.stockfish.set_fen_position(board.fen())
-        print("We are in Stockfish Player getting the move!")
         move = self.stockfish.get_best_move()
-        print("this is the move chosen: ", move)
         return move
 
     def __str__(self):
@@ -74,23 +71,24 @@ class CLHumanPlayer:
         return "CLHumanPlayer"
 
 class GUIPlayer:
-    '''"GUI" class that allows playing with the chessboard through the gui.
-    '''
+    """"GUI" class that allows playing with the chessboard through the gui.
+    """
     def __init__(self):
-        pass
+        self.next_move = None
 
     def select_move(self, board):
-        '''Prompts user to select a move.
-        '''
-        uci_move = None
-        while uci_move is None:
-            input_move = simpledialog.askstring(title="Choose Piece Color",
-                                  prompt="Please input your move (xyxy): ").lower()
-            if board.is_valid_move(input_move):
-                uci_move = input_move
-            else:
-                print(f"The move {input_move} is invalid; please use format (xyxy) e.g., d2d4")
-        return uci_move
+        """returns None until a new move is selected on the GUI
+        (which can only be done if it"s the GUI player"s turn)
+        """
+        #Note next move can be None
+        prev_move = self.next_move
+        self.next_move = None
+        return prev_move
+
+    def set_move(self, next_move):
+        """Sets the next_move to move made by the player on the GUI
+        """
+        self.next_move = next_move
 
     def __str__(self):
         return "GUIPlayer"
