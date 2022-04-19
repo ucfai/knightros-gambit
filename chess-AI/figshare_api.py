@@ -22,14 +22,11 @@ class FigshareApi:
         # API key needs to be stored as an environment variable
         self.api_key = os.getenv('FIGSHARE_KEY')
 
-    def get_figshare_article(self,store_dir,file_name):
-        """Get an article from figshare and store it in
-        store_path.
+    def get_figshare_article(self, store_dir, file_name):
+        """Get an article from figshare and store it in store_path.
 
-        file_name refers to the name of the file that is in
-        figshare, not the title
+        file_name refers to the figshare filename, not title.
         """
-
         endpoint = "account/articles/{article_id}/files"
         download_url = None
         store_path = store_dir + file_name
@@ -51,19 +48,19 @@ class FigshareApi:
         if not download_url:
             print("File %s not found in Figshare" % (file_name))
             return False
-           
+
         urlretrieve(download_url, store_path)
-        print("File %s downloaded to %s" % (file_name,store_path))
-        # Return true to signify file was found 
+        print("File %s downloaded to %s" % (file_name, store_path))
+        # Return true to signify file was found
         return True
 
-    def raw_issue_request(self,method, url, data=None, binary=False):
-        """ Utility function taken from Figshare documentation
-        """
-
+    def raw_issue_request(self, method, url, data=None, binary=False):
+        """Utility function taken from Figshare documentation."""
         headers = {'Authorization': 'token ' + self.api_key}
+
         if data is not None and not binary:
             data = json.dumps(data)
+
         response = requests.request(method, url, headers=headers, data=data)
         try:
             response.raise_for_status()
@@ -72,27 +69,24 @@ class FigshareApi:
             except ValueError:
                 data = response.content
         except HTTPError as error:
-            print ("Caught an HTTPError: {}".format(error.message))
-            print ('Body:\n', response.content)
+            print("Caught an HTTPError: {}".format(error.message))
+            print('Body:\n', response.content)
             raise
 
         return data
 
-    def issue_request(self,method, endpoint, *args, **kwargs):
-        """ Utility function taken from Figshare documentation
-        """
+    def issue_request(self, method, endpoint, *args, **kwargs):
+        """Utility function taken from Figshare documentation."""
         return self.raw_issue_request(method, self.BASE_URL.format(endpoint=endpoint), \
         *args, **kwargs)
 
-    # create the article within figshare
-    def create_article(self,title,desc,keywords,categories):
-        """ Create an article given the title, description, keywords
-        and categories
+    def create_article(self, title, desc, keywords, categories):
+        """Create a figshare article given the title, description, keywords
+        and categories.
 
         These are all fields that are required for an article to be published
-        in Figshare
+        in Figshare.
         """
-
         data = {
             'title': title,
             "description": desc,
@@ -100,15 +94,13 @@ class FigshareApi:
             "categories": categories
         }
         result = self.issue_request('POST', 'account/articles', data=data)
-        print ('Created article:', result['location'], '\n')
+        print('Created article:', result['location'], '\n')
 
         result = self.raw_issue_request('GET', result['location'])
         return result['id']
 
-    def get_file_check_data(self,file_name):
-        """ Utility function taken from Figshare documentation
-        """
-
+    def get_file_check_data(self, file_name):
+        """Utility function taken from Figshare documentation."""
         with open(file_name, 'rb') as fin:
             md5 = hashlib.md5()
             size = 0
@@ -120,10 +112,8 @@ class FigshareApi:
 
             return md5.hexdigest(), size
 
-    def initiate_new_upload(self,article_id, file_name):
-        """ Utility function taken from Figshare documentation
-        """
-
+    def initiate_new_upload(self, article_id, file_name):
+        """Utility function taken from Figshare documentation."""
         endpoint = 'account/articles/{}/files'
         endpoint = endpoint.format(article_id)
 
@@ -134,7 +124,7 @@ class FigshareApi:
                 }
 
         result = self.issue_request('POST', endpoint, data=data)
-        print ('Initiated file upload:', result['location'], '\n')
+        print('Initiated file upload:', result['location'], '\n')
 
         result = self.raw_issue_request('GET', result['location'])
 
@@ -147,15 +137,12 @@ class FigshareApi:
         result = self.issue_request('GET', 'account/articles')
         return result
 
-    def complete_upload(self,article_id, file_id):
-        """ Utility function taken from Figshare documentation
-        """
+    def complete_upload(self, article_id, file_id):
+        """Utility function taken from Figshare documentation."""
         self.issue_request('POST', 'account/articles/{}/files/{}'.format(article_id, file_id))
 
-    def upload_parts(self,file_info,path):
-        """ Utility function taken from Figshare documentation
-        """
-
+    def upload_parts(self, file_info, path):
+        """Utility function taken from Figshare documentation."""
         url = '{upload_url}'.format(**file_info)
         result = self.raw_issue_request('GET', url)
 
@@ -165,10 +152,8 @@ class FigshareApi:
             for part in result['parts']:
                 self.upload_part(file_info, fin, part)
 
-    def upload_part(self,file_info, stream, part):
-        """ Utility function taken from Figshare documentation
-        """
-
+    def upload_part(self, file_info, stream, part):
+        """Utility function taken from Figshare documentation."""
         udata = file_info.copy()
         udata.update(part)
         url = '{upload_url}/{partNo}'.format(**udata)
@@ -177,20 +162,19 @@ class FigshareApi:
         data = stream.read(part['endOffset'] - part['startOffset'] + 1)
 
         self.raw_issue_request('PUT', url, data=data, binary=True)
-        print ('  Uploaded part {partNo} from {startOffset} to {endOffset}'.format(**part))
+        print('  Uploaded part {partNo} from {startOffset} to {endOffset}'.format(**part))
 
-    def upload(self,title,desc,keywords,categories,path):
-        """ Upload and publish an article to figshare
+    def upload(self, title, desc, keywords, categories, path):
+        """Upload and publish an article to figshare.
 
-        Articles do not become accessible through the API until they
-        are published
+        Articles do not become accessible through the API until they are
+        published.
         """
-
         # Create the article and get associated ID
-        article_id = self.create_article(title,desc,keywords,categories)
+        article_id = self.create_article(title, desc, keywords, categories)
         # Upload the file to Figshare
         file_info = self.initiate_new_upload(article_id, path)
-        self.upload_parts(file_info,path)
+        self.upload_parts(file_info, path)
         self.complete_upload(article_id, file_info['id'])
         # The article must be published
         self.issue_request('POST', f"account/articles/{article_id}/publish".format(article_id))
