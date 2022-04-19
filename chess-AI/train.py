@@ -1,12 +1,11 @@
-"""
-Main training program
+"""Main training program.
 """
 import chess
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
-from ai_io import init_params, save_model,save_dataset ,load_dataset, make_dir
+from ai_io import init_params, save_model, save_dataset, load_dataset, make_dir
 from mcts import Mcts
 from nn_layout import PlayNetwork
 from output_representation import policy_converter
@@ -215,7 +214,7 @@ def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=Fal
 
     # Saves model to specified file, or a new file if not specified.
     if save:
-        save_model(nnet,options.m_saving,True,f"model_{iteration}")
+        save_model(nnet, options.m_saving, checkpointing=True, file_name=f"model_{iteration}")
 
 
 def create_stockfish_dataset(sf_opt, show_dash):
@@ -252,8 +251,8 @@ def train_on_mcts(nnet, mcts_opt, show_dash=False):
                                                          temperature=5)
 
         dataset = create_dataset(mcts_opt.games, mcts_moves)
-        train_on_dataset(dataset, nnet, mcts_opt, iteration=(i+1), save=(i % mcts_opt.m_saving['mcts_check_freq'] == 0),
-                         show_dash=show_dash)
+        train_on_dataset(dataset, nnet, mcts_opt, iteration=(i+1),
+                         save=(i % mcts_opt.m_saving['mcts_check_freq'] == 0), show_dash=show_dash)
 
 
 def main():
@@ -274,7 +273,7 @@ def main():
                 print(msg)
             dataset = create_stockfish_dataset(stockfish_options, flags.show_dash)
             make_dir(ds_saving['data_dir'])
-            save_dataset(dataset,ds_saving)
+            save_dataset(dataset, ds_saving)
             msg = "Dataset Creation completed"
             if flags.show_dash:
                 Dashboard.info_message("success", msg)
@@ -293,7 +292,7 @@ def main():
                 Dashboard.info_message("success", msg)
             else:
                 print(msg)
-            train_on_dataset(dataset, nnet, stockfish_options,0)
+            train_on_dataset(dataset, nnet, stockfish_options, iteration=0)
 
             msg = "Stockfish Training completed"
             if flags.show_dash:
@@ -317,7 +316,7 @@ def main():
                 print(msg)
 
         if mcts_options.m_saving['model_dir'] is not None:
-            save_model(nnet,mcts_options.m_saving,False)
+            save_model(nnet, mcts_options.m_saving, checkpointing=False)
 
 if __name__ == "__main__":
     main()
