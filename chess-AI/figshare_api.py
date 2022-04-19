@@ -1,7 +1,4 @@
-"""Module for retrieving and uploading articles through the
-Figshare API
-"""
-
+"""Module for retrieving and uploading articles through the Figshare API."""
 import hashlib
 import json
 import os
@@ -11,11 +8,10 @@ import requests
 from requests.exceptions import HTTPError
 
 class FigshareApi:
-    """ Class with al the functions for interacting with Figshare
-    """
+    """Class with all the functions for interacting with Figshare."""
     # Size of upload chunks
     CHUNK_SIZE = 1048576
-    #  Figshare base UR
+    # Figshare base URL
     BASE_URL = 'https://api.figshare.com/v2/{endpoint}'
 
     def __init__(self):
@@ -131,9 +127,7 @@ class FigshareApi:
         return result
 
     def get_articles(self):
-        """ Get all the articles in Figshare
-        """
-
+        """Get all the articles in Figshare."""
         result = self.issue_request('GET', 'account/articles')
         return result
 
