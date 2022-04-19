@@ -63,7 +63,7 @@ def load_dataset(ds_saving, show_dash):
 
 
 def save_dataset(dataset, ds_saving):
-    """ Save a dataset to Figshare or Locally
+    """Save a dataset to Figshare or Locally
 
     The save_dir refers to the directory where the file
     will be saved. For saving to Figshare, the file still needs to
