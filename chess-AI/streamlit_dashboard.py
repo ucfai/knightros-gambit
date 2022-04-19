@@ -61,34 +61,56 @@ class Dashboard:
         self.col1.title("Get Dataset")
         self.col2.title("Get Model")
 
-        ds_load_figshare = self.col1.checkbox("Load dataset from Figshare")
-        m_load_figshare = self.col2.checkbox( "Load model from Figshare")
+        # get directory for model and dataset
+        data_dir = self.col1.text_input("Dataset Directory","datasets/")
+        model_dir = self.col2.text_input("Model Directory","models/")
 
-        ds_load_path = self.col1.text_input("Dataset Path","datasets/dataset.pt")
-        m_load_path = self.col2.text_input("Model Path","models/model.pt")
+        # get the file names for each model / dataset
+        ds_file_name = self.col1.text_input("Dataset file name","dataset-06-04-22:19.pt")
+        m_file_name = self.col2.text_input("Model file name","model-06-04-22:19.pt")
 
+        ds_load = self.col1.selectbox('Load Dataset',
+        ('None', 'Locally', 'Figshare'))
+
+        m_load = self.col2.selectbox('Load Model',
+        ('None', 'Locally', 'Figshare'))
+   
         self.col1.title("Save Dataset")
         self.col2.title("Save Model")
 
+        # see if model should be saved to figshare
         ds_save_figshare = self.col1.checkbox("Save dataset to Figshare")
         m_save_figshare = self.col2.checkbox("Save model to Figshare")
 
-        ds_save_path = self.col1.text_input("Dataset Save Path","datasets/dataset.pt")
-        m_save_path = self.col2.text_input("Model Save Path","models/model.pt")
+        # get MCTS save frequency
+        save_freq = self.col2.slider('MCTS Save freq',1,100)
+
+        # get figshare and local load flags
+        ds_figshare_load = True if ds_load == 'Figshare' else False
+        ds_local_load = True if ds_load == 'Local' else False
+        m_figshare_load = True if m_load == 'Figshare' else False
+        m_local_load = True if m_load == 'Local' else False
 
         ds_saving = {
-            "load_path": ds_load_path,
-            "save_path": ds_save_path,
-            "figshare_load": ds_load_figshare,
-            "figshare_save": ds_save_figshare
+            "data_dir": data_dir,
+            "file_name": ds_file_name,
+            "figshare_load": ds_figshare_load,
+            "local_load": ds_local_load,
+            "figshare_save":ds_save_figshare
         }
 
         m_saving = {
-            "load_path": m_load_path,
-            "save_path": m_save_path,
-            "figshare_load": m_load_figshare,
-            "figshare_save": m_save_figshare
+            "model_dir": model_dir,
+            "file_name": m_file_name,
+            "figshare_load":m_figshare_load,
+            "local_load": m_local_load,
+            "figshare_save":m_save_figshare,
+            "mcts_check_freq": save_freq
         }
+        
+        self.col1.subheader('Params')
+        self.col1.code(ds_saving,language = None)
+        self.col1.code(m_saving, language = None)
 
         return ds_saving,m_saving
 

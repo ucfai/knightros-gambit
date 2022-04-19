@@ -235,7 +235,7 @@ def init_params(nnet, device):
         raise ValueError("This program must be run with the `train.sh` script. See the script "
                          "for usage instructions.")
 
-    # want to wait until training has begun before model can be loaded
+    # wait until training has begun and catch any param errors
     if start_train:  
             if ds_saving["data_dir"] is None:
                 raise ValueError("Directory for dataset must always be specified")
@@ -252,6 +252,8 @@ def init_params(nnet, device):
             if ds_saving["local_load"] or ds_saving["figshare_load"]:
                 if not ds_saving["file_name"]:
                     raise ValueError("A file name must be specified to load a dataset")
+                if make_dataset:
+                    raise ValueError("Dataset cannot be created and loaded")
             elif not make_dataset:
                  raise ValueError("If a dataset is not being created then local_load or \
                      figshare_load must be specified")
@@ -264,9 +266,9 @@ def init_params(nnet, device):
                  raise ValueError("Dataset cannot be loaded from figshare and locally")
 
             if m_saving["local_load"] and m_saving["figshare_load"]: 
-                 raise ValueError("Model cannot be loaded from figshare and locally")
-        
-            # see if model should be loaded
+                 raise ValueError("Model cannot be loaded from figshare and locally")  
+           
+            # if no errors are raised then model can be loaded
             if m_saving["local_load"] or m_saving["figshare_load"]:
                 load_model(nnet, m_saving, args.dashboard)
 
@@ -286,7 +288,6 @@ def init_params(nnet, device):
     flags = options.TrainingFlags(
         start_train, args.dashboard, make_dataset, stockfish_train, mcts_train)
     return (nnet, ds_saving, stockfish_options, mcts_options, flags)
-
 
 if __name__ == "__main__":
     print("no main for this file")
