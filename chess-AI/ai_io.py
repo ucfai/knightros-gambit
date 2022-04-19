@@ -52,7 +52,7 @@ def load_dataset(ds_saving, show_dash):
         assert os.path.exists(ds_saving['data_dir']), "Dataset not found at path provided." \
                "You must provide a path to an existing dataset"
         full_path = ds_saving['data_dir'] + ds_saving['file_name']
-        msg = f"dataset from {full_path} retrieved" 
+        msg = f"dataset from {full_path} retrieved"
 
     if show_dash:
         Dashboard.info_message("success", msg)
@@ -88,7 +88,7 @@ def save_dataset(dataset, ds_saving):
 
 def save_model(nnet, m_saving, checkpointing, file_name=None):
     """Save a model to Figshare or Locally.
- 
+
     The save_dir refers to the directory where the file will be saved. For saving to Figshare,
     the file still needs to be saved locally first.
     """
@@ -115,7 +115,6 @@ def save_model(nnet, m_saving, checkpointing, file_name=None):
 def load_model(nnet, m_saving, show_dash):
     """Load model parameters from Figshare or locally."""
     # A load path must be specified to load a file
-  
     if m_saving['figshare_load']:
         file_name = m_saving['file_name']
         # Ensure file exists in figshare
@@ -123,7 +122,8 @@ def load_model(nnet, m_saving, show_dash):
                 "File not found in figshare"
         msg = f"{file_name} downloaded from figshare"
     else:
-        assert os.path.exists(m_saving['model_dir'] + m_saving['file_name']), "Model not found at path provided. " \
+        assert os.path.exists(m_saving['model_dir'] + m_saving['file_name']), \
+                "Model not found at path provided. " \
                 "You must provide a path to an existing model."
         msg = "Model retrieved."
     if show_dash:
@@ -236,41 +236,41 @@ def init_params(nnet, device):
                          "for usage instructions.")
 
     # wait until training has begun and catch any param errors
-    if start_train:  
-            if ds_saving["data_dir"] is None:
-                raise ValueError("Directory for dataset must always be specified")
-            else:
-                assert os.path.exists(os.path.dirname(ds_saving["data_dir"])), \
-                    "Dataset load directory does not exist"
+    if start_train:
+        if ds_saving["data_dir"] is None:
+            raise ValueError("Directory for dataset must always be specified")
+        else:
+            assert os.path.exists(os.path.dirname(ds_saving["data_dir"])), \
+                "Dataset load directory does not exist"
 
-            if m_saving["model_dir"] is None:
-                raise ValueError("Directory for model must always be specified.")
-            else: 
-                assert os.path.exists(os.path.dirname(m_saving["model_dir"])), \
-                    "Model load directory does not exist"
+        if m_saving["model_dir"] is None:
+            raise ValueError("Directory for model must always be specified.")
+        else:
+            assert os.path.exists(os.path.dirname(m_saving["model_dir"])), \
+                "Model load directory does not exist"
 
-            if ds_saving["local_load"] or ds_saving["figshare_load"]:
-                if not ds_saving["file_name"]:
-                    raise ValueError("A file name must be specified to load a dataset")
-                if make_dataset:
-                    raise ValueError("Dataset cannot be created and loaded")
-            elif not make_dataset:
-                 raise ValueError("If a dataset is not being created then local_load or \
-                     figshare_load must be specified")
+        if ds_saving["local_load"] or ds_saving["figshare_load"]:
+            if not ds_saving["file_name"]:
+                raise ValueError("A file name must be specified to load a dataset")
+            if make_dataset:
+                raise ValueError("Dataset cannot be created and loaded")
+        elif not make_dataset:
+            raise ValueError("If a dataset is not being created then local_load or \
+                figshare_load must be specified")
 
-            if m_saving["local_load"] or m_saving["figshare_load"]:
-                if not m_saving["file_name"]:
-                    raise ValueError("A file name must be specified to load a model")
+        if m_saving["local_load"] or m_saving["figshare_load"]:
+            if not m_saving["file_name"]:
+                raise ValueError("A file name must be specified to load a model")
 
-            if ds_saving["local_load"] and ds_saving["figshare_load"]: 
-                 raise ValueError("Dataset cannot be loaded from figshare and locally")
+        if ds_saving["local_load"] and ds_saving["figshare_load"]:
+            raise ValueError("Dataset cannot be loaded from figshare and locally")
 
-            if m_saving["local_load"] and m_saving["figshare_load"]: 
-                 raise ValueError("Model cannot be loaded from figshare and locally")  
-           
-            # if no errors are raised then model can be loaded
-            if m_saving["local_load"] or m_saving["figshare_load"]:
-                load_model(nnet, m_saving, args.dashboard)
+        if m_saving["local_load"] and m_saving["figshare_load"]:
+            raise ValueError("Model cannot be loaded from figshare and locally")
+
+        # if no errors are raised then model can be loaded
+        if m_saving["local_load"] or m_saving["figshare_load"]:
+            load_model(nnet, m_saving, args.dashboard)
 
     # add checkpointing directory
     m_saving["checkpoint_path"] = m_saving["model_dir"] + "checkpoint-" + \
