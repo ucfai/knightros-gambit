@@ -1,3 +1,5 @@
+"""Module implementing Monte Carlo tree search, used in training and evaluation.
+"""
 from math import sqrt
 import random
 
@@ -81,7 +83,9 @@ class Mcts:
             n_values = list(zip(*values))[0]
 
             # Calculate U based on the UCB formula
-            u_value = q_value + (self.exploration * self.p_values[fen_string][uci_move]) * sqrt(sum(n_values)) / (1 + n_value)
+            u_value = q_value + \
+                (self.exploration * self.p_values[fen_string][uci_move]) * \
+                sqrt(sum(n_values)) / (1 + n_value)
 
             if u_value > best_u:
                 best_u = u_value
