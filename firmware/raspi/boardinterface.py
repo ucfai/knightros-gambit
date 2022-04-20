@@ -221,8 +221,7 @@ class Board:
         else:
             self.human_plays_white_pieces = human_plays_white_pieces
 
-        self.ser = None
-        #serial.Serial(port='/dev/ttyS0') if interact_w_arduino else None
+        self.ser = serial.Serial(port='/dev/ttyS0') if interact_w_arduino else None
 
     def retransmit_last_msg(self):
         """Create message to request Arduino retransmit last message and add to msg_queue.
