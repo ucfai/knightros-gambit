@@ -94,6 +94,8 @@ class GUI:
             root.mainloop()
 
     def square_clicked(self, event):
+        """Waits for click on the board and depending on player's turn, executes the move
+        """
         if self.turn == "gui":
             col_size = row_size = self.dim_square
             selected_column = int(event.x / col_size)
@@ -163,6 +165,9 @@ class GUI:
 
 
     def shift(self, p1, p2):
+        """Checks if the move from p1 to p2 is valid, then makes and
+        returns the move
+        """
         piece = self.chessboard[p1]
         try:
             dest_piece = self.chessboard[p2]
@@ -177,6 +182,8 @@ class GUI:
                 return p1.lower()+p2.lower()
 
     def focus(self, pos):
+        """Focuses piece in given position
+        """
         try:
             piece = self.chessboard[pos]
         except: #pylint: disable=bare-except
