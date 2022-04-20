@@ -87,6 +87,31 @@ body {
   max-height: 90%;
   opacity: 80%; 
 }
+.grid-img2 {
+  text-align: center;
+  font-size: 15px;
+  font-family: 'Roboto';
+  color: rgb(160, 150, 124); 
+}
+.grid-img2 img {
+  justify-content: center;
+  max-width: 55%;
+  max-height: 55%;
+  opacity: 80%; 
+}
+.grid-img3 {
+  text-align: center;
+  font-size: 15px;
+  font-family: 'Roboto';
+  color: rgb(160, 150, 124); 
+}
+.grid-img3 img {
+  justify-content: center;
+  max-width: 80%;
+  max-height: 80%;
+  opacity: 80%; 
+}
+
 #grid-sub {
   font-size: 20px;
   letter-spacing: 3px;
@@ -100,6 +125,7 @@ body {
   color: rgb(172, 172, 172);
   margin-bottom: 30px;
   margin-top: -20px;
+  margin-right: 10px;
 }
 .grid-container2 {
   display: flex;
@@ -122,6 +148,20 @@ body {
   justify-content: center;
   max-width: 90%;
   max-height: 90%;
+  opacity: 80%; 
+}
+.grid-imgC {
+  text-align: center;
+  font-size: 15px;
+  font-family: 'Roboto'; 
+  color: rgb(160, 150, 124);
+}
+.grid-imgC img {
+  justify-content: center;
+  margin-left: -300px;
+  margin-right: auto;
+  max-width: 60%;
+  max-height: 60%;
   opacity: 80%; 
 }
 .grid-mini {

@@ -35,8 +35,9 @@
           which is used to store captured pieces and spare pieces for promotions.<br><br><a href= "https://a360.co/347aV61" target="_blank" 
           rel="noopener noreferrer">View a 3D model of the Chessboard Assembly</a></div>
         <div class="grid-item1"><img src="images/slider.png"><br>CAD Mockup of Actuation Assembly (Slider Extrusion)</div>
-        <div class="grid-item1"><img src="images/m&basmbly.png"><br>CAD Mockup of Exploded View of Mechanism and Board Assembly</div> 
-        <div class="grid-item">Sheets of wood and acrylic will be connected with fasteners to create the physical chessboard. Two chess sets 
+        <div class="grid-item1"><img class="slideShow" src="images/mounting.png"><img class="slideShow"  src="images/frame.png">
+        <img class="slideShow" src="images/timer.png"><br>CAD Mockup of Mouting, Frame, and Timer</div> 
+        <div class="grid-item"><br>Sheets of wood and acrylic will be connected with fasteners to create the physical chessboard. Two chess sets 
           will be used, one as the main set and one to facilitate piece promotion. We will attach a small rare-earth magnet to each chess 
           piece so that it can be moved by an electromagnet that is beneath the surface of the chessboard. Current flow to the electromagnet 
           will be enabled and disabled through a MOSFET. The electromagnet will be connected to a slider that will be 3D printed using the 
@@ -60,11 +61,28 @@
           into the Raspberry Pi via USB) and the power hookup for the Raspberry Pi.</div>
       </div><br><br>
       <div class="grid-container2">
-        <div class="grid-img"><img src="images/PBC.png"><br>Printed Circuit Board (PCB)</div>
+        <div class="grid-img"><img src="images/PCB.png"><br>Printed Circuit Board (PCB)</div>
         <div class="grid">This PCB will function as a way to connect all of the main components in a robust way. This allows us to reduce the 
           number of exposed wires and greatly increase organization. The circuit connects the motor controllers, MOSFETs, voltage regulator, and 
           microcontroller together so they can work properly. </div>
       </div><br><br>
     </div>
   </body>
+  <script>
+    var index = 0;
+    slideshow();
+    function slideshow() {
+      var y = document.getElementsByClassName("slideShow");
+      var i;
+      for (i = 0; i < y.length; i++) {
+        y[i].style.display = "none";  
+      }
+      index++;
+      if (index > y.length) {
+        index = 1
+      }    
+      y[index-1].style.display = "block";  
+      setTimeout(slideshow, 2500);
+    }
+    </script>
 </html>
