@@ -45,10 +45,6 @@ class GUI:
         self.canvas.pack(padx=8, pady=8)
         #Adding Frame
         self.btmfrm = tk.Frame(parent, height=64)
-        self.info_label = tk.Label(self.btmfrm,
-                                text="   White to Start the Game  ",
-                                fg=self.color2)
-        self.info_label.pack(side=tk.RIGHT, padx=8, pady=5)
         self.btmfrm.pack(fill="x", side=tk.BOTTOM)
 
     def change_turn(self):
@@ -86,11 +82,10 @@ class GUI:
             self.move_first = "ai"
 
         if self.turn == "gui":
-            print("Please make your move on the board")
+            print("Please make your move on the board.")
             root.mainloop()
         else:
             self.game.process(self.players[0])
-            self.game.board.show_on_cli()
             self.chessboard.show(self.game.current_fen())
             self.draw_board()
             self.show_move(self.game.last_made_move(), self.game.is_white_turn())
@@ -113,14 +108,13 @@ class GUI:
                 self.made_move = self.shift(self.selected_piece[1], pos)
                 if self.made_move == None:
                     self.selected_piece = None
-                    print("Choose a new piece")
+                    print("Invalid Move! Choose a new piece.")
                     return
                 gui_player.set_move(self.made_move)
                 while True:
                     made_move = self.game.process(gui_player)
                     if made_move:
                         break
-                self.game.board.show_on_cli()
                 self.selected_piece = None
                 self.focused = None
                 self.pieces = {}
@@ -137,7 +131,6 @@ class GUI:
                         made_move = self.game.process(self.players[1])
                     if made_move:
                         break
-                self.game.board.show_on_cli()
                 self.chessboard.show(self.game.current_fen())
                 self.draw_board()
                 self.show_move(self.game.last_made_move(), self.game.is_white_turn())
@@ -145,7 +138,7 @@ class GUI:
                 self.change_turn()
 
         if self.game.is_game_over():
-            print("checking if game is over")
+            print("Checking if game is over...")
             # Need to empty move queue to play out final captures, etc (if any) before ending
             while self.game.board.msg_queue:
                 self.game.process(None)
@@ -160,7 +153,7 @@ class GUI:
                 print("Black won")
 
             if not player_wants_rematch():
-                print("Thanks for playing")
+                print("Thanks for playing!")
                 #break  # Break out of main game loop
 
             # TODO: Implement rematch capability
@@ -179,13 +172,8 @@ class GUI:
             try:
                 self.chessboard.shift(p1, p2)
             except chessboard.ChessError as error:
-                self.info_label["text"] = error.__class__.__name__
                 return None
             else:
-                self.info_label[
-                    "text"]= "" + piece.color.capitalize() + "  :  " + p1 + p2+ "    " +self.turn + "\"s turn"
-                print("this is the current turn: ", self.turn)
-                print("This was the move made:", p1+p2)
                 return p1.lower()+p2.lower()
 
     def focus(self, pos):
@@ -273,7 +261,6 @@ class GUI:
         self.setup_game(root)
 
 
-
 # TODO: make this function have a better name; it doesn"t just return bool, it also assigns color.
 def is_human_turn_at_start():
     """Assigns piece color for human and returns boolean accordingly.
@@ -348,12 +335,12 @@ def player_wants_rematch():
     return False
 
 def main(): #took out chessboard
-    """Main driver loop for running Knightro"s Gambit.
+    """Main driver loop for running Knightro's Gambit.
     """
     # Set random seed for program
     random.seed()
     root=tk.Tk()
-    root.title("Knightr0\"s Gambit")
+    root.title("Knightr0\'s Gambit")
 
     #initialize gui
     color = None
@@ -367,7 +354,7 @@ def main(): #took out chessboard
 
     sys.stdout.write = redirector
 
-    print("Welcome to Knightro's Gambit")
+    print("Welcome to Knightro's Gambit!\n")
     # Show game at start before any moves are made
     gui.draw_board()
     gui.draw_pieces()
