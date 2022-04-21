@@ -59,18 +59,19 @@ class GUI:
         params = init_parameters()
         mode_of_interaction = params["mode_of_interaction"]
         print(f"\nRUNNING IN {mode_of_interaction.upper()} MODE...\n")
-
+ 
         if params["mode_of_interaction"] == "test":
-            self.game = Game(params["mode_of_interaction"])
+            self.game = Game(params["mode_of_interaction"], params["interact_w_arduino"])
             # TODO: Refactor to handle dispatching moves using the code in `process`.
             # raise ValueError("Test mode of interaction not yet implemented.")
         elif params["mode_of_interaction"] == "debug":
-            self.game = Game(params["mode_of_interaction"])
+            self.game = Game(params["mode_of_interaction"], params["interact_w_arduino"])
             # TODO: Implement debug mode of interaction
             # Should be able to use process with human as both players
             # raise ValueError("Debug mode of interaction not yet implemented.")
         elif params["mode_of_interaction"] in ("cli", "otb", "web", "speech"):
-            self.game = Game(params["mode_of_interaction"], params["human_plays_white_pieces"])
+            self.game = Game(params["mode_of_interaction"], params["interact_w_arduino"],
+                                params["human_plays_white_pieces"])
             # _, human_plays_white_pieces, board, ai_player = params
 
         self.players = params["players"]
@@ -268,21 +269,21 @@ class GUI:
         self.setup_game(root)
 
 
-# TODO: make this function have a better name; it doesn"t just return bool, it also assigns color.
-def is_human_turn_at_start():
-    """Assigns piece color for human and returns boolean accordingly.
-    """
-    while True:
-        start = simpledialog.askstring(title="Choose Piece Color",
-                                  prompt="Choose piece color ([w]hite, [b]lack, or [r]andom):").lower()
-        #start = input("Choose piece color ([w]hite, [b]lack, or [r]andom): ").lower()
+ # TODO: make this function have a better name; it doesn"t just return bool, it also assigns color.
+def assign_human_turn_at_start():
+     """Assigns piece color for human and returns boolean accordingly.
+     """
+     while True:
+        start = simpledialog.askstring(
+            title="Choose Piece Color",
+            prompt="Choose piece color ([w]hite, [b]lack, or [r]andom):").lower()
+         #start = input("Choose piece color ([w]hite, [b]lack, or [r]andom): ").lower()
         if start == "r":
-            piece_color = "w" if random.randint(0, 1) else "b"
-            return piece_color == "w" # return True if piece color for human is white
+             piece_color = "w" if random.randint(0, 1) else "b"
         if start == "b":
-            return False
+             return False
         if start == "w":
-            return True
+             return True
         print("Please choose one of [w], [b], or [r].")
 
 def init_parameters():
@@ -296,27 +297,24 @@ def init_parameters():
         human_plays_white_pieces: bool used to specify orientation of board.
     """
     args = parse_args()
-
-    # TODO: update program to handle otb communication and play.
-    if args.microcontroller:
-        raise ValueError("Serial communication not yet implemented.")
-
-    # TODO: Find better way to initialize board if running in test or debug mode.
-    # Also need to update so that we don"t assume CLI for setting is_human_turn.
+ 
+    # TODO: need to update so that we don't assume CLI for setting is_human_turn.
     if args.test or args.debug:
         human_plays_white_pieces = None
         # Note: priority of modes of operation:
         # test > debug > cli == otb == web == speech
         if args.test:
             return {"mode_of_interaction": "test",
-                    "players": [player.TestfilePlayer(args.test)]}
+                "players": [player.TestfilePlayer(args.test)],
+                "interact_w_arduino": args.microcontroller}
 
         # Note: if args.debug specified, takes priority over other modes of operation.
         if args.debug:
-            return {"mode_of_interaction": "debug", "players": [player.CLDebugPlayer()]}
+            return {"mode_of_interaction": "debug", "players": [player.CLDebugPlayer()],
+                "interact_w_arduino": args.microcontroller}
     else:
         # Get desired piece color for human. Can be white, black, or random.
-        human_plays_white_pieces = is_human_turn_at_start()
+        human_plays_white_pieces = assign_human_turn_at_start()
 
         mode_of_interaction = args.playstyle
         if mode_of_interaction == "cli":
@@ -331,8 +329,9 @@ def init_parameters():
 
         return {"mode_of_interaction": mode_of_interaction,
                 "players": players,
-                "human_plays_white_pieces": human_plays_white_pieces}
-
+                "human_plays_white_pieces": human_plays_white_pieces,
+                "interact_w_arduino": args.microcontroller}
+ 
     raise ValueError("Error parsing parameters...")
 
 def player_wants_rematch():
