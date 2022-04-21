@@ -45,9 +45,8 @@ class Game:
     def last_made_move(self):
         """Returns the last made move, if applicable. If no moves have been made, returns None.
         """
-        """if self.board.engine.chess_board.move_stack:
-            return None"""
-        #this was always defaulting to true and not allowing access to move
+        if not self.board.engine.chess_board.move_stack:
+            return None
         return self.board.engine.chess_board.peek().uci()
 
     def is_game_over(self):
@@ -170,3 +169,6 @@ class Game:
             return True
 
         raise ValueError("We shouldn't reach this point in the function.")
+
+    if __name__ == '__main__':
+        print("No main for this file, please use `cliinterface.py`")

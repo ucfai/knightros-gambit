@@ -10,7 +10,7 @@ from tkinter import simpledialog
 import sys
 import random
 
-from player import GUIPlayer
+from player import GUIHumanPlayer
 import chessboard
 from game import Game
 import player
@@ -106,7 +106,7 @@ class GUI:
             except: #pylint: disable=bare-except
                 pass
             if self.selected_piece:
-                gui_player = GUIPlayer()
+                gui_player = GUIHumanPlayer()
                 self.made_move = self.shift(self.selected_piece[1], pos)
                 if self.made_move == None:
                     self.selected_piece = None
@@ -325,7 +325,7 @@ def init_parameters():
         else:
             raise ValueError("Other modes of interaction are unimplemented")
 
-        players = [player.GUIPlayer(), player.StockfishPlayer(elo_rating=1400)]
+        players = [player.GUIHumanPlayer(), player.StockfishPlayer(elo_rating=1400)]
         if not human_plays_white_pieces:
             players.reverse()
 
