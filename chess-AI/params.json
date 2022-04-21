@@ -2,18 +2,18 @@
     "_comment": "PARAMS MUST BE ALPHABETIZED",
 
     "saving":{
-        "ds_saving": {
+        "dataset_saving": {
             "data_dir": "datasets/",
             "file_name": "dataset-06-04-22:19.pt",
             "figshare_load": false,
             "local_load": false,
-            "figshare_save":false
+            "figshare_save":true
         },
 
-        "m_saving": {
+        "model_saving": {
             "model_dir": "models/",
             "file_name": "model-06-04-22:32.pt",
-            "figshare_load":true,
+            "figshare_load":false,
             "local_load": false,
             "figshare_save":false,
             "mcts_check_freq": 10

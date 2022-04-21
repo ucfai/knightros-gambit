@@ -214,7 +214,7 @@ def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=Fal
 
     # Saves model to specified file, or a new file if not specified.
     if save:
-        save_model(nnet, options.m_saving, checkpointing=True, file_name=f"model_{iteration}")
+        save_model(nnet, options.model_saving, checkpointing=True, file_name=f"model_{iteration}")
 
 
 def create_stockfish_dataset(sf_opt, show_dash):
@@ -252,7 +252,7 @@ def train_on_mcts(nnet, mcts_opt, show_dash=False):
 
         dataset = create_dataset(mcts_opt.games, mcts_moves)
         train_on_dataset(dataset, nnet, mcts_opt, iteration=(i+1),
-                         save=(i % mcts_opt.m_saving['mcts_check_freq'] == 0), show_dash=show_dash)
+                         save=(i % mcts_opt.model_saving['mcts_check_freq'] == 0), show_dash=show_dash)
 
 
 def main():
@@ -262,7 +262,7 @@ def main():
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     nnet = PlayNetwork().to(device=device)
 
-    nnet, ds_saving, stockfish_options, mcts_options, flags = init_params(nnet, device)
+    nnet, dataset_saving, stockfish_options, mcts_options, flags = init_params(nnet, device)
 
     if flags.start_train:
         if flags.make_dataset:
@@ -272,16 +272,16 @@ def main():
             else:
                 print(msg)
             dataset = create_stockfish_dataset(stockfish_options, flags.show_dash)
-            make_dir(ds_saving['data_dir'])
-            save_dataset(dataset, ds_saving)
+            make_dir(dataset_saving['data_dir'])
+            save_dataset(dataset, dataset_saving)
             msg = "Dataset Creation completed"
             if flags.show_dash:
                 Dashboard.info_message("success", msg)
             else:
                 print(msg)
         else:
-            if ds_saving['local_load'] or ds_saving['figshare_load']:
-                dataset = load_dataset(ds_saving, flags.show_dash)
+            if dataset_saving['local_load'] or dataset_saving['figshare_load']:
+                dataset = load_dataset(dataset_saving, flags.show_dash)
             # load path must be specified
             else:
                 raise ValueError("If not making dataset either local load or figshare \
@@ -315,8 +315,8 @@ def main():
             else:
                 print(msg)
 
-        if mcts_options.m_saving['model_dir'] is not None:
-            save_model(nnet, mcts_options.m_saving, checkpointing=False)
+        if mcts_options.model_saving['model_dir'] is not None:
+            save_model(nnet, mcts_options.model_saving, checkpointing=False)
 
 if __name__ == "__main__":
     main()

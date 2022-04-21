@@ -14,11 +14,11 @@ class TrainOptions:
         device: the device being used to train (either CPU or GPU)
         save_path: path for model checkpointing
         num_saved_models: number of models to store
-        m_saving: parameters for model saving
+        model_saving: parameters for model saving
     """
 
     def __init__(self, learning_rate, momentum, weight_decay, epochs, batch_size, games, device,
-                 m_saving):
+                 model_saving):
         self.learning_rate = learning_rate
         self.momentum = momentum
         self.weight_decay = weight_decay
@@ -26,7 +26,7 @@ class TrainOptions:
         self.batch_size = batch_size
         self.games = games
         self.device = device
-        self.m_saving = m_saving
+        self.model_saving = model_saving
 
 
 class MCTSOptions(TrainOptions):
@@ -39,10 +39,10 @@ class MCTSOptions(TrainOptions):
     """
 
     def __init__(self, learning_rate, momentum, weight_decay, epochs, batch_size, games, device,
-                 m_saving, exploration, simulations,
+                 model_saving, exploration, simulations,
                  training_episodes):
         TrainOptions.__init__(self, learning_rate, momentum, weight_decay, epochs, batch_size,
-                              games, device, m_saving)
+                              games, device, model_saving)
 
         self.exploration = exploration
         self.simulations = simulations
