@@ -5,13 +5,55 @@ import argparse
 from datetime import datetime
 import json
 import os
-
 import torch
 
 from figshare_api import FigshareApi
 import options
 from streamlit_dashboard import Dashboard
 
+class DatasetSaving:
+    """
+    All the parameters for saving and loading datasets
+    
+    Attributes:
+        data_dir: the directory where datasets will be saved and loaded from
+        file_name: the file name of the dataset to load
+        figshare_load: flag for if dataset should be loaded from figshare
+        local_load: flag for if dataset should be loaded from local directory
+        figshare_save: flag for if dataset should be saved to figshare
+    """
+
+    def __init__(self,data_dir,file_name,figshare_load,local_load,figshare_save):
+        self.data_dir = data_dir
+        self.file_name = file_name
+        self.figshare_load = figshare_load
+        self.local_load = local_load
+        self.figshare_save = figshare_save
+
+
+class ModelSaving:
+    """
+    All the parameters for saving and loading models
+
+    Attributes:
+        model_dir: the directory where models will be saved
+        file_name: file name of the model to load
+        figshare_load: flag for if model should be loaded from figshare
+        local_load: flag for if model should be loaded from local directory
+        figshare_save: flag for if model should be saved from figshare
+        mcts_check_freq: frequency for how often model should be saved
+        checkpoint_path: the path where models should be saved during checkpointing
+    """
+
+    def __init__(self,model_dir,file_name,figshare_load,local_load,figshare_save,mcts_check_freq):
+        self.model_dir = model_dir
+        self.file_name = file_name
+        self.figshare_load = figshare_load
+        self.local_load = local_load
+        self.figshare_save = figshare_save
+        self.mcts_check_freq = mcts_check_freq
+        self.checkpoint_path = None
+        
 
 def file_from_path(path):
     """Splits up the full file path into the directory and file."""
@@ -39,19 +81,19 @@ def load_dataset(dataset_saving, show_dash):
     will be loaded. Otherwise no dataset will be loaded.
     """
     # See if dataset should be loaded from Figshare
-    if dataset_saving['figshare_load']:
+    if dataset_saving.figshare_load:
         # Get the base path and file name
-        file_name = dataset_saving['file_name']
+        file_name = dataset_saving.file_name
         # ensure file exists in figshare
-        assert FigshareApi.get_figshare_article(dataset_saving['data_dir'], file_name), \
+        assert FigshareApi.get_figshare_article(dataset_saving.data_dir, file_name), \
                "File not found in figshare"
         msg = f"{file_name} downloaded from figshare"
     else:
         # Load the dataset at the provided path. If using streamlit,
         # show a confirmation message.
-        assert os.path.exists(dataset_saving['data_dir']), "Dataset not found at path provided." \
+        assert os.path.exists(dataset_saving.data_dir), "Dataset not found at path provided." \
                "You must provide a path to an existing dataset"
-        full_path = dataset_saving['data_dir'] + dataset_saving['file_name']
+        full_path = dataset_saving.data_dir + dataset_saving.file_name
         msg = f"dataset from {full_path} retrieved"
 
     if show_dash:
@@ -59,7 +101,7 @@ def load_dataset(dataset_saving, show_dash):
     else:
         print(msg)
     # load the dataset into the path specified
-    return torch.load(dataset_saving['data_dir'] + dataset_saving['file_name'])
+    return torch.load(dataset_saving.data_dir + dataset_saving.file_name)
 
 
 def save_dataset(dataset, dataset_saving):
@@ -72,11 +114,11 @@ def save_dataset(dataset, dataset_saving):
 
     date_string = create_date_string()
     # get the full file path to save
-    full_path = dataset_saving['data_dir'] + "dataset-" +  date_string + ".pt"
+    full_path = dataset_saving.data_dir + "dataset-" +  date_string + ".pt"
     # save the dataset
     torch.save(dataset, full_path)
 
-    if dataset_saving['figshare_save']:
+    if dataset_saving.figshare_save:
         # Save dataset to figshare
         title = "dataset-" + date_string
         desc = "This description is a placeholder"
@@ -98,14 +140,14 @@ def save_model(nnet, model_saving, checkpointing, file_name=None):
 
     if checkpointing:
         assert file_name is not None, "For checkpointing, a file name must be specified"
-        full_path = model_saving['checkpoint_path'] + file_name + ".pt"
+        full_path = model_saving.checkpoint_path + file_name + ".pt"
         torch.save(nnet.state_dict(), full_path)
     else:
         date_string = create_date_string()
-        full_path = model_saving['model_dir'] + "model-" +  date_string + ".pt"
+        full_path = model_saving.model_dir + "model-" +  date_string + ".pt"
         torch.save(nnet.state_dict(), full_path)
         # Check if model should be saved to Figshare
-        if model_saving['figshare_save']:
+        if model_saving.figshare_save:
             title = "model-" + date_string
             desc = "Dataset of chessboard states (fen strings), Stockfish move \
                 probabilities, and position evaluations"
@@ -118,14 +160,14 @@ def save_model(nnet, model_saving, checkpointing, file_name=None):
 def load_model(nnet, model_saving, show_dash):
     """Load model parameters from Figshare or locally."""
     # A load path must be specified to load a file
-    if model_saving['figshare_load']:
-        file_name = model_saving['file_name']
+    if model_saving.figshare_load:
+        file_name = model_saving.file_name
         # Ensure file exists in figshare
-        assert FigshareApi.get_figshare_article(model_saving['model_dir'], file_name), \
+        assert FigshareApi.get_figshare_article(model_saving.model_dir, file_name), \
                 "File not found in figshare"
         msg = f"{file_name} downloaded from figshare"
     else:
-        assert os.path.exists(model_saving['model_dir'] + model_saving['file_name']), \
+        assert os.path.exists(model_saving.model_dir + model_saving.file_name), \
                 "Model not found at path provided. " \
                 "You must provide a path to an existing model."
         msg = "Model retrieved."
@@ -134,7 +176,7 @@ def load_model(nnet, model_saving, show_dash):
     else:
         print(msg)
     # load the model into memory
-    nnet.load_state_dict(torch.load(model_saving['model_dir'] + model_saving['file_name']))
+    nnet.load_state_dict(torch.load(model_saving.model_dir + model_saving.file_name))
 
 
 def init_params(nnet, device):
@@ -191,8 +233,8 @@ def init_params(nnet, device):
         with open('params.json') as file:
             params = json.load(file)
 
-        model_saving = params['saving']['model_saving']
-        dataset_saving = params['saving']['dataset_saving']
+        model_saving_dict = params['saving']['model_saving']
+        dataset_saving_dict = params['saving']['dataset_saving']
 
         learning_rate = params['misc_params']['lr']
         momentum = params['misc_params']['momentum']
@@ -221,7 +263,7 @@ def init_params(nnet, device):
         dashboard = Dashboard()
         # TODO: Have reasonable defaults in case certain hyperparams are not specified within the
         # streamlit dashboard. Can use the params in params.json
-        dataset_saving, model_saving = dashboard.load_files()
+        dataset_saving_dict, model_saving_dict = dashboard.load_files()
 
         learning_rate, momentum, weight_decay = dashboard.nnet_params()
 
@@ -240,20 +282,23 @@ def init_params(nnet, device):
 
     # wait until training has begun and catch any param errors
     if start_train:
-        if dataset_saving["data_dir"] is None:
+        model_saving = ModelSaving(*model_saving_dict.values())
+        dataset_saving = DatasetSaving(*dataset_saving_dict.values())
+
+        if dataset_saving.data_dir is None:
             raise ValueError("Directory for dataset must always be specified")
         else:
-            assert os.path.exists(os.path.dirname(dataset_saving["data_dir"])), \
+            assert os.path.exists(os.path.dirname(dataset_saving.data_dir)), \
                 "Dataset load directory does not exist"
 
-        if model_saving["model_dir"] is None:
+        if model_saving.model_dir is None:
             raise ValueError("Directory for model must always be specified.")
         else:
-            assert os.path.exists(os.path.dirname(model_saving["model_dir"])), \
+            assert os.path.exists(os.path.dirname(model_saving.model_dir)), \
                 "Model load directory does not exist"
 
-        if dataset_saving["local_load"] or dataset_saving["figshare_load"]:
-            if not dataset_saving["file_name"]:
+        if dataset_saving.local_load or dataset_saving.figshare_load:
+            if not dataset_saving.file_name:
                 raise ValueError("A file name must be specified to load a dataset")
             if make_dataset:
                 raise ValueError("Dataset cannot be created and loaded")
@@ -261,23 +306,23 @@ def init_params(nnet, device):
             raise ValueError("If a dataset is not being created then local_load or \
                 figshare_load must be specified")
 
-        if model_saving["local_load"] or model_saving["figshare_load"]:
-            if not model_saving["file_name"]:
+        if model_saving.local_load or model_saving.figshare_load:
+            if not model_saving.file_name:
                 raise ValueError("A file name must be specified to load a model")
-            if model_saving["local_load"] and model_saving["figshare_load"]:
+            if model_saving.local_load and model_saving.figshare_load:
                 raise ValueError("Model cannot be loaded from figshare and locally")
 
-        if dataset_saving["local_load"] and dataset_saving["figshare_load"]:
+        if dataset_saving.local_load and dataset_saving.figshare_load:
             raise ValueError("Dataset cannot be loaded from figshare and locally")
 
         # if no errors are raised then model can be loaded
-        if model_saving["local_load"] or model_saving["figshare_load"]:
+        if model_saving.local_load or model_saving.figshare_load:
             load_model(nnet, model_saving, args.dashboard)
 
     # add checkpointing directory
-    model_saving["checkpoint_path"] = model_saving["model_dir"] + "checkpoint-" + \
+    model_saving.checkpoint_path = model_saving.model_dir + "checkpoint-" + \
                                     create_date_string() + '/'
-    make_dir(model_saving["checkpoint_path"])
+    make_dir(model_saving.checkpoint_path)
 
     stockfish_options = options.StockfishOptions(learning_rate, momentum, weight_decay,
                                                  stock_epochs, stock_batch_size, stock_games,

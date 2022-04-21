@@ -252,7 +252,7 @@ def train_on_mcts(nnet, mcts_opt, show_dash=False):
 
         dataset = create_dataset(mcts_opt.games, mcts_moves)
         train_on_dataset(dataset, nnet, mcts_opt, iteration=(i+1),
-                         save=(i % mcts_opt.model_saving['mcts_check_freq'] == 0), show_dash=show_dash)
+                         save=(i % mcts_opt.model_saving.mcts_check_freq == 0), show_dash=show_dash)
 
 
 def main():
@@ -272,7 +272,7 @@ def main():
             else:
                 print(msg)
             dataset = create_stockfish_dataset(stockfish_options, flags.show_dash)
-            make_dir(dataset_saving['data_dir'])
+            make_dir(dataset_saving.data_dir)
             save_dataset(dataset, dataset_saving)
             msg = "Dataset Creation completed"
             if flags.show_dash:
@@ -280,7 +280,7 @@ def main():
             else:
                 print(msg)
         else:
-            if dataset_saving['local_load'] or dataset_saving['figshare_load']:
+            if dataset_saving.local_load or dataset_saving.figshare_load:
                 dataset = load_dataset(dataset_saving, flags.show_dash)
             # load path must be specified
             else:
@@ -315,7 +315,7 @@ def main():
             else:
                 print(msg)
 
-        if mcts_options.model_saving['model_dir'] is not None:
+        if mcts_options.model_saving.model_dir is not None:
             save_model(nnet, mcts_options.model_saving, checkpointing=False)
 
 if __name__ == "__main__":
