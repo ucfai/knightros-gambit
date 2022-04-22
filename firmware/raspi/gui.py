@@ -86,8 +86,8 @@ class GUI:
             self.draw_board()
             self.show_move(self.game.last_made_move(), self.game.is_white_turn())
             self.draw_pieces()
-            self.turn -= 1
-        self.parent.after(100, self.update_state)
+            self.turn = 1
+        self.parent.after(10, self.update_state)
         self.parent.mainloop()
 
     def update_state(self):
