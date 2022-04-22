@@ -4,3 +4,9 @@
 # Saved models to keep. Note: when adding models here, add a description indicating why model is kept
 # Our first model!
 !model.pt
+
+# ignore all saved datasets
+/datasets
+
+# ignore all saved models
+/models

@@ -1,6 +1,5 @@
 """This file holds the StockfishTrain class, used to augment our self-play training approach.
 """
-import math
 import random
 
 import chess
@@ -106,8 +105,8 @@ class StockfishTrain:
             # if x > 0 , that is a mate for white in x moves
             # if x < 0, that is a mate for black in x moves
             if move["Centipawn"] is None:
-                # Probability of mating moves is set to 1, mating moves for the opponent is set to 0.
-                # We would like to explore losing moves regardless, but epsilon-greedy resolves this.
+                # Probability of mating moves is set to 1, mating moves for the opponent is set to 0
+                # We would like to explore losing moves regardless, but epsilon-greedy resolves this
                 search_probs.append(np.sign(move["Mate"]) * player / 2 + 0.5)
             else:
                 search_probs.append(self.centipawn_to_winprob(move["Centipawn"] * player))
