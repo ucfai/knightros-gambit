@@ -12,9 +12,9 @@ class FigshareApi:
     # Size of upload chunks
     CHUNK_SIZE = 1048576
     # Figshare base URL
-    BASE_URL = 'https://api.figshare.com/v2/{endpoint}'
+    BASE_URL = "https://api.figshare.com/v2/{endpoint}"
     # Get key from environment variale
-    API_KEY = os.getenv('FIGSHARE_KEY')
+    API_KEY = os.getenv("FIGSHARE_KEY")
 
     @staticmethod
     def get_figshare_article(store_dir, file_name):
@@ -29,12 +29,12 @@ class FigshareApi:
         articles = FigshareApi.get_articles()
         # Iterate through all the returned articles
         for article in articles:
-            article_id = article['id']
-            file_data = FigshareApi.issue_request('GET', endpoint.format(article_id=article_id))
+            article_id = article["id"]
+            file_data = FigshareApi.issue_request("GET", endpoint.format(article_id=article_id))
             # Ensure articles has associated file data
             if len(file_data) > 0:
                 # Get the file name of the article
-                figshare_file = file_data[0]['name']
+                figshare_file = file_data[0]["name"]
                 # See if this the file being searched for
                 if figshare_file == file_name:
                     # Get the download URL
