@@ -35,6 +35,7 @@ class GUI:
     columns = 8
     dim_square = 64
 
+
     def __init__(self, parent, board):
         self.chessboard = board
         self.parent = parent
@@ -47,12 +48,7 @@ class GUI:
         self.btmfrm = tk.Frame(parent, height=64)
         self.btmfrm.pack(fill="x", side=tk.BOTTOM)
 
-    def change_turn(self):
-        """switches the turn from gui to ai and vice versa
-        """
-        self.turn = {"ai":"gui","gui":"ai"}[self.turn]
-
-    def setup_game(self, root):
+    def setup_game(self):
         """Sets up the main game variables and then calls the tkinter mainloop
         which waits for events
         """
@@ -76,28 +72,48 @@ class GUI:
 
         self.players = params["players"]
         if params["human_plays_white_pieces"]:
-            self.turn = "gui"
+            self.turn = 0
             self.move_first = "gui"
         else:
-            self.turn = "ai"
+            self.turn = 1
             self.move_first = "ai"
-
-        if self.turn == "gui":
+          
+        if not self.turn:
             print("Please make your move on the board.")
-            root.mainloop()
+        
         else:
             self.game.process(self.players[0])
             self.chessboard.show(self.game.current_fen())
             self.draw_board()
-            self.show_move(self.game.last_made_move(), self.game.is_white_turn())
+           # self.show_move(self.game.last_made_move(), self.game.is_white_turn())
             self.draw_pieces()
-            self.change_turn()
-            root.mainloop()
+            self.turn -= 1
+        self.parent.after(100, self.update_state)
+        self.parent.mainloop()
+
+    def update_state(self):
+        made_move = self.game.process(self.players[self.turn])
+        print(self.turn)
+        print(made_move)
+        if made_move:
+           
+            self.selected_piece = None
+            self.focused = None
+            self.pieces = {}
+            self.draw_board()
+            self.draw_pieces()
+            if self.turn:
+                print("AI move")
+                print(self.game.current_fen())
+                self.chessboard.show(self.game.current_fen())
+                #self.show_move(self.game.last_made_move(), self.game.is_white_turn())
+            self.turn = (self.turn + 1) % 2
+        self.parent.after(100,self.update_state)
 
     def square_clicked(self, event):
         """Waits for click on the board and depending on player's turn, executes the move
         """
-        if self.turn == "gui":
+        if self.turn == 0:
             col_size = row_size = self.dim_square
             selected_column = int(event.x / col_size)
             selected_row = 7 - int(event.y / row_size)
@@ -107,38 +123,17 @@ class GUI:
             except: #pylint: disable=bare-except
                 pass
             if self.selected_piece:
-                gui_player = GUIHumanPlayer()
                 self.made_move = self.shift(self.selected_piece[1], pos)
                 if self.made_move == None:
                     self.selected_piece = None
                     print("Invalid Move! Choose a new piece.")
                     return
-                gui_player.set_move(self.made_move)
-                while True:
-                    made_move = self.game.process(gui_player)
-                    if made_move:
-                        break
-                self.selected_piece = None
-                self.focused = None
-                self.pieces = {}
-                self.draw_board()
-                self.draw_pieces()
-                self.change_turn()
+                self.players[self.turn].set_move(self.made_move)
             self.focus(pos)
             self.draw_board()
-            if self.turn == "ai":
-                while True:
-                    if self.move_first == "ai":
-                        made_move = self.game.process(self.players[0])
-                    else:
-                        made_move = self.game.process(self.players[1])
-                    if made_move:
-                        break
-                self.chessboard.show(self.game.current_fen())
-                self.draw_board()
-                self.show_move(self.game.last_made_move(), self.game.is_white_turn())
-                self.draw_pieces()
-                self.change_turn()
+           
+                
+               
 
         if self.game.is_game_over():
             print("Checking if game is over...")
@@ -228,7 +223,7 @@ class GUI:
         self.canvas.tag_raise("occupied")
         self.canvas.tag_lower("area")
 
-    def show_move(self, move, color):
+    '''def show_move(self, move, color):
         """Prints arrow showing the move from previous to current position.
         """
         self.canvas.after(7000, lambda:self.canvas.delete("arrow"))
@@ -243,7 +238,7 @@ class GUI:
         else:
             y_2 =((7 - corr_x1) * self.dim_square) + int(self.dim_square / 2)-25
 
-        self.canvas.create_line(x_1, y_1, x_2, y_2, arrow=tk.LAST, fill="#000000", tags="arrow")
+        self.canvas.create_line(x_1, y_1, x_2, y_2, arrow=tk.LAST, fill="#000000", tags="arrow")'''
 
     def draw_pieces(self):
         """Prints the chess pieces.
@@ -263,10 +258,10 @@ class GUI:
                 y_0 = ((7 - corr_x) * self.dim_square) + int(self.dim_square / 2)
                 self.canvas.coords(piecename, x_0, y_0)
 
-    def gui_loop(self, root):
+    def gui_loop(self):
         """allows user to select move on board and then calls the event loop """
         self.canvas.bind("<Button-1>", self.square_clicked)
-        self.setup_game(root)
+        self.setup_game()
 
 
  # TODO: make this function have a better name; it doesn"t just return bool, it also assigns color.
@@ -364,7 +359,7 @@ def main(): #took out chessboard
     # Show game at start before any moves are made
     gui.draw_board()
     gui.draw_pieces()
-    gui.gui_loop(root)
+    gui.gui_loop()
 
 if __name__ == "__main__":
     main()
