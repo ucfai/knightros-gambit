@@ -43,7 +43,7 @@ class ModelSaving:
         checkpoint_path: the path where models should be saved during checkpointing
     """
     def __init__(self, model_dir, file_name, figshare_load, local_load, figshare_save,
-        mcts_check_freq, checkpoint_path):
+        mcts_check_freq, checkpoint_path=None):
         self.model_dir = model_dir
         self.file_name = file_name
         self.figshare_load = figshare_load
