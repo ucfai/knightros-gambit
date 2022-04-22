@@ -16,7 +16,8 @@ def create_stockfish_wrapper():
     elif operating_system == "linux":
         stockfish_path = "../chess-engine/stockfish_14.1_linux_x64/stockfish_14.1_linux_x64"
     elif operating_system == "windows":
-        stockfish_path = "../chess-engine/stockfish_14.1_win_x64_avx2.exe"
+        # stockfish_path = "../chess-engine/stockfish_14.1_win_x64_avx2.exe"
+        stockfish_path = "C:/Users/juddb/Stockfish/stockfish_14.1_win_x64_avx2/stockfish_14.1_win_x64_avx2.exe"
     else:
         raise ValueError("Operating system must be one of "
                          "'darwin' (osx), 'linux', 'windows', 'raspi'")
