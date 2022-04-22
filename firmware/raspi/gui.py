@@ -85,30 +85,30 @@ class GUI:
             self.game.process(self.players[0])
             self.chessboard.show(self.game.current_fen())
             self.draw_board()
-           # self.show_move(self.game.last_made_move(), self.game.is_white_turn())
+            #self.show_move(self.game.last_made_move(), self.game.is_white_turn())
             self.draw_pieces()
-            self.turn -= 1
-        self.parent.after(100, self.update_state)
+            self.turn = 1
+        self.parent.after(10, self.update_state)
         self.parent.mainloop()
 
     def update_state(self):
         made_move = self.game.process(self.players[self.turn])
         print(self.turn)
         print(made_move)
-        if made_move:
-           
-            self.selected_piece = None
-            self.focused = None
-            self.pieces = {}
-            self.draw_board()
-            self.draw_pieces()
+        if made_move: 
+            if not self.turn:
+                self.selected_piece = None
+                self.focused = None
+                self.pieces = {}
             if self.turn:
                 print("AI move")
                 print(self.game.current_fen())
                 self.chessboard.show(self.game.current_fen())
-                #self.show_move(self.game.last_made_move(), self.game.is_white_turn())
+                self.show_move(self.game.last_made_move(), self.game.is_white_turn())
+            self.draw_board()
+            self.draw_pieces()
             self.turn = (self.turn + 1) % 2
-        self.parent.after(100,self.update_state)
+        self.parent.after(10,self.update_state)
 
     def square_clicked(self, event):
         """Waits for click on the board and depending on player's turn, executes the move
@@ -130,8 +130,7 @@ class GUI:
                     return
                 self.players[self.turn].set_move(self.made_move)
             self.focus(pos)
-            self.draw_board()
-           
+            self.draw_board() 
                 
                
 
@@ -223,7 +222,7 @@ class GUI:
         self.canvas.tag_raise("occupied")
         self.canvas.tag_lower("area")
 
-    '''def show_move(self, move, color):
+    def show_move(self, move, color):
         """Prints arrow showing the move from previous to current position.
         """
         self.canvas.after(7000, lambda:self.canvas.delete("arrow"))
@@ -238,7 +237,7 @@ class GUI:
         else:
             y_2 =((7 - corr_x1) * self.dim_square) + int(self.dim_square / 2)-25
 
-        self.canvas.create_line(x_1, y_1, x_2, y_2, arrow=tk.LAST, fill="#000000", tags="arrow")'''
+        self.canvas.create_line(x_1, y_1, x_2, y_2, arrow=tk.LAST, fill="#000000", tags="arrow")
 
     def draw_pieces(self):
         """Prints the chess pieces.

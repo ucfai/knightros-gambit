@@ -89,7 +89,7 @@ class Game:
 
         if arduino_status.status == status.ArduinoStatus.EXECUTING_MOVE:
             # Wait for move in progress to finish executing
-            time.sleep(1) # reduce the amount of polling while waiting for move to finish
+            time.sleep(0.1) # reduce the amount of polling while waiting for move to finish
 
             if self.board.ser is None:
                 # Allows testing other game loop functionality with simulated connection to Arduino
@@ -105,7 +105,7 @@ class Game:
 
         if arduino_status.status == status.ArduinoStatus.IDLE:
             # Don't spam new Arduino messages too frequently if waiting for Arduino status to update
-            time.sleep(1)
+            time.sleep(0.1)
 
             if self.board.msg_queue:
                 # We have a separate move counter for moves and instructions; to resolve conflicts
