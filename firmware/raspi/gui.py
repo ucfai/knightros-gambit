@@ -99,7 +99,6 @@ class GUI:
             self.focused = None
             self.pieces = {}
             if (self.turn and self.move_first == "gui") or (not self.turn and self.move_first == "ai"):
-                print("we are printing")
                 self.chessboard.show(self.game.current_fen())
                 self.show_move(self.game.last_made_move(), self.game.is_white_turn())
             self.draw_board()
