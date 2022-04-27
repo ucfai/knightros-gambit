@@ -35,7 +35,6 @@ class GUI:
     columns = 8
     dim_square = 64
 
-
     def __init__(self, parent, board):
         self.chessboard = board
         self.parent = parent
@@ -91,12 +90,16 @@ class GUI:
         self.parent.mainloop()
 
     def update_state(self):
+        """Runs simultaneously with the tkinter main loop and checks if a move has been
+        made every 10ms 
+        """
         made_move = self.game.process(self.players[self.turn])
         if made_move:
             self.selected_piece = None
             self.focused = None
             self.pieces = {}
-            if self.turn:
+            if (self.turn and self.move_first == "gui") or (not self.turn and self.move_first == "ai"):
+                print("we are printing")
                 self.chessboard.show(self.game.current_fen())
                 self.show_move(self.game.last_made_move(), self.game.is_white_turn())
             self.draw_board()
@@ -107,7 +110,7 @@ class GUI:
     def square_clicked(self, event):
         """Waits for click on the board and depending on player's turn, executes the move
         """
-        if self.turn == 0:
+        if not self.turn or (self.turn and self.move_first == "ai"):
             col_size = row_size = self.dim_square
             selected_column = int(event.x / col_size)
             selected_row = 7 - int(event.y / row_size)
@@ -120,6 +123,8 @@ class GUI:
                 self.made_move = self.shift(self.selected_piece[1], pos)
                 if self.made_move == None:
                     self.selected_piece = None
+                    self.focus(pos)
+                    self.draw_board()
                     print("Invalid Move! Choose a new piece.")
                     return
                 self.players[self.turn].set_move(self.made_move)
@@ -149,7 +154,6 @@ class GUI:
             raise ValueError("Rematch not yet implemented")
             # print("Ok, resetting board")
             # reset_board()
-
 
     def shift(self, p1, p2):
         """Checks if the move from p1 to p2 is valid, then makes and
@@ -217,7 +221,7 @@ class GUI:
     def show_move(self, move, color):
         """Prints arrow showing the move from previous to current position.
         """
-        self.canvas.after(7000, lambda:self.canvas.delete("arrow"))
+        self.canvas.after(700, lambda:self.canvas.delete("arrow"))
         arr = list(move)
         corr_x, corr_y = self.chessboard.num_notation(arr[0].upper() + arr[1])
         corr_x1, corr_y1 = self.chessboard.num_notation(arr[2].upper() + arr[3])
