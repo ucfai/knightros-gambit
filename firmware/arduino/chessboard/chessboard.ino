@@ -11,6 +11,7 @@
 // 1. UART_LEVEL:     This level will be used to print uart messages
 // 2. FUNCTION_LEVEL: This level will be used to print information about importantt funciton calls 
 #define DEBUG 2
+#define ON_BOARD_LED 2
 
 enum DebugLevels
 {
@@ -47,6 +48,14 @@ enum SwitchesMisc
   DEBOUNCE_TIME = 100    
 };
 
+enum MotorPins
+{
+  X_MOTOR_ENABLE = 18,
+  X_MOTOR_SLEEP_RESET = 4,
+  Y_MOTOR_ENABLE = 19,
+  Y_MOTOR_SLEEP_RESET = 5
+};
+
 enum XMotorPins
 {
   X_MOTOR_MS1 = 13,
@@ -75,16 +84,6 @@ enum MotorArrayIndicies
   MS2_PIN = 3,
   ZERO_ENDSTOP_PIN = 4,
   MAX_ENDSTOP_PIN = 5
-};
-
-enum SharedMotorPins
-{
-  X_MOTOR_ENABLE = 18,
-  X_MOTOR_RESET = 4,
-  X_MOTOR_SLEEP = 15,
-  Y_MOTOR_ENABLE = 19,
-  Y_MOTOR_RESET = 5,
-  Y_MOTOR_SLEEP = 2
 };
 
 enum ArduinoState
@@ -158,7 +157,7 @@ uint8_t stepsPerUnitSpace;
 
 // currPositionX and currPositionY measure distance from the origin 
 // (bottom left corner of the board) in eighth steps
-uint16_t currPositionX, currPositionY;
+uint16_t currPositionX = 0, currPositionY = 0;
 
 // Maximum position that currPositionX/Y may reach
 uint16_t maxPosition;  
@@ -166,11 +165,9 @@ uint16_t maxPosition;
 void setup()
 {
   // Define our pinModes
-  pinMode(X_MOTOR_RESET, OUTPUT);
-  pinMode(X_MOTOR_SLEEP, OUTPUT);
+  pinMode(X_MOTOR_SLEEP_RESET, OUTPUT);
   pinMode(X_MOTOR_ENABLE, OUTPUT);
-  pinMode(Y_MOTOR_RESET, OUTPUT);
-  pinMode(Y_MOTOR_SLEEP, OUTPUT);
+  pinMode(Y_MOTOR_SLEEP_RESET, OUTPUT);
   pinMode(Y_MOTOR_ENABLE, OUTPUT);
 
   pinMode(X_MOTOR_MS1, OUTPUT);
@@ -211,6 +208,14 @@ void setup()
 
   if (DEBUG >= UART_LEVEL)
   {
+    digitalWrite(ON_BOARD_LED, HIGH);
+    delay(200);
+    digitalWrite(ON_BOARD_LED, LOW);
+    delay(300);
+    digitalWrite(ON_BOARD_LED, HIGH);
+    delay(200);
+    digitalWrite(ON_BOARD_LED, LOW);
+
     Serial.println();
     Serial.println("Starting Program...");
   }
