@@ -72,7 +72,7 @@ bool moveDirect(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t endR
     Serial.print(", ");
     Serial.print(endRow);
     Serial.print(")");
-    Serial.print("    ");
+    Serial.println("    ");
     Serial.print("Electromagnet State: ");
     Serial.print( (enableMagnet ? "On" : "Off"));
     Serial.println("\n");
@@ -138,6 +138,13 @@ bool moveDirect(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t endR
 
   // Turn electromagnet off
   digitalWrite(ELECTROMAGNET, LOW);
+
+  // Print debug info about moveDirect main movement
+  if (DEBUG >= FUNCTION_LEVEL)
+  {
+    Serial.print("Electromagnet State: Off");
+    Serial.println("\n");
+  }
 
   return isSuccessful;
 }
@@ -381,6 +388,13 @@ bool moveAlongEdges(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t 
 
   // Turn electromagnet off
   digitalWrite(ELECTROMAGNET, LOW);
+
+  // Print debug info about moveAlongEdges main movement
+  if (DEBUG >= FUNCTION_LEVEL)
+  {
+    Serial.print("Electromagnet State: Off");
+    Serial.println("\n");
+  }
 
   return (pointCounter == numPoints);
 }
