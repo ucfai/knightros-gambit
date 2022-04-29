@@ -11,7 +11,7 @@
 // 1. UART_LEVEL:     This level will be used to print uart messages
 // 2. FUNCTION_LEVEL: This level will be used to print information about importantt funciton calls 
 #define DEBUG 2
-#define ON_BOARD_LED 2
+#define INDICATOR_LED 21
 
 // This is the delay between pulses in milliseconds
 #define STEP_DELAY 1
@@ -211,13 +211,13 @@ void setup()
 
   if (DEBUG >= UART_LEVEL)
   {
-    digitalWrite(ON_BOARD_LED, HIGH);
+    digitalWrite(INDICATOR_LED, HIGH);
     delay(200);
-    digitalWrite(ON_BOARD_LED, LOW);
+    digitalWrite(INDICATOR_LED, LOW);
     delay(300);
-    digitalWrite(ON_BOARD_LED, HIGH);
+    digitalWrite(INDICATOR_LED, HIGH);
     delay(200);
-    digitalWrite(ON_BOARD_LED, LOW);
+    digitalWrite(INDICATOR_LED, LOW);
 
     Serial.println();
     Serial.println("Starting Program...");
