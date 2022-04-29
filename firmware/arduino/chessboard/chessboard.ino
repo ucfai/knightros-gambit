@@ -60,21 +60,23 @@ enum XMotorPins
 {
   X_MOTOR_MS1 = 13,
   X_MOTOR_MS2 = 12,
+  X_MOTOR_MS3 = 2,
   X_MOTOR_DIR = 27,
   X_MOTOR_STEP = 14
 };
-uint8_t xMotor[6] = {X_MOTOR_STEP, X_MOTOR_DIR, X_MOTOR_MS1, 
-                     X_MOTOR_MS2, X_AXIS_MAX_ENDSTOP, X_AXIS_ZERO_ENDSTOP};
+uint8_t xMotor[7] = {X_MOTOR_STEP, X_MOTOR_DIR, X_MOTOR_MS1, X_MOTOR_MS2, 
+                     X_MOTOR_MS3, X_AXIS_MAX_ENDSTOP, X_AXIS_ZERO_ENDSTOP};
 
 enum YMotorPins
 {
   Y_MOTOR_MS1 = 26,
   Y_MOTOR_MS2 = 25,
+  Y_MOTOR_MS3 = 15,
   Y_MOTOR_DIR = 32,
   Y_MOTOR_STEP = 33
 };
-uint8_t yMotor[6] = {Y_MOTOR_STEP, Y_MOTOR_DIR, Y_MOTOR_MS1, 
-                     Y_MOTOR_MS2, Y_AXIS_MAX_ENDSTOP, Y_AXIS_ZERO_ENDSTOP};
+uint8_t yMotor[7] = {Y_MOTOR_STEP, Y_MOTOR_DIR, Y_MOTOR_MS1, Y_MOTOR_MS2, 
+                     Y_MOTOR_MS3, Y_AXIS_MAX_ENDSTOP, Y_AXIS_ZERO_ENDSTOP};
                   
 enum MotorArrayIndicies
 {
@@ -82,8 +84,9 @@ enum MotorArrayIndicies
   DIR_PIN = 1,
   MS1_PIN = 2,
   MS2_PIN = 3,
-  ZERO_ENDSTOP_PIN = 4,
-  MAX_ENDSTOP_PIN = 5
+  MS3_PIN = 4,
+  ZERO_ENDSTOP_PIN = 5,
+  MAX_ENDSTOP_PIN = 6
 };
 
 enum ArduinoState
@@ -117,7 +120,8 @@ enum StepSize
   WHOLE_STEPS = 1,
   HALF_STEPS = 2,
   QUARTER_STEPS = 4,
-  EIGHTH_STEPS = 8
+  EIGHTH_STEPS = 8,
+  SIXTEENTH_STEPS = 16
 };
 
 enum CircleFunctionConsts

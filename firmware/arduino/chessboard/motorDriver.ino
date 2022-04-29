@@ -47,21 +47,31 @@ void setScale(uint8_t motor[], uint8_t scale)
   {
     digitalWrite(motor[MS1_PIN], LOW);
     digitalWrite(motor[MS2_PIN], LOW);
+    digitalWrite(motor[MS3_PIN], LOW);
   }
   else if (scale == HALF_STEPS)
   {
     digitalWrite(motor[MS1_PIN], HIGH);
     digitalWrite(motor[MS2_PIN], LOW);
+    digitalWrite(motor[MS3_PIN], LOW);
   }
   else if (scale == QUARTER_STEPS)
   {
     digitalWrite(motor[MS1_PIN], LOW);
     digitalWrite(motor[MS2_PIN], HIGH);
+    digitalWrite(motor[MS3_PIN], LOW);
   }
   else if (scale == EIGHTH_STEPS)
   {
     digitalWrite(motor[MS1_PIN], HIGH);
     digitalWrite(motor[MS2_PIN], HIGH);
+    digitalWrite(motor[MS3_PIN], LOW);
+  }
+  else if (scale == SIXTEENTH_STEPS)
+  {
+    digitalWrite(motor[MS1_PIN], HIGH);
+    digitalWrite(motor[MS2_PIN], HIGH);
+    digitalWrite(motor[MS3_PIN], HIGH);
   }
 }
 
