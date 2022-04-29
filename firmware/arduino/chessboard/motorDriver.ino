@@ -67,23 +67,19 @@ void setScale(uint8_t motor[], uint8_t scale)
 
 void enableMotors()
 {
-  digitalWrite(X_MOTOR_SLEEP, HIGH);
-  digitalWrite(X_MOTOR_RESET, HIGH);
+  digitalWrite(X_MOTOR_SLEEP_RESET, HIGH);
   digitalWrite(X_MOTOR_ENABLE, LOW);
   
-  digitalWrite(Y_MOTOR_SLEEP, HIGH);
-  digitalWrite(Y_MOTOR_RESET, HIGH);
+  digitalWrite(Y_MOTOR_SLEEP_RESET, HIGH);
   digitalWrite(Y_MOTOR_ENABLE, LOW);
 }
 
 void disableMotors()
 {
-  digitalWrite(X_MOTOR_SLEEP, LOW);
-  digitalWrite(X_MOTOR_RESET, LOW);
+  digitalWrite(X_MOTOR_SLEEP_RESET, LOW);
   digitalWrite(X_MOTOR_ENABLE, HIGH);
 
-  digitalWrite(Y_MOTOR_SLEEP, LOW);
-  digitalWrite(Y_MOTOR_RESET, LOW);
+  digitalWrite(Y_MOTOR_SLEEP_RESET, LOW);
   digitalWrite(Y_MOTOR_ENABLE, HIGH);
 }
 
@@ -226,7 +222,6 @@ uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
   // Print debug info about straight movement
   if (DEBUG >= FUNCTION_LEVEL)
   {
-    Serial.println("The following is in the form (col, row)");
     Serial.print("Moving straight from (");
     Serial.print(startCol);
     Serial.print(", ");
@@ -238,7 +233,7 @@ uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
     Serial.print(") ");
     Serial.print("along the ");
     Serial.print( (motor == xMotor) ? "x-axis" : "y-axis");
-    Serial.println("\n");
+    Serial.println("");
   }
 
   // Same as homeAxis(), sets the loop to only update a single motors position at a time
@@ -332,7 +327,6 @@ uint8_t moveDiagonal(uint8_t endCol, uint8_t endRow)
   // Print debug info about diagonal movement
   if (DEBUG >= FUNCTION_LEVEL)
   {
-    Serial.println("The following is in the form (col, row)");
     Serial.print("Moving diagonal from (");
     Serial.print(startCol);
     Serial.print(", ");
@@ -342,7 +336,7 @@ uint8_t moveDiagonal(uint8_t endCol, uint8_t endRow)
     Serial.print(", ");
     Serial.print(endRow);
     Serial.print(")");
-    Serial.println("\n");
+    Serial.println("");
   }
 
   // Sets scale and numEighthSteps for both X and Y
