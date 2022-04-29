@@ -141,7 +141,7 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   {
     // Moves motor
     digitalWrite(motor[STEP_PIN], LOW);
-    delay(1);
+    delay(STEP_DELAY);
     digitalWrite(motor[STEP_PIN], HIGH);
   }
 
@@ -154,7 +154,7 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   for (i = 0; i < HOME_CALIBRATION_OFFSET; i++)
   {
     digitalWrite(motor[STEP_PIN], LOW);
-    delay(1);
+    delay(STEP_DELAY);
     digitalWrite(motor[STEP_PIN], HIGH);
   }
 
@@ -169,7 +169,7 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   while (digitalRead(motor[endstopPin]) == LOW)
   {
     digitalWrite(motor[STEP_PIN], LOW);
-    delay(1);
+    delay(STEP_DELAY);
     digitalWrite(motor[STEP_PIN], HIGH);
   }
 
@@ -189,7 +189,7 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   for (i = 0; i < tempAlignWholeSteps; i++)
   {
     digitalWrite(motor[STEP_PIN], LOW);
-    delay(1);
+    delay(STEP_DELAY);
     digitalWrite(motor[STEP_PIN], HIGH);
   }
 
@@ -299,7 +299,7 @@ uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
       return HIT_NEG_Y_ENDSTOP;
 
     digitalWrite(motor[STEP_PIN], LOW);
-    delay(1); // 1 milliSecond
+    delay(STEP_DELAY);
     digitalWrite(motor[STEP_PIN], HIGH);
   }
 
@@ -411,7 +411,7 @@ uint8_t moveDiagonal(uint8_t endCol, uint8_t endRow)
 
     digitalWrite(xMotor[STEP_PIN], LOW);
     digitalWrite(yMotor[STEP_PIN], LOW);
-    delay(1);
+    delay(STEP_DELAY);
     digitalWrite(xMotor[STEP_PIN], HIGH);
     digitalWrite(yMotor[STEP_PIN], HIGH);
   }

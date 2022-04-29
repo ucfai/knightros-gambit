@@ -13,6 +13,9 @@
 #define DEBUG 2
 #define ON_BOARD_LED 2
 
+// This is the delay between pulses in milliseconds
+#define STEP_DELAY 1
+
 enum DebugLevels
 {
   UART_LEVEL = 1,
