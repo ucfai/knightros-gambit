@@ -39,8 +39,7 @@ bool moveDirect(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t endR
     Serial.print(startCol);
     Serial.print(", ");
     Serial.print(startRow);
-    Serial.print(") ");
-    Serial.println("\n");
+    Serial.println(") \n");
   }
 
   // Make initial move to first position and move directly since it's faster.
@@ -202,8 +201,7 @@ bool moveAlongEdges(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t 
     Serial.print(startCol);
     Serial.print(", ");
     Serial.print(startRow);
-    Serial.print(") ");
-    Serial.println("\n");
+    Serial.println(") \n");
   }
 
   // Make initial move to first position. Move diagonally since it's faster.
@@ -223,8 +221,7 @@ bool moveAlongEdges(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t 
     Serial.print(endCol);
     Serial.print(", ");
     Serial.print(endRow);
-    Serial.print(")");
-    Serial.println("\n");
+    Serial.println(") \n");
   }
 
   // Calculate a list of up to 4 new points (including the start point) 
@@ -412,8 +409,7 @@ void centerPiece()
     Serial.print(currRow);
     Serial.print(", ");
     Serial.print(currCol);
-    Serial.print(")");
-    Serial.println("\n");
+    Serial.println(") \n");
   }
 
 

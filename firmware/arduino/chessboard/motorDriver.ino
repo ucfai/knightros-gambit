@@ -242,8 +242,7 @@ uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
     Serial.print(endRow);
     Serial.print(") ");
     Serial.print("along the ");
-    Serial.print( (motor == xMotor) ? "x-axis" : "y-axis");
-    Serial.println("");
+    Serial.println( (motor == xMotor) ? "x-axis" : "y-axis");
   }
 
   // Same as homeAxis(), sets the loop to only update a single motors position at a time
@@ -345,8 +344,7 @@ uint8_t moveDiagonal(uint8_t endCol, uint8_t endRow)
     Serial.print(endCol);
     Serial.print(", ");
     Serial.print(endRow);
-    Serial.print(")");
-    Serial.println("");
+    Serial.println(")");
   }
 
   // Sets scale and numEighthSteps for both X and Y
