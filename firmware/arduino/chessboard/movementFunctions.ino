@@ -39,8 +39,7 @@ bool moveDirect(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t endR
     Serial.print(startCol);
     Serial.print(", ");
     Serial.print(startRow);
-    Serial.print(") ");
-    Serial.println("\n");
+    Serial.println(") \n");
   }
 
   // Make initial move to first position and move directly since it's faster.
@@ -71,8 +70,7 @@ bool moveDirect(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t endR
     Serial.print(endCol);
     Serial.print(", ");
     Serial.print(endRow);
-    Serial.print(")");
-    Serial.print("    ");
+    Serial.println(")");
     Serial.print("Electromagnet State: ");
     Serial.print( (enableMagnet ? "On" : "Off"));
     Serial.println("\n");
@@ -139,6 +137,10 @@ bool moveDirect(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t endR
   // Turn electromagnet off
   digitalWrite(ELECTROMAGNET, LOW);
 
+  // Print debug info about moveDirect main movement
+  if (DEBUG >= FUNCTION_LEVEL)
+    Serial.println("Electromagnet State: Off \n");
+
   return isSuccessful;
 }
 
@@ -199,8 +201,7 @@ bool moveAlongEdges(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t 
     Serial.print(startCol);
     Serial.print(", ");
     Serial.print(startRow);
-    Serial.print(") ");
-    Serial.println("\n");
+    Serial.println(") \n");
   }
 
   // Make initial move to first position. Move diagonally since it's faster.
@@ -220,8 +221,7 @@ bool moveAlongEdges(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t 
     Serial.print(endCol);
     Serial.print(", ");
     Serial.print(endRow);
-    Serial.print(")");
-    Serial.println("\n");
+    Serial.println(") \n");
   }
 
   // Calculate a list of up to 4 new points (including the start point) 
@@ -382,6 +382,10 @@ bool moveAlongEdges(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t 
   // Turn electromagnet off
   digitalWrite(ELECTROMAGNET, LOW);
 
+  // Print debug info about moveAlongEdges main movement
+  if (DEBUG >= FUNCTION_LEVEL)
+    Serial.println("Electromagnet State: Off \n");
+
   return (pointCounter == numPoints);
 }
 
@@ -405,8 +409,7 @@ void centerPiece()
     Serial.print(currRow);
     Serial.print(", ");
     Serial.print(currCol);
-    Serial.print(")");
-    Serial.println("\n");
+    Serial.println(") \n");
   }
 
 

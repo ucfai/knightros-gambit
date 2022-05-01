@@ -47,36 +47,50 @@ void setScale(uint8_t motor[], uint8_t scale)
   {
     digitalWrite(motor[MS1_PIN], LOW);
     digitalWrite(motor[MS2_PIN], LOW);
+    digitalWrite(motor[MS3_PIN], LOW);
   }
   else if (scale == HALF_STEPS)
   {
     digitalWrite(motor[MS1_PIN], HIGH);
     digitalWrite(motor[MS2_PIN], LOW);
+    digitalWrite(motor[MS3_PIN], LOW);
   }
   else if (scale == QUARTER_STEPS)
   {
     digitalWrite(motor[MS1_PIN], LOW);
     digitalWrite(motor[MS2_PIN], HIGH);
+    digitalWrite(motor[MS3_PIN], LOW);
   }
   else if (scale == EIGHTH_STEPS)
   {
     digitalWrite(motor[MS1_PIN], HIGH);
     digitalWrite(motor[MS2_PIN], HIGH);
+    digitalWrite(motor[MS3_PIN], LOW);
+  }
+  else if (scale == SIXTEENTH_STEPS)
+  {
+    digitalWrite(motor[MS1_PIN], HIGH);
+    digitalWrite(motor[MS2_PIN], HIGH);
+    digitalWrite(motor[MS3_PIN], HIGH);
   }
 }
 
 void enableMotors()
 {
-  digitalWrite(MOTOR_SLEEP, HIGH);
-  digitalWrite(MOTOR_RESET, HIGH);
-  digitalWrite(MOTOR_ENABLE, LOW);
+  digitalWrite(X_MOTOR_SLEEP_RESET, HIGH);
+  digitalWrite(X_MOTOR_ENABLE, LOW);
+  
+  digitalWrite(Y_MOTOR_SLEEP_RESET, HIGH);
+  digitalWrite(Y_MOTOR_ENABLE, LOW);
 }
 
 void disableMotors()
 {
-  digitalWrite(MOTOR_SLEEP, LOW);
-  digitalWrite(MOTOR_RESET, LOW);
-  digitalWrite(MOTOR_ENABLE, HIGH);
+  digitalWrite(X_MOTOR_SLEEP_RESET, LOW);
+  digitalWrite(X_MOTOR_ENABLE, HIGH);
+
+  digitalWrite(Y_MOTOR_SLEEP_RESET, LOW);
+  digitalWrite(Y_MOTOR_ENABLE, HIGH);
 }
 
 // Drives the motor corresponding to "motor" to be aligned properly at either the max position or 0
@@ -127,7 +141,7 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   {
     // Moves motor
     digitalWrite(motor[STEP_PIN], LOW);
-    delay(1);
+    delay(STEP_DELAY);
     digitalWrite(motor[STEP_PIN], HIGH);
   }
 
@@ -140,7 +154,7 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   for (i = 0; i < HOME_CALIBRATION_OFFSET; i++)
   {
     digitalWrite(motor[STEP_PIN], LOW);
-    delay(1);
+    delay(STEP_DELAY);
     digitalWrite(motor[STEP_PIN], HIGH);
   }
 
@@ -155,7 +169,7 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   while (digitalRead(motor[endstopPin]) == LOW)
   {
     digitalWrite(motor[STEP_PIN], LOW);
-    delay(1);
+    delay(STEP_DELAY);
     digitalWrite(motor[STEP_PIN], HIGH);
   }
 
@@ -175,7 +189,7 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   for (i = 0; i < tempAlignWholeSteps; i++)
   {
     digitalWrite(motor[STEP_PIN], LOW);
-    delay(1);
+    delay(STEP_DELAY);
     digitalWrite(motor[STEP_PIN], HIGH);
   }
 
@@ -218,7 +232,6 @@ uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
   // Print debug info about straight movement
   if (DEBUG >= FUNCTION_LEVEL)
   {
-    Serial.println("The following is in the form (col, row)");
     Serial.print("Moving straight from (");
     Serial.print(startCol);
     Serial.print(", ");
@@ -229,8 +242,7 @@ uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
     Serial.print(endRow);
     Serial.print(") ");
     Serial.print("along the ");
-    Serial.print( (motor == xMotor) ? "x-axis" : "y-axis");
-    Serial.println("\n");
+    Serial.println( (motor == xMotor) ? "x-axis" : "y-axis");
   }
 
   // Same as homeAxis(), sets the loop to only update a single motors position at a time
@@ -286,7 +298,7 @@ uint8_t moveStraight(uint8_t motor[], uint8_t endCol, uint8_t endRow)
       return HIT_NEG_Y_ENDSTOP;
 
     digitalWrite(motor[STEP_PIN], LOW);
-    delay(1); // 1 milliSecond
+    delay(STEP_DELAY);
     digitalWrite(motor[STEP_PIN], HIGH);
   }
 
@@ -324,7 +336,6 @@ uint8_t moveDiagonal(uint8_t endCol, uint8_t endRow)
   // Print debug info about diagonal movement
   if (DEBUG >= FUNCTION_LEVEL)
   {
-    Serial.println("The following is in the form (col, row)");
     Serial.print("Moving diagonal from (");
     Serial.print(startCol);
     Serial.print(", ");
@@ -333,8 +344,7 @@ uint8_t moveDiagonal(uint8_t endCol, uint8_t endRow)
     Serial.print(endCol);
     Serial.print(", ");
     Serial.print(endRow);
-    Serial.print(")");
-    Serial.println("\n");
+    Serial.println(")");
   }
 
   // Sets scale and numEighthSteps for both X and Y
@@ -399,7 +409,7 @@ uint8_t moveDiagonal(uint8_t endCol, uint8_t endRow)
 
     digitalWrite(xMotor[STEP_PIN], LOW);
     digitalWrite(yMotor[STEP_PIN], LOW);
-    delay(1);
+    delay(STEP_DELAY);
     digitalWrite(xMotor[STEP_PIN], HIGH);
     digitalWrite(yMotor[STEP_PIN], HIGH);
   }
