@@ -160,7 +160,7 @@ uint8_t stepsPerUnitSpace;
 
 // currPositionX and currPositionY measure distance from the origin 
 // (bottom left corner of the board) in eighth steps
-uint16_t currPositionX = 0, currPositionY = 0;
+uint16_t currPositionX, currPositionY;
 
 // Maximum position that currPositionX/Y may reach
 uint16_t maxPosition;  
@@ -205,6 +205,10 @@ void setup()
   // that are used in the `makeCircle()` function in circleFunction.ino
   calculatePulsesPerSlope();
 
+  // Set current position to 0 in case raspberry pi does not call home before a move
+  currPositionX = 0;
+  currPositionY = 0;
+
   Serial2.begin(9600, SERIAL_8N1, RX2, TX2);
   Serial.begin(115200);
   disableMotors();
@@ -219,8 +223,7 @@ void setup()
     delay(200);
     digitalWrite(INDICATOR_LED, LOW);
 
-    Serial.println();
-    Serial.println("Starting Program...");
+    Serial.println("Starting Program...\n");
   }
   
   attachInterrupt(digitalPinToInterrupt(CHESS_TIMER_BUTTON), chessTimerISR, RISING);
