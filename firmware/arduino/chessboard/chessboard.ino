@@ -184,6 +184,7 @@ void setup()
   pinMode(Y_MOTOR_STEP, OUTPUT);
 
   pinMode(ELECTROMAGNET, OUTPUT);
+  pinMode(INDICATOR_LED, OUTPUT);
 
   pinMode(X_AXIS_MAX_ENDSTOP, INPUT);
   pinMode(Y_AXIS_MAX_ENDSTOP, INPUT);
