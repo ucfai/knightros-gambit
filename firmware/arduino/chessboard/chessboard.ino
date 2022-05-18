@@ -84,8 +84,8 @@ enum MotorArrayIndicies
   MS1_PIN = 2,
   MS2_PIN = 3,
   MS3_PIN = 4,
-  ZERO_ENDSTOP_PIN = 5,
-  MAX_ENDSTOP_PIN = 6
+  MAX_ENDSTOP_PIN = 5,
+  ZERO_ENDSTOP_PIN = 6
 };
 
 enum ArduinoState
