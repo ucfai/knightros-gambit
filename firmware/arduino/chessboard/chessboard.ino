@@ -110,8 +110,8 @@ enum DistanceConstants
 // and right/upward movement is positive (POS_DIR)
 enum Direction
 {
-  POS_DIR = 0,
-  NEG_DIR = 1
+  POS_DIR = 1,
+  NEG_DIR = 0
 }; 
 
 enum StepSize
