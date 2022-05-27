@@ -78,7 +78,10 @@ bool moveDirect(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t endR
 
   // Enable electromagnet
   if (enableMagnet)
+  {
     ledcWrite(EM_PWM_CHANNEL, PWM_HALF);
+    digitalWrite(INDICATOR_LED, HIGH);
+  }
 
   // This variable allows us to store the return value of the function
   // so we can turn off the electromagnet before exiting.
@@ -107,7 +110,8 @@ bool moveDirect(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t endR
       // All moveDirect calls that move pieces have valid slopes, so we can only encounter this
       // if we are moving to the start point, which does not move pieces
       digitalWrite(ELECTROMAGNET, LOW);
-
+      digitalWrite(INDICATOR_LED, LOW);
+  
       // We need to find the smaller distance for the diagonal movement using the absolute value, 
       // because if either deltaX or deltaY are negative it will yield an incorrect minimum
       // Calculate the X and Y components separately, since they can be different signs  
@@ -136,6 +140,7 @@ bool moveDirect(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t endR
 
   // Turn electromagnet off
   digitalWrite(ELECTROMAGNET, LOW);
+  digitalWrite(INDICATOR_LED, LOW);
 
   // Print debug info about moveDirect main movement
   if (DEBUG >= FUNCTION_LEVEL)
@@ -349,6 +354,7 @@ bool moveAlongEdges(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t 
 
   // Enable electromagnet
   ledcWrite(EM_PWM_CHANNEL, PWM_HALF);
+  digitalWrite(INDICATOR_LED, HIGH);
   
   // Loop through each of the calculated points and call the according movement function
   // Start from 1 since 0 is the start point and we always refer back to it
@@ -381,7 +387,8 @@ bool moveAlongEdges(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t 
 
   // Turn electromagnet off
   digitalWrite(ELECTROMAGNET, LOW);
-
+  digitalWrite(INDICATOR_LED, LOW);
+ 
   // Print debug info about moveAlongEdges main movement
   if (DEBUG >= FUNCTION_LEVEL)
     Serial.println("Electromagnet State: Off \n");
@@ -417,6 +424,7 @@ void centerPiece()
 
   // Enable electromagnet
   ledcWrite(EM_PWM_CHANNEL, PWM_HALF);
+  digitalWrite(INDICATOR_LED, HIGH);
 
   for (i = 0; i < NUM_CIRCLES; i++)
   {
@@ -430,6 +438,7 @@ void centerPiece()
 
   // Turn electromagnet off
   digitalWrite(ELECTROMAGNET, LOW);
+  digitalWrite(INDICATOR_LED, LOW);
 }
 
 // Handles error codes passed in by the returns of relevant movement functions
