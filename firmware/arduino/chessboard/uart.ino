@@ -229,9 +229,15 @@ bool makeMove(volatile char * message)
     else if (message[ITYPE_IDX] == SET_ELECTROMAGNET)
     {
       if (message[EXTRA_IDX] == '0')
+      {
         digitalWrite(ELECTROMAGNET, LOW);
+        digitalWrite(INDICATOR_LED, LOW);
+      }
       else if (message[EXTRA_IDX] == '1')
+      {
         ledcWrite(EM_PWM_CHANNEL, PWM_HALF);
+        digitalWrite(INDICATOR_LED, HIGH);
+      }
     }
     // Retransmit last message
     else if (message[ITYPE_IDX] == RETRANSMIT)
