@@ -1,11 +1,6 @@
-"""
-adapted code from:
-*    Title: chess_tk
-*    Author: Guatam Sharma
-*    Date: May 19, 2016
-*    Availability: https://github.com/saavedra29/chess_tk
+"""Module containing helper GUI code for gui.py.
 
-"""
+Based on https://github.com/saavedra29/chess_tk"""
 
 import sys
 
@@ -34,7 +29,7 @@ def create_piece(piece, color="white"):
     return module.__dict__[piece](color)
 
 class Piece(object):
-    """Chess piece class condainting color and shortname.
+    """Chess piece class containing color and shortname.
     """
     def __init__(self, color):
         if color == "black":
@@ -150,7 +145,7 @@ class Pawn(Piece):
         """Returns moves available based on piece
         """
         board = self.board
-        piece = self #pylint: disable=unused-variable
+        _ = self
         if self.color == "white":
             startpos, direction, enemy = 1, 1, "black"
         else:

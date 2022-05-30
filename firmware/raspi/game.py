@@ -171,5 +171,5 @@ class Game:
 
         raise ValueError("We shouldn't reach this point in the function.")
 
-    if __name__ == '__main__':
-        print("No main for this file, please use `cliinterface.py`")
+if __name__ == '__main__':
+    print("No main for this file, please use `cliinterface.py`")

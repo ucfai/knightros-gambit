@@ -1,16 +1,12 @@
+"""Module containing main GUI code to interact with game.py.
+
+Based on https://github.com/saavedra29/chess_tk
 """
-adapted code from:
-*    Title: chess_tk
-*    Author: Guatam Sharma
-*    Date: May 19, 2016
-*    Availability: https://github.com/saavedra29/chess_tk
-"""
+import random
+import sys
 import tkinter as tk
 from tkinter import simpledialog
-import sys
-import random
 
-from player import GUIHumanPlayer
 import chessboard
 from game import Game
 import player
@@ -115,8 +111,8 @@ class GUI:
             selected_row = 7 - int(event.y / row_size)
             pos = self.chessboard.alpha_notation((selected_row, selected_column))
             try:
-                piece = self.chessboard[pos] #pylint: disable=unused-variable
-            except: #pylint: disable=bare-except
+                _ = self.chessboard[pos]
+            except Exception as e:
                 pass
             if self.selected_piece:
                 self.made_move = self.shift(self.selected_piece[1], pos)
@@ -161,7 +157,7 @@ class GUI:
         piece = self.chessboard[p1]
         try:
             dest_piece = self.chessboard[p2]
-        except: #pylint: disable=bare-except
+        except Exception as e:
             dest_piece = None
         if dest_piece is None or dest_piece.color != piece.color:
             try:
@@ -176,7 +172,7 @@ class GUI:
         """
         try:
             piece = self.chessboard[pos]
-        except: #pylint: disable=bare-except
+        except Exception as e:
             piece = None
         if piece is not None and (piece.color == self.chessboard.player_turn):
             self.selected_piece = (self.chessboard[pos], pos)
@@ -220,17 +216,17 @@ class GUI:
     def show_move(self, move, color):
         """Prints arrow showing the move from previous to current position.
         """
-        self.canvas.after(700, lambda:self.canvas.delete("arrow"))
+        self.canvas.after(700, lambda: self.canvas.delete("arrow"))
         arr = list(move)
         corr_x, corr_y = self.chessboard.num_notation(arr[0].upper() + arr[1])
         corr_x1, corr_y1 = self.chessboard.num_notation(arr[2].upper() + arr[3])
-        x_1 =( corr_y * self.dim_square) + int(self.dim_square / 2)
-        y_1 =((7 - corr_x) * self.dim_square) + int(self.dim_square / 2)
-        x_2 = ( corr_y1 * self.dim_square) + int(self.dim_square / 2)
+        x_1 = (corr_y * self.dim_square) + int(self.dim_square / 2)
+        y_1 = ((7 - corr_x) * self.dim_square) + int(self.dim_square / 2)
+        x_2 = (corr_y1 * self.dim_square) + int(self.dim_square / 2)
         if not color:
-            y_2 =((7 - corr_x1) * self.dim_square) + int(self.dim_square / 2)+25
+            y_2 = ((7 - corr_x1) * self.dim_square) + int(self.dim_square / 2) + 25
         else:
-            y_2 =((7 - corr_x1) * self.dim_square) + int(self.dim_square / 2)-25
+            y_2 = ((7 - corr_x1) * self.dim_square) + int(self.dim_square / 2) - 25
 
         self.canvas.create_line(x_1, y_1, x_2, y_2, arrow=tk.LAST, fill="#000000", tags="arrow")
 
@@ -253,20 +249,18 @@ class GUI:
                 self.canvas.coords(piecename, x_0, y_0)
 
     def gui_loop(self):
-        """allows user to select move on board and then calls the event loop """
+        """Allows user to select move on board and then calls the event loop"""
         self.canvas.bind("<Button-1>", self.square_clicked)
         self.setup_game()
 
 
- # TODO: make this function have a better name; it doesn"t just return bool, it also assigns color.
 def assign_human_turn_at_start():
      """Assigns piece color for human and returns boolean accordingly.
      """
      while True:
-        start = simpledialog.askstring(
+        start = tk.simpledialog.askstring(
             title="Choose Piece Color",
-            prompt="Choose piece color ([w]hite, [b]lack, or [r]andom):").lower()
-         #start = input("Choose piece color ([w]hite, [b]lack, or [r]andom): ").lower()
+            prompt="Choose piece color ([w]hite, [b]lack, or [r]andom): ").lower()
         if start == "r":
              piece_color = "w" if random.randint(0, 1) else "b"
         if start == "b":
@@ -337,13 +331,13 @@ def main(): #took out chessboard
     root=tk.Tk()
     root.title("Knightr0\'s Gambit")
 
-    #initialize gui
+    # initialize gui
     color = None
     gui = GUI(root, chessboard.Board(color))
     textbox=tk.Text(root)
     textbox.pack()
 
-    #redirects print statements to gui
+    # redirects print statements to gui
     def redirector(input_str):
         textbox.insert(tk.INSERT, input_str)
 

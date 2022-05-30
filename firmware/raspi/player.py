@@ -23,8 +23,7 @@ class StockfishPlayer:
         """Sets stockfish state from provided fen and returns best move.
         """
         self.stockfish.set_fen_position(board.fen())
-        move = self.stockfish.get_best_move()
-        return move
+        return self.stockfish.get_best_move()
 
     def __str__(self):
         return "StockfishPlayer"
@@ -80,8 +79,7 @@ class GUIHumanPlayer:
         """Returns None until a new move is selected on the GUI
         (which can only be done if it's the GUI player's turn)
         """
-
-        #Note next move can be None
+        # Note next move can be None
         prev_move = self.next_move
         self.next_move = None
         return prev_move

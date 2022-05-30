@@ -1,16 +1,13 @@
-"""
-adapted code from:
-*    Title: chess_tk
-*    Author: Guatam Sharma
-*    Date: May 19, 2016
-*    Availability: https://github.com/saavedra29/chess_tk
+"""Module containing class to display current board state.
+
+Also contains some custom Exceptions.
+
+Based on https://github.com/saavedra29/chess_tk
 """
 from copy import deepcopy
 import re
+
 import pieces
-
-START_PATTERN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
-
 
 class Board(dict):
     """Board class to disply current board state.
@@ -22,9 +19,11 @@ class Board(dict):
     halfmove_clock = 0
     fullmove_number = 1
     history = []
+    START_PATTERN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
-    def __init__(self, pat=None): # pylint: disable=super-init-not-called unused-argument
-        self.show(START_PATTERN)
+    def __init__(self, pat=None):
+        super().__init__()
+        self.show(Board.START_PATTERN)
 
     def is_in_check_after_move(self, p1, p2):
         """Checks if the king is in check after move has been made
@@ -40,7 +39,7 @@ class Board(dict):
         piece = self[p1]
         try:
             dest = self[p2]
-        except: # pylint: disable=W0702
+        except Exception as e:
             dest = None
         if self.player_turn != piece.color:
             raise NotYourTurn("Not " + piece.color + "'s turn!")
@@ -57,20 +56,20 @@ class Board(dict):
             raise Draw
         else:
             self.move(p1, p2)
-            self.complete_move(piece, dest, p1, p2)
+            self.complete_move(piece, dest, p2)
 
     def move(self, p1, p2):
         """Moves a piece from p1 to p2
         """
         piece = self[p1]
         try:
-            dest = self[p2] #pylint: disable=W0612
-        except: # pylint: disable=W0702
+            _ = self[p2]
+        except Exception as e:
             pass
         del self[p1]
         self[p2] = piece
 
-    def complete_move(self, piece, dest, p1, p2): #pylint: disable=unused-argument
+    def complete_move(self, piece, dest, p2):
         """Makes a complete move by updating values and changes the turn to the opponent
         """
         enemy = ("white" if piece.color == "black" else "black")
@@ -120,7 +119,7 @@ class Board(dict):
         """
         kingpos = self.position_of_king(color)
         opponent = ("black" if color == "white" else "white")
-        for pieces in self.items(): #pylint: disable=redefined-outer-name unused-variable
+        for _ in self.items():
             return bool(kingpos in self.all_moves_available(opponent))
 
     def alpha_notation(self, xycoord):
@@ -140,10 +139,8 @@ class Board(dict):
     def is_on_board(self, coord):
         """Checks if the given coord is on the board
         """
-        if coord[1] < 0 or coord[1] > 7 or coord[0] < 0 or coord[0] > 7:
-            return False
-        else:
-            return True
+        list = [coord[1] >= 0, coord[1] <= 7, coord[0] >= 0, coord[0] <= 7]
+        return all(list)
 
     def show(self, pat):
         """Prints a visual representation of the board state based on a
