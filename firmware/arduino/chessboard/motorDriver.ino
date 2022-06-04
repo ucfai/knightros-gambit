@@ -137,6 +137,8 @@ void alignAxis(uint8_t motor[], uint8_t alignmentCode)
   }
   setScale(motor, WHOLE_STEPS);
 
+  enableMotors();
+
   while (digitalRead(motor[endstopPin]) == LOW)
   {
     // Moves motor
