@@ -118,8 +118,8 @@ class InstructionType:
     # enabling the motors.
     ENABLE_MOTORS = 'E'
 
-    # A code used to indicate the Arduino should perform a power cycle/software reset
-    RESET_ARDUINO = 'P'
+    # A code used to indicate the Arduino should restart (perform a power cycle)
+    RESTART_ARDUINO = 'P'
 
     # Tuple of all InstructionTypes, used for checking membership
     VALID_INSTRUCTIONS = (
@@ -128,7 +128,7 @@ class InstructionType:
         SET_HUMAN_MOVE_VALID,   # M
         RETRANSMIT_LAST_MSG,    # R
         ENABLE_MOTORS,          # E
-        RESET_ARDUINO,          # P
+        RESTART_ARDUINO,          # P
     )
 
 class ArduinoException(Exception):

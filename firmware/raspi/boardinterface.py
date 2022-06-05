@@ -270,9 +270,9 @@ class Board:
 
         self.add_instruction_to_queue(InstructionType.ENABLE_MOTORS, turn_on)
 
-    def reset_arduino(self):
-        """Create message to do Arduino software reset, and add to front of msg_queue."""
-        self.add_instruction_to_queue(InstructionType.RESET_ARDUINO)
+    def restart_arduino(self):
+        """Create message to restart the Arduino, and add to front of msg_queue."""
+        self.add_instruction_to_queue(InstructionType.RESTART_ARDUINO)
 
     def align_axis(self, alignment_code):
         """Create message to align axis and add to front of msg_queue.
