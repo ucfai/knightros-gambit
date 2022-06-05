@@ -45,7 +45,7 @@ class Game:
     def last_made_move(self):
         """Returns the last made move, if applicable. If no moves have been made, returns None.
         """
-        if self.board.engine.chess_board.move_stack:
+        if not self.board.engine.chess_board.move_stack:
             return None
         return self.board.engine.chess_board.peek().uci()
 
@@ -74,7 +74,7 @@ class Game:
                                       "Should we loop until move is valid? What if "
                                       "the board is messed up? Need to revisit.")
 
-    def process(self, player):
+    def process(self, player, verbose=False):
         """One iteration of main game loop.
 
         Note: expects caller to check game.is_game_over before calling.
@@ -85,11 +85,12 @@ class Game:
             made_move: boolean that is True if turn changes, otherwise False.
         """
         arduino_status = self.board.get_status_from_arduino()
-        print(f"\nBoard Status: {arduino_status}")
+        if verbose:
+            print(f"\nBoard Status: {arduino_status}")
 
         if arduino_status.status == status.ArduinoStatus.EXECUTING_MOVE:
             # Wait for move in progress to finish executing
-            time.sleep(1) # reduce the amount of polling while waiting for move to finish
+            time.sleep(.01) # reduce the amount of polling while waiting for move to finish
 
             if self.board.ser is None:
                 # Allows testing other game loop functionality with simulated connection to Arduino
@@ -105,7 +106,7 @@ class Game:
 
         if arduino_status.status == status.ArduinoStatus.IDLE:
             # Don't spam new Arduino messages too frequently if waiting for Arduino status to update
-            time.sleep(1)
+            time.sleep(.01)
 
             if self.board.msg_queue:
                 # We have a separate move counter for moves and instructions; to resolve conflicts
@@ -170,5 +171,5 @@ class Game:
 
         raise ValueError("We shouldn't reach this point in the function.")
 
-if __name__ == '__main__':
-    print("No main for this file, please use `cliinterface.py`")
+    if __name__ == '__main__':
+        print("No main for this file, please use `cliinterface.py`")
