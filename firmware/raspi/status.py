@@ -128,6 +128,7 @@ class InstructionType:
         SET_HUMAN_MOVE_VALID,   # M
         RETRANSMIT_LAST_MSG,    # R
         ENABLE_MOTORS,          # E
+        RESET_ARDUINO,          # P
     )
 
 class ArduinoException(Exception):
