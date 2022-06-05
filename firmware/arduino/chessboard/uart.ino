@@ -37,7 +37,8 @@ enum InstructionType
   SET_ELECTROMAGNET = 'S',
   SET_HUMAN_MOVE_VALID = 'M',
   RETRANSMIT = 'R',
-  ENABLE_MOTORS = 'E'
+  ENABLE_MOTORS = 'E',
+  RESET_ARDUINO = 'P'
 };
 
 // Send message to Pi when the chess timer is pressed
@@ -153,6 +154,7 @@ bool validateMessageFromPi(volatile char * message)
         (message[ITYPE_IDX] != RETRANSMIT) &&
         (message[ITYPE_IDX] != SET_HUMAN_MOVE_VALID || message[EXTRA_IDX] < '0' || message[EXTRA_IDX] > '1')   &&
         (message[ITYPE_IDX] != ENABLE_MOTORS  ||  message[EXTRA_IDX] < '0'  ||  message[EXTRA_IDX] > '1')      &&
+        (message[ITYPE_IDX] != RESET_ARDUINO)
       )
     {
       extraByte = INVALID_LOCATION;
@@ -269,6 +271,10 @@ bool makeMove(volatile char * message)
       {
         disableMotors();
       }
+    }
+    else if (message[ITYPE_IDX] == RESET_ARDUINO)
+    {
+      ESP.restart();
     }
   }
   else
