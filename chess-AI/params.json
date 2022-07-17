@@ -2,11 +2,22 @@
     "_comment": "PARAMS MUST BE ALPHABETIZED",
 
     "saving":{
-        "dataset_path": "datasets/stockfish_data.pt",
-        "model_path": null,
-        "num_saved_models": 5,
-        "save_freq": 10,
-        "overwrite": true
+        "dataset_saving": {
+            "data_dir": "datasets/",
+            "file_name": "dataset-06-04-22:19.pt",
+            "figshare_load": false,
+            "local_load": false,
+            "figshare_save":false
+        },
+
+        "model_saving": {
+            "model_dir": "models/",
+            "file_name": "model-06-04-22:32.pt",
+            "figshare_load":false,
+            "local_load": false,
+            "figshare_save":true,
+            "mcts_check_freq": 10
+        }
     },
 
     "misc_params": {
@@ -18,18 +29,18 @@
     "stockfish":{
         "epochs": 10,
         "batch_size": 8,
-        "games": 10,
+        "games": 1,
         "elo": 1000,
         "depth": 5
     },
 
     "mcts":{
-        "epochs": 100,
+        "epochs": 1,
         "batch_size": 8,
-        "games": 100,
+        "games": 10,
         "exploration": 5,
         "training_episodes": 5,
-        "simulations": 10
+        "simulations": 2
     },
 
     "currently_unused": {

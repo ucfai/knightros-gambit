@@ -108,7 +108,7 @@ void makeCircle(uint8_t circle, uint8_t firstQuarter)
         {
           // Y-Step
           digitalWrite(yMotor[STEP_PIN], LOW);
-          delay(1);
+          delay(STEP_DELAY);
           digitalWrite(yMotor[STEP_PIN], HIGH);
         }
       }
@@ -118,7 +118,7 @@ void makeCircle(uint8_t circle, uint8_t firstQuarter)
         {
           // X-Step
           digitalWrite(xMotor[STEP_PIN], LOW);
-          delay(1);
+          delay(STEP_DELAY);
           digitalWrite(xMotor[STEP_PIN], HIGH);
         }
       }
@@ -128,12 +128,12 @@ void makeCircle(uint8_t circle, uint8_t firstQuarter)
         {
           // X-Step
           digitalWrite(xMotor[STEP_PIN], LOW);
-          delay(1);
+          delay(STEP_DELAY);
           digitalWrite(xMotor[STEP_PIN], HIGH);
 
           // Y-Step
           digitalWrite(yMotor[STEP_PIN], LOW);
-          delay(1);
+          delay(STEP_DELAY);
           digitalWrite(yMotor[STEP_PIN], HIGH);
         }
       }
@@ -306,7 +306,7 @@ void moveToFirstCircle()
   {
     // Y-Step
     digitalWrite(yMotor[STEP_PIN], LOW);
-    delay(1);
+    delay(STEP_DELAY);
     digitalWrite(yMotor[STEP_PIN], HIGH);
   }
 }
@@ -348,12 +348,12 @@ void moveToNextCircle(uint8_t currentCircle, uint8_t quarter)
   {
     // X-Step
     digitalWrite(xMotor[STEP_PIN], LOW);
-    delay(1);
+    delay(STEP_DELAY);
     digitalWrite(xMotor[STEP_PIN], HIGH);
 
     // Y-Step
     digitalWrite(yMotor[STEP_PIN], LOW);
-    delay(1);
+    delay(STEP_DELAY);
     digitalWrite(yMotor[STEP_PIN], HIGH);
   }
 
@@ -364,7 +364,7 @@ void moveToNextCircle(uint8_t currentCircle, uint8_t quarter)
     {
       // Y-Step
       digitalWrite(yMotor[STEP_PIN], LOW);
-      delay(1);
+      delay(STEP_DELAY);
       digitalWrite(yMotor[STEP_PIN], HIGH);
     }
   }
@@ -374,7 +374,7 @@ void moveToNextCircle(uint8_t currentCircle, uint8_t quarter)
     {
       // X-Step
       digitalWrite(xMotor[STEP_PIN], LOW);
-      delay(1);
+      delay(STEP_DELAY);
       digitalWrite(xMotor[STEP_PIN], HIGH);
     }
   }

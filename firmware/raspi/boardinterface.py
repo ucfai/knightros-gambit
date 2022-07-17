@@ -224,12 +224,12 @@ class Board:
         self.ser = serial.Serial(port='/dev/ttyS0') if interact_w_arduino else None
 
     def retransmit_last_msg(self):
-        """Create message to request Arduino retransmit last message and add to msg_queue.
+        """Create message to request Arduino retransmit last message and add to front of msg_queue.
         """
         self.add_instruction_to_queue(InstructionType.RETRANSMIT_LAST_MSG)
 
     def set_electromagnet(self, turn_on):
-        """Create message to set state of electromagnet and add to msg_queue.
+        """Create message to set state of electromagnet and add to front of msg_queue.
 
         Attributes:
             turn_on: char, if '0', turns electromagnet off, elif '1', on.
@@ -238,12 +238,12 @@ class Board:
             ValueError if turn_on not in ('0', '1')
         """
         if turn_on not in ('0', '1'):
-            raise ValueError("Received unexpected code", turn_on)
+            raise ValueError("Received unexpected Extra bit: ", turn_on)
 
         self.add_instruction_to_queue(InstructionType.SET_ELECTROMAGNET, turn_on)
 
     def set_human_move_valid(self, turn_on):
-        """Create message to set HUMAN_MOVE_VALID flag, and add to msg_queue.
+        """Create message to set HUMAN_MOVE_VALID flag, and add to front of msg_queue.
 
         Attributes:
             turn_on: char, if '0', sets flag to '0', elif '1', '1'.
@@ -252,12 +252,30 @@ class Board:
             ValueError if turn_on not in ('0', '1')
         """
         if turn_on not in ('0', '1'):
-            raise ValueError("Received unexpected code", turn_on)
+            raise ValueError("Received unexpected Extra bit: ", turn_on)
 
         self.add_instruction_to_queue(InstructionType.SET_HUMAN_MOVE_VALID, turn_on)
 
+    def enable_motors(self, turn_on):
+        """Create message to enable/disable Arduino motors, and add to front of msg_queue.
+
+        Attributes:
+            turn_on: char, if '0', disables motors, elif '1', enables.
+
+        Raises:
+            ValueError if turn_on not in ('0', '1')
+        """
+        if turn_on not in ('0', '1'):
+            raise ValueError("Received unexpected Extra bit: ", turn_on)
+
+        self.add_instruction_to_queue(InstructionType.ENABLE_MOTORS, turn_on)
+
+    def restart_arduino(self):
+        """Create message to restart the Arduino, and add to front of msg_queue."""
+        self.add_instruction_to_queue(InstructionType.RESTART_ARDUINO)
+
     def align_axis(self, alignment_code):
-        """Create message to align axis and add to msg_queue.
+        """Create message to align axis and add to front of msg_queue.
 
         Attributes:
             alignment_code: char, '0' indicates aligning x axis to zero, '1' indicates aligning y
@@ -630,7 +648,7 @@ class Instruction:
 
     Attributes:
         op_type: char describing type of instruction. See status.InstructionType.
-        extra: str field used for ALIGN_AXIS and SET_ELECTROMAGNET. See status.InstructionType.
+        extra: str field used for additional information. See status.InstructionType.
     """
     def __init__(self, op_type, instruction_count, extra='0'):
         self.op_code = OpCode.INSTRUCTION

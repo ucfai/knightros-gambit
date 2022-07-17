@@ -94,14 +94,14 @@ class OpCode:
 class InstructionType:
     """Enum of instruction types used to provide information about OpCode.INSTRUCTION types."""
     # This code indicates Arduino should align an axis
-    # Setting first info bit (e.g. msg[2]) to '0' indicates aligning x axis to zero, '1' indicates
+    # Setting Extra byte (e.g. msg[2]) to '0' indicates aligning x axis to zero, '1' indicates
     # aligning y axis to zero, '2' indicates aligning x axis to max, '3' indicates aligning y axis
     # to max, '4' indicates calling the Arduino's home() function, which aligns x to zero and y to
     # zero.
     ALIGN_AXIS = 'A'
 
     # This code indicates Arduino should set the state of the electromagnet
-    # Setting first info bit (e.g. msg[2]) to '0' indicates OFF, '1' indicates ON
+    # Setting Extra byte (e.g. msg[2]) to '0' indicates OFF, '1' indicates ON
     SET_ELECTROMAGNET = 'S'
 
     # A code used to set the human_move_valid_flag, which guards button presses. When the Extra byte
@@ -113,8 +113,23 @@ class InstructionType:
     # This code used when a corrupted or misaligned message is received
     RETRANSMIT_LAST_MSG = 'R'
 
+    # A code used to indicate that the Arduino should enable/disable the motors
+    # Setting the Extra field (e.g. msg[2] to '0' indicates disabling the motors, '1' indicates
+    # enabling the motors.
+    ENABLE_MOTORS = 'E'
+
+    # A code used to indicate the Arduino should restart (perform a power cycle)
+    RESTART_ARDUINO = 'P'
+
     # Tuple of all InstructionTypes, used for checking membership
-    VALID_INSTRUCTIONS = (ALIGN_AXIS, SET_ELECTROMAGNET, RETRANSMIT_LAST_MSG)
+    VALID_INSTRUCTIONS = (
+        ALIGN_AXIS,             # A
+        SET_ELECTROMAGNET,      # S
+        SET_HUMAN_MOVE_VALID,   # M
+        RETRANSMIT_LAST_MSG,    # R
+        ENABLE_MOTORS,          # E
+        RESTART_ARDUINO,          # P
+    )
 
 class ArduinoException(Exception):
     """Helper class for custom Arduino exceptions.

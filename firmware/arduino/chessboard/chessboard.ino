@@ -10,7 +10,11 @@
 // 0. This level is used to specify that no messages should be printed
 // 1. UART_LEVEL:     This level will be used to print uart messages
 // 2. FUNCTION_LEVEL: This level will be used to print information about importantt funciton calls 
-#define DEBUG 1
+#define DEBUG 2
+#define INDICATOR_LED 21
+
+// This is the delay between pulses in milliseconds
+#define STEP_DELAY 1
 
 enum DebugLevels
 {
@@ -43,29 +47,35 @@ enum SwitchesMisc
   Y_AXIS_MAX_ENDSTOP = 34,
   X_AXIS_ZERO_ENDSTOP = 39,
   Y_AXIS_ZERO_ENDSTOP = 35,
-  CHESS_TIMER_BUTTON = 21,
+  CHESS_TIMER_BUTTON = 22,
   DEBOUNCE_TIME = 100    
 };
 
 enum XMotorPins
 {
-  X_MOTOR_MS1 = 13,
-  X_MOTOR_MS2 = 12,
   X_MOTOR_DIR = 27,
-  X_MOTOR_STEP = 14
+  X_MOTOR_STEP = 14,
+  X_MOTOR_SLEEP_RESET = 12,
+  X_MOTOR_ENABLE = 13,
+  X_MOTOR_MS1 = 15,
+  X_MOTOR_MS2 = 2,
+  X_MOTOR_MS3 = 4
 };
-uint8_t xMotor[6] = {X_MOTOR_STEP, X_MOTOR_DIR, X_MOTOR_MS1, 
-                     X_MOTOR_MS2, X_AXIS_MAX_ENDSTOP, X_AXIS_ZERO_ENDSTOP};
+uint8_t xMotor[7] = {X_MOTOR_STEP, X_MOTOR_DIR, X_MOTOR_MS1, X_MOTOR_MS2, 
+                     X_MOTOR_MS3, X_AXIS_MAX_ENDSTOP, X_AXIS_ZERO_ENDSTOP};
 
 enum YMotorPins
 {
-  Y_MOTOR_MS1 = 26,
-  Y_MOTOR_MS2 = 25,
   Y_MOTOR_DIR = 32,
-  Y_MOTOR_STEP = 33
+  Y_MOTOR_STEP = 33,
+  Y_MOTOR_SLEEP_RESET = 25,
+  Y_MOTOR_ENABLE = 26,
+  Y_MOTOR_MS1 = 5,
+  Y_MOTOR_MS2 = 18,
+  Y_MOTOR_MS3 = 19
 };
-uint8_t yMotor[6] = {Y_MOTOR_STEP, Y_MOTOR_DIR, Y_MOTOR_MS1, 
-                     Y_MOTOR_MS2, Y_AXIS_MAX_ENDSTOP, Y_AXIS_ZERO_ENDSTOP};
+uint8_t yMotor[7] = {Y_MOTOR_STEP, Y_MOTOR_DIR, Y_MOTOR_MS1, Y_MOTOR_MS2, 
+                     Y_MOTOR_MS3, Y_AXIS_MAX_ENDSTOP, Y_AXIS_ZERO_ENDSTOP};
                   
 enum MotorArrayIndicies
 {
@@ -73,15 +83,9 @@ enum MotorArrayIndicies
   DIR_PIN = 1,
   MS1_PIN = 2,
   MS2_PIN = 3,
-  ZERO_ENDSTOP_PIN = 4,
-  MAX_ENDSTOP_PIN = 5
-};
-
-enum SharedMotorPins
-{
-  MOTOR_ENABLE = 4,
-  MOTOR_RESET = 2,
-  MOTOR_SLEEP = 15
+  MS3_PIN = 4,
+  MAX_ENDSTOP_PIN = 5,
+  ZERO_ENDSTOP_PIN = 6
 };
 
 enum ArduinoState
@@ -106,8 +110,8 @@ enum DistanceConstants
 // and right/upward movement is positive (POS_DIR)
 enum Direction
 {
-  POS_DIR = 0,
-  NEG_DIR = 1
+  POS_DIR = 1,
+  NEG_DIR = 0
 }; 
 
 enum StepSize
@@ -115,7 +119,8 @@ enum StepSize
   WHOLE_STEPS = 1,
   HALF_STEPS = 2,
   QUARTER_STEPS = 4,
-  EIGHTH_STEPS = 8
+  EIGHTH_STEPS = 8,
+  SIXTEENTH_STEPS = 16
 };
 
 enum CircleFunctionConsts
@@ -163,10 +168,11 @@ uint16_t maxPosition;
 void setup()
 {
   // Define our pinModes
-  pinMode(MOTOR_RESET, OUTPUT);
-  pinMode(MOTOR_SLEEP, OUTPUT);
-  pinMode(MOTOR_ENABLE, OUTPUT);
-  
+  pinMode(X_MOTOR_SLEEP_RESET, OUTPUT);
+  pinMode(X_MOTOR_ENABLE, OUTPUT);
+  pinMode(Y_MOTOR_SLEEP_RESET, OUTPUT);
+  pinMode(Y_MOTOR_ENABLE, OUTPUT);
+
   pinMode(X_MOTOR_MS1, OUTPUT);
   pinMode(X_MOTOR_MS2, OUTPUT);
   pinMode(X_MOTOR_DIR, OUTPUT);
@@ -178,6 +184,7 @@ void setup()
   pinMode(Y_MOTOR_STEP, OUTPUT);
 
   pinMode(ELECTROMAGNET, OUTPUT);
+  pinMode(INDICATOR_LED, OUTPUT);
 
   pinMode(X_AXIS_MAX_ENDSTOP, INPUT);
   pinMode(Y_AXIS_MAX_ENDSTOP, INPUT);
@@ -199,13 +206,25 @@ void setup()
   // that are used in the `makeCircle()` function in circleFunction.ino
   calculatePulsesPerSlope();
 
+  // Set current position to 0 in case raspberry pi does not call home before a move
+  currPositionX = 0;
+  currPositionY = 0;
+
   Serial2.begin(9600, SERIAL_8N1, RX2, TX2);
   Serial.begin(115200);
+  disableMotors();
 
   if (DEBUG >= UART_LEVEL)
   {
-    Serial.println();
-    Serial.println("Starting Program...");
+    digitalWrite(INDICATOR_LED, HIGH);
+    delay(200);
+    digitalWrite(INDICATOR_LED, LOW);
+    delay(300);
+    digitalWrite(INDICATOR_LED, HIGH);
+    delay(200);
+    digitalWrite(INDICATOR_LED, LOW);
+
+    Serial.println("Starting Program...\n");
   }
 }
 
