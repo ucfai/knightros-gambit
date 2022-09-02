@@ -170,7 +170,7 @@ class _PlayNetworkPolicyConverter:
                     direction += "E" if ew_value > 0 else "W"
                 move_idx = self.codes_list.index(("underpromotion", direction, uci_move[4]))
                 return [*start_coords, move_idx]
-            # Note: queen promotions are "normal moves", no special indexing for them                
+            # Note: queen promotions are "normal moves", no special indexing for them
 
         # If here, normal move along single file/rank/diagonal. Includes promotion to queen
         n_squares = max(abs(ew_value), abs(ns_value))

@@ -1,8 +1,8 @@
-'''Main game class that serves as backend for controlling automatic chessboard.
+"""Main game class that serves as backend for controlling automatic chessboard.
 
 Can be used with multiple different front end options, `cliinterface.py`, many others still being
 developed (web, speech, otb).
-'''
+"""
 import time
 
 from boardinterface import Board
@@ -15,14 +15,17 @@ class Game:
     The main program logic is in the `process` function. `process` should be called in a loop in
     the frontend code.
     """
-    def __init__(self, mode_of_interaction, human_plays_white_pieces=None):
+    def __init__(self, mode_of_interaction, interact_w_arduino, human_plays_white_pieces=None):
         self.mode_of_interaction = mode_of_interaction
         # TODO: Set up board with either white or black on human side.
-        self.board = Board(human_plays_white_pieces)
+        self.board = Board(interact_w_arduino, human_plays_white_pieces)
         # board.setup_board(is_human_turn)
 
-        # TODO: remove this after real Arduino communication is set up
-        self.board.set_status_from_arduino(status.ArduinoStatus.IDLE, 0, None)
+        if interact_w_arduino:
+            arduino_status = self.board.get_status_from_arduino()
+        else:
+            # Simulate communication with Arduino for software testing.
+            self.board.set_status_from_arduino(status.ArduinoStatus.IDLE, 0, None)
 
     def winner(self):
         """Returns None if draw or still in progress, True if white won, False if black won.
@@ -35,8 +38,8 @@ class Game:
         return self.board.engine.fen()
 
     def is_white_turn(self):
-        '''Return True if it is white's turn, False otherwise.
-        '''
+        """Return True if it is white's turn, False otherwise.
+        """
         return self.board.engine.is_white_turn()
 
     def last_made_move(self):
@@ -52,8 +55,8 @@ class Game:
         return self.board.engine.chess_board.is_game_over()
 
     def reset_board(self):
-        '''Skeleton method for resetting board after play.
-        '''
+        """Skeleton method for resetting board after play.
+        """
         # TODO: implement
         print("Resetting board")
 
@@ -71,10 +74,8 @@ class Game:
                                       "Should we loop until move is valid? What if "
                                       "the board is messed up? Need to revisit.")
 
-    # TODO: this makes implicit assumption that we do human vs. ai. Try to factor that out
-    # TODO: convert to class based and store all passed parameters as class members
     def process(self, player):
-        '''One iteration of main game loop.
+        """One iteration of main game loop.
 
         Note: expects caller to check game.is_game_over before calling.
         There may be moves remaining on self.board.msg_queue after game is over, so it is legal to
@@ -82,7 +83,7 @@ class Game:
 
         Returns:
             made_move: boolean that is True if turn changes, otherwise False.
-        '''
+        """
         arduino_status = self.board.get_status_from_arduino()
         print(f"\nBoard Status: {arduino_status}")
 
@@ -90,10 +91,11 @@ class Game:
             # Wait for move in progress to finish executing
             time.sleep(1) # reduce the amount of polling while waiting for move to finish
 
-            # TODO: This is just so we have game loop working, remove once we read from arduino
-            self.board.set_status_from_arduino(status.ArduinoStatus.IDLE,
-                                               self.board.msg_queue[0].move_count,
-                                               self.board.msg_queue[0].op_code)
+            if self.board.ser is None:
+                # Allows testing other game loop functionality with simulated connection to Arduino
+                self.board.set_status_from_arduino(status.ArduinoStatus.IDLE,
+                                                   self.board.msg_queue[0].move_count,
+                                                   self.board.msg_queue[0].op_code)
             # Turn doesn't change, since we don't get next move if Arduino is still executing
             return False
 
@@ -102,6 +104,9 @@ class Game:
             raise ValueError("Unimplemented, need to handle errors")
 
         if arduino_status.status == status.ArduinoStatus.IDLE:
+            # Don't spam new Arduino messages too frequently if waiting for Arduino status to update
+            time.sleep(1)
+
             if self.board.msg_queue:
                 # We have a separate move counter for moves and instructions; to resolve conflicts
                 # we check both OpType (to identify whether we are checking for an instruction or

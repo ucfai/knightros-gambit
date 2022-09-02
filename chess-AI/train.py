@@ -1,12 +1,11 @@
-"""
-Main training program
+"""Main training program.
 """
 import chess
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
-from ai_io import init_params, save_model, load_dataset, make_dir
+from ai_io import init_params, save_model, save_dataset, load_dataset, make_dir
 from mcts import Mcts
 from nn_layout import PlayNetwork
 from output_representation import policy_converter
@@ -128,7 +127,7 @@ def create_dataset(games, move_approximator, val_approximator=None, show_dash=Fa
     return dataset
 
 
-def train_on_dataset(dataset, nnet, options, show_dash=False):
+def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=False):
     """Train with the specified dataset
 
     Attributes:
@@ -214,8 +213,8 @@ def train_on_dataset(dataset, nnet, options, show_dash=False):
         Dashboard.visualize_losses(average_pol_loss, average_val_loss)
 
     # Saves model to specified file, or a new file if not specified.
-    # TODO: Figure frequency of model saving, right now it is after a defined number of epochs.
-    save_model(nnet, options.save_path, options.num_saved_models, options.overwrite)
+    if save:
+        save_model(nnet, options.model_saving, checkpointing=True, file_name=f"model_{iteration}")
 
 
 def create_stockfish_dataset(sf_opt, show_dash):
@@ -247,12 +246,13 @@ def train_on_mcts(nnet, mcts_opt, show_dash=False):
     mcts = Mcts(mcts_opt.exploration, mcts_opt.device)
 
     # Will iterate through the number of training episodes
-    for _ in range(mcts_opt.training_episodes):
+    for i in range(mcts_opt.training_episodes):
         mcts_moves = lambda board: mcts.get_tree_results(mcts_opt.simulations, nnet, board,
                                                          temperature=5)
 
         dataset = create_dataset(mcts_opt.games, mcts_moves)
-        train_on_dataset(dataset, nnet, mcts_opt, show_dash)
+        train_on_dataset(dataset, nnet, mcts_opt, iteration=(i+1),
+                         save=(i % mcts_opt.model_saving.mcts_check_freq == 0), show_dash=show_dash)
 
 
 def main():
@@ -262,66 +262,61 @@ def main():
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     nnet = PlayNetwork().to(device=device)
 
-    nnet, dataset_path, stockfish_options, mcts_options, flags = init_params(nnet, device)
+    nnet, dataset_saving, stockfish_options, mcts_options, flags = init_params(nnet, device)
 
-    # Need to check for dataset
-    if not dataset_path:
-        msg = "No dataset path specified"
-        if flags.show_dash:
-            Dashboard.info_message("error", msg)
-        else:
-            print(msg)
-    else:
-        # Makes parent directories if necessary
-        make_dir(dataset_path)
-
-        if flags.start_train:
-            if flags.make_dataset:
-                msg = "Dataset Creation Has Begun"
-                if flags.show_dash:
-                    Dashboard.info_message("success", msg)
-                else:
-                    print(msg)
-                dataset = create_stockfish_dataset(stockfish_options, flags.show_dash)
-                torch.save(dataset, dataset_path)
-
-                msg = "Dataset Creation completed"
-                if flags.show_dash:
-                    Dashboard.info_message("success", msg)
-                else:
-                    print(msg)
+    if flags.start_train:
+        if flags.make_dataset:
+            msg = "Dataset Creation Has Begun"
+            if flags.show_dash:
+                Dashboard.info_message("success", msg)
             else:
-                dataset = load_dataset(dataset_path, flags.show_dash)
+                print(msg)
+            dataset = create_stockfish_dataset(stockfish_options, flags.show_dash)
+            make_dir(dataset_saving.data_dir)
+            save_dataset(dataset, dataset_saving)
+            msg = "Dataset Creation completed"
+            if flags.show_dash:
+                Dashboard.info_message("success", msg)
+            else:
+                print(msg)
+        else:
+            if dataset_saving.local_load or dataset_saving.figshare_load:
+                dataset = load_dataset(dataset_saving, flags.show_dash)
+            # load path must be specified
+            else:
+                raise ValueError("If not making dataset either local load or figshare \
+                load must be specified")
+        if flags.stockfish_train:
+            msg = "Stockfish Training Has Begun"
+            if flags.show_dash:
+                Dashboard.info_message("success", msg)
+            else:
+                print(msg)
+            train_on_dataset(dataset, nnet, stockfish_options, iteration=0)
 
-            if flags.stockfish_train:
-                msg = "Stockfish Training Has Begun"
-                if flags.show_dash:
-                    Dashboard.info_message("success", msg)
-                else:
-                    print(msg)
-                train_on_dataset(dataset, nnet, stockfish_options)
+            msg = "Stockfish Training completed"
+            if flags.show_dash:
+                Dashboard.info_message("success", msg)
+            else:
+                print(msg)
 
-                msg = "Stockfish Training completed"
-                if flags.show_dash:
-                    Dashboard.info_message("success", msg)
-                else:
-                    print(msg)
+        if flags.mcts_train:
+            # Train network using MCTS
+            msg = "MCTS Training has begun"
+            if flags.show_dash:
+                Dashboard.info_message("success", msg)
+            else:
+                print(msg)
+            train_on_mcts(nnet, mcts_options, flags.show_dash)
 
-            if flags.mcts_train:
-                # Train network using MCTS
-                msg = "MCTS Training has begun"
-                if flags.show_dash:
-                    Dashboard.info_message("success", msg)
-                else:
-                    print(msg)
-                train_on_mcts(nnet, mcts_options, flags.show_dash)
+            msg = "MCTS Training completed"
+            if flags.show_dash:
+                Dashboard.info_message("success", msg)
+            else:
+                print(msg)
 
-                msg = "MCTS Training completed"
-                if flags.show_dash:
-                    Dashboard.info_message("success", msg)
-                else:
-                    print(msg)
-
+        if mcts_options.model_saving.model_dir is not None:
+            save_model(nnet, mcts_options.model_saving, checkpointing=False)
 
 if __name__ == "__main__":
     main()

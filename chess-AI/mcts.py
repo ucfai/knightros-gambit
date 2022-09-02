@@ -1,3 +1,5 @@
+"""Module implementing Monte Carlo tree search, used in training and evaluation.
+"""
 from math import sqrt
 import random
 
@@ -81,7 +83,9 @@ class Mcts:
             n_values = list(zip(*values))[0]
 
             # Calculate U based on the UCB formula
-            u_value = q_value + (self.exploration * self.p_values[fen_string][uci_move]) * sqrt(sum(n_values)) / (1 + n_value)
+            u_value = q_value + \
+                (self.exploration * self.p_values[fen_string][uci_move]) * \
+                sqrt(sum(n_values)) / (1 + n_value)
 
             if u_value > best_u:
                 best_u = u_value
@@ -109,7 +113,7 @@ class Mcts:
         # Get flattened probability distribution
         n_values = torch.from_numpy(n_values)
         n_values = n_values ** (1 / temperature)
-        search_probs = n_values/sum(n_values)
+        search_probs = n_values/torch.sum(n_values)
         move = random.choices(moves, search_probs)[0]
 
         # Return list of uci_moves and corresponding search probabilities

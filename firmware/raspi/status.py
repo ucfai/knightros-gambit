@@ -2,16 +2,25 @@
 """
 
 class ArduinoStatus:
-    '''Wrapper around messages received from Arduino.
+    """Wrapper around messages received from Arduino.
     # TODO: add in some more documentation here w.r.t. message formatting.
-    '''
+    """
     # Status codes used to indicate current status of Arduino controlling physical board.
     IDLE = '0'
     EXECUTING_MOVE = '1'
     END_TURN_BUTTON_PRESSED = '2'
     ERROR = '3'
+
+    # Arduino Error Codes
+    INVALID_OP = '0'
+    INVALID_LOCATION = '1'
+    MOVEMENT_ERROR = '2'
+
+    # Incoming message length from Arduino
     MESSAGE_LENGTH = 4
 
+    # TODO: Update order of fields so that it matches actual msg format. Should be status, extra,
+    # move_count, in that order.
     def __init__(self, status, move_count, extra):
         self.status = status
         self.move_count = move_count
@@ -36,7 +45,8 @@ class ArduinoStatus:
             return "ERROR"
         return ""
 
-    def is_valid_code(self, code):
+    @staticmethod
+    def is_valid_code(code):
         """Returns True if provided code is a valid ArduinoStatus code, else False.
         """
         return code in (ArduinoStatus.IDLE,
@@ -45,17 +55,17 @@ class ArduinoStatus:
                         ArduinoStatus.ERROR)
 
 class Status:
-    '''Helper class that stores current status of game, along with related metadata.
-    '''
+    """Helper class that stores current status of game, along with related metadata.
+    """
     @staticmethod
     def write_game_status_to_disk(board):
-        '''Write pgn to disk, also write associated metadata about board state.
-        '''
+        """Write pgn to disk, also write associated metadata about board state.
+        """
         raise NotImplementedError("Not implemented")
 
 class OpCode:
-    '''Enum of op codes used to provide information about type of move Arduino should make.
-    '''
+    """Enum of op codes used to provide information about type of move Arduino should make.
+    """
     # This code indicates Arduino should use straight-line path, diagonals allowed
     MOVE_PIECE_IN_STRAIGHT_LINE = '0'
 
@@ -81,29 +91,49 @@ class OpCode:
 
     MESSAGE_LENGTH = 7
 
-class OpType:
-    '''Enum of op types used to provide information about OpCode.INSTRUCTION types.
-    '''
+class InstructionType:
+    """Enum of instruction types used to provide information about OpCode.INSTRUCTION types."""
     # This code indicates Arduino should align an axis
-    # Setting first info bit (e.g. msg[2]) to '0' indicates aligning x axis to zero, '1' indicates
+    # Setting Extra byte (e.g. msg[2]) to '0' indicates aligning x axis to zero, '1' indicates
     # aligning y axis to zero, '2' indicates aligning x axis to max, '3' indicates aligning y axis
-    # to max.
+    # to max, '4' indicates calling the Arduino's home() function, which aligns x to zero and y to
+    # zero.
     ALIGN_AXIS = 'A'
 
     # This code indicates Arduino should set the state of the electromagnet
-    # Setting first info bit (e.g. msg[2]) to '0' indicates OFF, '1' indicates ON
+    # Setting Extra byte (e.g. msg[2]) to '0' indicates OFF, '1' indicates ON
     SET_ELECTROMAGNET = 'S'
+
+    # A code used to set the human_move_valid_flag, which guards button presses. When the Extra byte
+    # is '1', allows button presses; when '0', disallows button presses (for the chess timer, which
+    # signals end of human turn).
+    SET_HUMAN_MOVE_VALID = 'M'
 
     # This code indicates Arduino should retransmit last message
     # This code used when a corrupted or misaligned message is received
     RETRANSMIT_LAST_MSG = 'R'
 
-    # Tuple of all OpTypes, used for checking membership
-    VALID_OPS = (ALIGN_AXIS, SET_ELECTROMAGNET, RETRANSMIT_LAST_MSG)
+    # A code used to indicate that the Arduino should enable/disable the motors
+    # Setting the Extra field (e.g. msg[2] to '0' indicates disabling the motors, '1' indicates
+    # enabling the motors.
+    ENABLE_MOTORS = 'E'
+
+    # A code used to indicate the Arduino should restart (perform a power cycle)
+    RESTART_ARDUINO = 'P'
+
+    # Tuple of all InstructionTypes, used for checking membership
+    VALID_INSTRUCTIONS = (
+        ALIGN_AXIS,             # A
+        SET_ELECTROMAGNET,      # S
+        SET_HUMAN_MOVE_VALID,   # M
+        RETRANSMIT_LAST_MSG,    # R
+        ENABLE_MOTORS,          # E
+        RESTART_ARDUINO,          # P
+    )
 
 class ArduinoException(Exception):
-    '''Helper class for custom Arduino exceptions.
-    '''
+    """Helper class for custom Arduino exceptions.
+    """
     NO_ERROR = '0'
     INVALID_OP = '1'
     INVALID_LOCATION = '2'

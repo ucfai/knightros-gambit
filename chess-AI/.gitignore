@@ -9,3 +9,9 @@
 BayesianElo/
 
 test.pgn
+=======
+# ignore all saved datasets
+/datasets
+
+# ignore all saved models
+/models

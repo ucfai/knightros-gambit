@@ -1,3 +1,6 @@
+"""Helper module that converts chess fen strings to a valid CNN input representation.
+"""
+
 import numpy as np
 import torch
 
@@ -51,8 +54,11 @@ def get_cnn_input(board_state):
     count_plane = np.full((1, 8, 8), round((float(move_count) - 1) / 74, 3))
     pointless_count = np.full((1, 8, 8), (int(half_count) / 2))
 
-    cnn_input = torch.from_numpy(np.array([np.concatenate((get_piece_planes(board2d, turn), get_castle_planes(castling, turn),
-                                                 get_turn_plane(turn), count_plane, pointless_count), axis=0)]))
+    cnn_input = torch.from_numpy(
+        np.array([np.concatenate((get_piece_planes(board2d, turn),
+                                  get_castle_planes(castling, turn),
+                                  get_turn_plane(turn), count_plane,
+                                  pointless_count), axis=0)]))
 
     return cnn_input.float()
 

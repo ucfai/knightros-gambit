@@ -1,47 +1,46 @@
-'''Helper file for miscellaneous utility classes and functions.
-'''
+"""Helper file for miscellaneous utility classes and functions.
+"""
 import argparse
 import io
 import os
 import platform
 
-import chess.pgn
-from stockfish import Stockfish
+import chess.pgn  # pylint: disable=import-error
+from stockfish import Stockfish  # pylint: disable=import-error
 
 class BoardCell:
-    '''Helper class for indexing entirety of board.
-    '''
+    """Helper class for indexing entirety of board.
+    """
     def __init__(self, row=None, col=None):
-        '''Point, if no args passed, initialized to (0,0), bottom left corner of entire board.
+        """Point, if no args passed, initialized to (0,0), bottom left corner of entire board.
 
         Board representation uses two unit spaces for each cell. So center of bottom left cell is
         at (1, 1). Similarly, center of bottom left cell of chessboard (either 'a1' or 'h8'
         depending on whether human plays white or black) is (5, 5). The bottom left corner of the
         playing area of the chessboard is (4, 4). The top right corner of the entire board is at
         (24, 24).
-        '''
+        """
         self.row = row if row else 0
         self.col = col if col else 0
 
     def __str__(self):
-        # TODO: Update this to have a clearer naming scheme for the indexing.
-        return f"{chr(self.row + ord('a'))}{chr(self.col + ord('a'))}"
+        return f"{chr(self.row + ord('A'))}{chr(self.col + ord('A'))}"
 
     def get_coords(self):
-        '''Returns tuple of row and col indices.
-        '''
+        """Returns tuple of row and col indices.
+        """
         return (self.row, self.col)
 
     def to_chess_sq(self):
-        '''Returns string representation of BoardCell.
+        """Returns string representation of BoardCell.
 
         Assumes BoardCell(0, 0) <=> 'a1' and BoardCell(7, 7) <=> 'h8'.
-        '''
+        """
         return chr(self.col + ord('a')) + chr(self.row + ord('1'))
 
 def create_stockfish_wrapper():
-    '''Create simple wrapper around stockfish python module depending on operating system type.
-    '''
+    """Create simple wrapper around stockfish python module depending on operating system type.
+    """
     operating_system = platform.system().lower()
     if operating_system == "darwin":
         stockfish_path = "/usr/local/bin/stockfish"
@@ -57,8 +56,8 @@ def create_stockfish_wrapper():
     return Stockfish(stockfish_path)
 
 def init_dead_piece_counts():
-    '''Creates and returns a dictionary corresponding to number of dead pieces for each piece type.
-    '''
+    """Creates and returns a dictionary corresponding to number of dead pieces for each piece type.
+    """
     dead_piece_counts = {}
     dead_piece_counts["wq"] = 2
     dead_piece_counts["wb"] = 1
@@ -75,8 +74,8 @@ def init_dead_piece_counts():
     return dead_piece_counts
 
 def init_dead_piece_graveyards():
-    '''Creates and returns a dictionary of BoardCell for each dead piece type.
-    '''
+    """Creates and returns a dictionary of BoardCell for each dead piece type.
+    """
     # TODO: Initialization of the graveyard depends on orientation of the board. If human plays
     # black pieces, this initialization needs to reflect that board configuration.
     dead_piece_graveyards = {}
@@ -101,21 +100,21 @@ def init_dead_piece_graveyards():
     return dead_piece_graveyards
 
 def init_capture_squares():
-    '''Creates and returns two BoardCell objects corresponding to capture squares.
-    '''
+    """Creates and returns two BoardCell objects corresponding to capture squares.
+    """
     w_capture_sq = BoardCell(2, 2)
     b_capture_sq = BoardCell(2, 20)
 
     return w_capture_sq, b_capture_sq
 
 def uci_move_from_boardcells(source, dest):
-    '''Returns uci move (as string) from two BoardCells.
-    '''
+    """Returns uci move (as string) from two BoardCells.
+    """
     return source.to_chess_sq() + dest.to_chess_sq()
 
 def get_piece_info_from_square(square, grid):
-    '''Returns tuple of color and piece type from provided square.
-    '''
+    """Returns tuple of color and piece type from provided square.
+    """
     coords = get_chess_coords_from_square(square)
     piece_w_color = grid[coords.row][coords.col]
     if piece_w_color == '.':
@@ -124,19 +123,19 @@ def get_piece_info_from_square(square, grid):
     return (color, piece_w_color.lower())
 
 def get_chess_coords_from_square(square):
-    '''Converts chess square to a BoardCell.
+    """Converts chess square to a BoardCell.
 
     Example: a1 <=> [0, 0], h8 <=> [7, 7], regardless of whether human plays white or black pieces.
-    '''
+    """
     # Nums correspond to row (rank), letters correspond to col (files)
     return BoardCell(ord(square[1]) - ord('1'), ord(square[0]) - ord('a'))
 
 def get_2d_board(fen, turn=None):
-    '''Returns a 2d board from fen representation
+    """Returns a 2d board from fen representation
 
     Taken from this SO answer:
     https://stackoverflow.com/questions/66451525/how-to-convert-fen-id-onto-a-chess-board
-    '''
+    """
     board = []
     for row in reversed(fen.split('/')):
         brow = []
@@ -158,13 +157,13 @@ def get_2d_board(fen, turn=None):
     return board
 
 def is_promotion(prev_board_fen, move):
-    '''Returns True if move is a promotional move.
+    """Returns True if move is a promotional move.
 
     Note: This differs from boardinterface.Engine.is_promotion in that it checks for a promotion
     in the case that the UCI move is not yet known. It is less efficient as it creates a 2d grid
     to check for the piece previously at the square, corresponding to move[:2], and thus should
     only be used when boardinterface.Engine.is_promotion can not be used.
-    '''
+    """
     # If piece in prev_board_fen at square move[:2] is a pawn and move[3] is the final rank,
     # this is a promotion. Note: Don't need to check color since white pawn can't move to row 1
     # and vice versa for black.
@@ -208,8 +207,9 @@ def parse_args():
     """
     parser = argparse.ArgumentParser(
         description='These allow us to select how we want the game to be played',
-        epilog='''The default is to run the chess engine using inputs from player moves detected'''
-               '''by computer vision.''')
+        epilog="""The default is to run the chess engine using inputs from player moves detected"""
+               """by computer vision.""")
+
     parser.add_argument('-p', '--playstyle',
                         dest='playstyle',
                         default='cli',
@@ -218,10 +218,8 @@ def parse_args():
 
     parser.add_argument('-d', '--debug',
                         dest='debug',
-                        action='store_const',
-                        const=True,
-                        default=False,
-                        help='if True, allow sending arbitrary commands to board')
+                        action='store_true',
+                        help='if specified, allow sending arbitrary commands to board')
 
     parser.add_argument('-t', '--test',
                         dest='test',
@@ -231,10 +229,9 @@ def parse_args():
 
     parser.add_argument('-m', '--microcontroller',
                         dest='microcontroller',
-                        action='store_const',
-                        const=True,
-                        default=False,
-                        help='if True, sends commands over UART to Arduino')
+                        action='store_true',
+                        help="if specified, sends commands over UART to Arduino. otherwise, "
+                             "simulates communication between pi and Arduino")
 
     return parser.parse_args()
 

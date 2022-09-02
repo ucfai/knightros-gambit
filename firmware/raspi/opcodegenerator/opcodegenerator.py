@@ -177,7 +177,7 @@ class OpCode0and1Page(BaseFrame):
                 else:
                     color = GUI.WHITEHEX
                 buttonij = tkinter.Button(
-                    self.button_area, text="  o  ", highlightbackground=color,
+                    self.button_area, text="  o  ", bg=color, highlightbackground=color,
                     command=lambda tmp=msg, row=i, col=j: self.callable(
                         tmp, row, col))
                 buttonij.grid(row=i, column=j)
@@ -191,40 +191,36 @@ class OpCode0and1Page(BaseFrame):
         # Clear buttons if two selected before selecting new button
         if self.src_btn_info is not None and self.dest_btn_info is not None:
             # reset buttons
-            self.src_btn_info.button.config(relief="raised", font=GUI.DEFAULT_FONT,
+            self.src_btn_info.button.config(bg=self.src_btn_info.orig_color,
                                             highlightbackground=self.src_btn_info.orig_color)
             self.src_btn_info = None
 
-            self.dest_btn_info.button.config(relief="raised", font=GUI.DEFAULT_FONT,
+            self.dest_btn_info.button.config(bg=self.dest_btn_info.orig_color,
                                              highlightbackground=self.dest_btn_info.orig_color)
             self.dest_btn_info = None
 
         button = self.button_grid[row][col]
 
         if self.src_btn_info is not None and button == self.src_btn_info.button:
-            self.src_btn_info.button.config(relief="raised", font=GUI.DEFAULT_FONT,
+            self.src_btn_info.button.config(bg=self.src_btn_info.orig_color,
                                             highlightbackground=self.src_btn_info.orig_color)
             self.src_btn_info = None
             return
 
-        # If selecting a button that is already selected
-        if button.config('relief')[-1] == 'sunken':
-            button.config(relief="raised", font=GUI.DEFAULT_FONT)
+        if self.dest_btn_info is not None and button == self.dest_btn_info.button:
+            self.dest_btn_info.button.config(bg=self.dest_btn_info.orig_color,
+                                             highlightbackground=self.dest_btn_info.orig_color)
+            self.dest_btn_info = None
+            return
 
-            if self.dest_btn_info is not None:
-                self.dest_btn_info = None
-            else:
-                self.src_btn_info = None
-        # If no buttons already selected, store selected button as src, else dest
+        if self.src_btn_info is None:
+            self.src_btn_info = ButtonInfo(button, msg, row, col,
+                                           button.cget("highlightbackground"))
         else:
-            if self.src_btn_info is None:
-                self.src_btn_info = ButtonInfo(button, msg, row, col,
-                                               button.cget("highlightbackground"))
-            else:
-                self.dest_btn_info = ButtonInfo(button, msg, row, col,
-                                                button.cget("highlightbackground"))
+            self.dest_btn_info = ButtonInfo(button, msg, row, col,
+                                            button.cget("highlightbackground"))
 
-            button.config(relief="sunken", font=GUI.BOLD_FONT, highlightbackground=GUI.REDHEX)
+        button.config(bg=GUI.REDHEX, highlightbackground=GUI.REDHEX)
 
         # Compute opcode if two buttons selected
         if self.src_btn_info is not None and self.dest_btn_info is not None:
@@ -246,6 +242,8 @@ class OpCode2Page(BaseFrame):
 
         self.controller = controller
 
+        self.update_status("Please select a single square...")
+
         # button grid
         self.btn_info = None
 
@@ -265,7 +263,7 @@ class OpCode2Page(BaseFrame):
                 else:
                     color = GUI.WHITEHEX
                 buttonij = tkinter.Button(
-                    self.button_area, text="  o  ", highlightbackground=color,
+                    self.button_area, text="  o  ", bg=color, highlightbackground=color,
                     command=lambda tmp=msg, row=i, col=j: self.callable(
                         tmp, row, col))
                 buttonij.grid(row=i, column=j)
@@ -280,20 +278,14 @@ class OpCode2Page(BaseFrame):
 
         if self.btn_info is not None:
             tmp = self.btn_info
-            self.btn_info.button.config(relief="raised", font=GUI.DEFAULT_FONT,
-                                            highlightbackground=self.btn_info.orig_color)
+            self.btn_info.button.config(bg=self.btn_info.orig_color,
+                                        highlightbackground=self.btn_info.orig_color)
             self.btn_info = None
             if tmp.button == button:
                 return
 
-        # If selecting a button that is already selected
-        if button.config('relief')[-1] == 'sunken':
-            button.config(relief="raised", font=GUI.DEFAULT_FONT)
-            self.btn_info = None
-            return
-
         self.btn_info = ButtonInfo(button, msg, row, col, button.cget("highlightbackground"))
-        button.config(relief="sunken", font=GUI.BOLD_FONT, highlightbackground=GUI.REDHEX)
+        button.config(bg=GUI.REDHEX, highlightbackground=GUI.REDHEX)
 
         # create opcodemsg
         opcode = self.opcodes.index(self.variable.get())
@@ -318,7 +310,8 @@ class OpCode3Page(BaseFrame):
         default_text = "Indicates that the Arduino should align an axis.\n" \
                        "Setting the Extra field (e.g. msg[2]) to '0' indicates aligning x axis\n" \
                        " to zero, '1' indicates aligning y axis to zero, '2' indicates aligning\n" \
-                       "x axis to max, '3' indicates aligning y axis to max."
+                       "x axis to max, '3' indicates aligning y axis to max, '4' indicates\n" \
+                       "calling the Arduino's home() function, which aligns both x and y to zero."
         self.label = tkinter.Label(self, text=default_text, font = GUI.DEFAULT_FONT)
 
         self.compute_btn = tkinter.Button(self, text="Compute", command=self.callable)
@@ -331,6 +324,7 @@ class OpCode3Page(BaseFrame):
         self.instruction_types = [
             "A: ALIGN_AXIS",
             "S: SET_ELECTROMAGNET",
+            "M: SET_HUMAN_MOVE_VALID",
             "R: RETRANSMIT_LAST_MSG"
         ]
         self.previous_instruction_idx = -1
@@ -365,6 +359,10 @@ class OpCode3Page(BaseFrame):
                    "electromagnet. Setting the Extra field (e.g. msg[2]) to '0' indicates OFF,\n" \
                    "'1' indicates ON."
         elif idx == 2:
+            text = "A code used to set the human_move_valid_flag, which guards button presses.\n" \
+                   "When the Extra byte is '1', allows button presses; when '0', disallows\n" \
+                   "button presses (for the chess timer, which signals end of human turn)."
+        elif idx == 3:
             text = "Indicates that the Arduino should retransmit the last message.\n" \
                    "This code is used when a corrupted or misaligned message is received.\n" \
                    "The Extra field is ignored."
@@ -378,7 +376,7 @@ class OpCode3Page(BaseFrame):
         extra = self.textbox.get("1.0",tkinter.END)[0]
         idx = self.instruction_types.index(self.variable2.get())
         if idx == 0:
-            if extra in ('0', '1', '2', '3'):
+            if extra in ('0', '1', '2', '3', '4'):
                 opcodemsg = f"~3{self.variable2.get()[0]}{extra}00{self.controller.msg_count}"
                 self.controller.msg_count = (self.controller.msg_count + 1) % 2
             else:
@@ -391,6 +389,12 @@ class OpCode3Page(BaseFrame):
             else:
                 opcodemsg = "Received invalid value for extra, expected value in ('0', '1')"
         elif idx == 2:
+            if extra in ('0', '1'):
+                opcodemsg = f"~3{self.variable2.get()[0]}000{self.controller.msg_count}"
+                self.controller.msg_count = (self.controller.msg_count + 1) % 2
+            else:
+                opcodemsg = "Received invalid value for extra, expected value in ('0', '1')"
+        elif idx == 3:
             opcodemsg = f"~3{self.variable2.get()[0]}000{self.controller.msg_count}"
             self.controller.msg_count = (self.controller.msg_count + 1) % 2
         else:

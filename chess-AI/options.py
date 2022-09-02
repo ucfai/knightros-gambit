@@ -14,10 +14,11 @@ class TrainOptions:
         device: the device being used to train (either CPU or GPU)
         save_path: path for model checkpointing
         num_saved_models: number of models to store
+        model_saving: model saving parameters class
     """
 
     def __init__(self, learning_rate, momentum, weight_decay, epochs, batch_size, games, device,
-                 save_path, num_saved_models, overwrite):
+                 model_saving):
         self.learning_rate = learning_rate
         self.momentum = momentum
         self.weight_decay = weight_decay
@@ -25,9 +26,7 @@ class TrainOptions:
         self.batch_size = batch_size
         self.games = games
         self.device = device
-        self.save_path = save_path
-        self.num_saved_models = num_saved_models
-        self.overwrite = overwrite
+        self.model_saving = model_saving
 
 
 class MCTSOptions(TrainOptions):
@@ -40,10 +39,10 @@ class MCTSOptions(TrainOptions):
     """
 
     def __init__(self, learning_rate, momentum, weight_decay, epochs, batch_size, games, device,
-                 save_path, num_saved_models, overwrite, exploration, simulations,
+                 model_saving, exploration, simulations,
                  training_episodes):
         TrainOptions.__init__(self, learning_rate, momentum, weight_decay, epochs, batch_size,
-                              games, device, save_path, num_saved_models, overwrite)
+                              games, device, model_saving)
 
         self.exploration = exploration
         self.simulations = simulations
@@ -59,9 +58,9 @@ class StockfishOptions(TrainOptions):
     """
 
     def __init__(self, learning_rate, momentum, weight_decay, epochs, batch_size, games, device,
-                 save_path, num_saved_models, overwrite, elo, depth):
+                 save_path, elo, depth):
         TrainOptions.__init__(self, learning_rate, momentum, weight_decay, epochs, batch_size,
-                              games, device, save_path, num_saved_models, overwrite)
+                              games, device, save_path)
 
         self.elo = elo
         self.depth = depth

@@ -1,5 +1,5 @@
-'''CLI entry point for the Knightr0's Gambit software that controls automatic chessboard.
-'''
+"""CLI entry point for the Knightr0's Gambit software that controls automatic chessboard.
+"""
 import random
 
 from game import Game
@@ -7,10 +7,10 @@ import player
 import status
 from util import parse_args
 
-# TODO: make this function have a better name; it doesn't just return bool, it also assigns color.
-def is_human_turn_at_start():
-    '''Assigns piece color for human and returns boolean accordingly.
-    '''
+
+def assign_human_turn_at_start():
+    """Assigns piece color for human and returns boolean accordingly.
+    """
     while True:
         start = input("Choose piece color ([w]hite, [b]lack, or [r]andom): ").lower()
         if start == 'r':
@@ -21,6 +21,7 @@ def is_human_turn_at_start():
         if start == 'w':
             return True
         print("Please choose one of [w], [b], or [r].")
+
 
 def init_parameters():
     """Initialize parameters needed to create Game object.
@@ -34,26 +35,23 @@ def init_parameters():
     """
     args = parse_args()
 
-    # TODO: update program to handle otb communication and play.
-    if args.microcontroller:
-        raise ValueError("Serial communication not yet implemented.")
-
-    # TODO: Find better way to initialize board if running in test or debug mode.
-    # Also need to update so that we don't assume CLI for setting is_human_turn.
+    # TODO: need to update so that we don't assume CLI for setting is_human_turn.
     if args.test or args.debug:
         human_plays_white_pieces = None
         # Note: priority of modes of operation:
         # test > debug > cli == otb == web == speech
         if args.test:
             return {"mode_of_interaction": "test",
-                    "players": [player.TestfilePlayer(args.test)]}
+                    "players": [player.TestfilePlayer(args.test)],
+                    "interact_w_arduino": args.microcontroller}
 
         # Note: if args.debug specified, takes priority over other modes of operation.
         if args.debug:
-            return {"mode_of_interaction": "debug", "players": [player.CLDebugPlayer()]}
+            return {"mode_of_interaction": "debug", "players": [player.CLDebugPlayer()],
+                    "interact_w_arduino": args.microcontroller}
     else:
         # Get desired piece color for human. Can be white, black, or random.
-        human_plays_white_pieces = is_human_turn_at_start()
+        human_plays_white_pieces = assign_human_turn_at_start()
 
         mode_of_interaction = args.playstyle
         if mode_of_interaction == "cli":
@@ -68,19 +66,20 @@ def init_parameters():
 
         return {"mode_of_interaction": mode_of_interaction,
                 "players": players,
-                "human_plays_white_pieces": human_plays_white_pieces}
+                "human_plays_white_pieces": human_plays_white_pieces,
+                "interact_w_arduino": args.microcontroller}
 
     raise ValueError("Error parsing parameters...")
 
 def player_wants_rematch():
-    '''Skeleton method for querying player about rematch.
-    '''
+    """Skeleton method for querying player about rematch.
+    """
     # TODO: implement
     return False
 
 def main():
-    '''Main driver loop for running Knightro's Gambit.
-    '''
+    """Main driver loop for running Knightro's Gambit.
+    """
     # Set random seed for program
     random.seed()
 
@@ -93,21 +92,16 @@ def main():
     # Note: If running in test or debug, need to call `alignAxis()` for xmin and ymin explicitly.
     # All other modes perform homing before entering main game loop.
     if params["mode_of_interaction"] == "test":
-        game = Game(params["mode_of_interaction"])
-        # TODO: Refactor to handle dispatching moves using the code in `process`.
-        # raise ValueError("Test mode of interaction not yet implemented.")
+        game = Game(params["mode_of_interaction"], params["interact_w_arduino"])
     elif params["mode_of_interaction"] == "debug":
-        game = Game(params["mode_of_interaction"])
-        # TODO: Implement debug mode of interaction
-        # Should be able to use process with human as both players
-        # raise ValueError("Debug mode of interaction not yet implemented.")
+        game = Game(params["mode_of_interaction"], params["interact_w_arduino"])
     elif params["mode_of_interaction"] in ("cli", "otb", "web", "speech"):
-        game = Game(params["mode_of_interaction"], params["human_plays_white_pieces"])
+        game = Game(params["mode_of_interaction"], params["interact_w_arduino"],
+                    params["human_plays_white_pieces"])
         # _, human_plays_white_pieces, board, ai_player = params
 
-        # Sends two instruction messages for homing, 1st for min x, 2nd for min y
-        game.board.add_instruction_to_queue(op_type=status.OpType.ALIGN_AXIS, extra='0')
-        game.board.add_instruction_to_queue(op_type=status.OpType.ALIGN_AXIS, extra='1')
+        # Sends instruction messages for homing (see InstructionType in status)
+        game.board.add_instruction_to_queue(op_type=status.InstructionType.ALIGN_AXIS, extra='4')
 
     # Main game loop
     current_player = 0
@@ -116,7 +110,6 @@ def main():
     # Show game at start before any moves are made
     game.board.show_on_cli()
     while True:
-        # TODO: need to finish processing remainder of moves on the queue after last move
         made_move = game.process(players[current_player])
 
         if made_move is None:

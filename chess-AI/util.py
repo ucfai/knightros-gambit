@@ -24,7 +24,8 @@ def create_stockfish_wrapper():
 
     return Stockfish(stockfish_path)
 
-def sig(value, scale):
+
+def sig(value):
     """Calculate the sigmoid of a value
 
     Attributes:
@@ -32,4 +33,4 @@ def sig(value, scale):
         scale: How much to scale the value by
     """
 
-    return 1 / (1 + np.exp(value/scale))
+    return 1 / (1 + np.exp(-value))

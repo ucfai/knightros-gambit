@@ -8,6 +8,7 @@ import torch
 
 import util
 
+
 class StockfishTrain:
     """Build a dataset of moves and stockfish evaluations.
 
@@ -29,6 +30,13 @@ class StockfishTrain:
         self.stockfish = util.create_stockfish_wrapper()
         self.stockfish.set_elo_rating(elo)
         self.stockfish.set_depth(depth)
+
+    @staticmethod
+    def centipawn_to_winprob(centipawn):
+        """Transforms centipawn value to approximate probability of winning
+        Equation taken from https://www.chessprogramming.org/Pawn_Advantage,_Win_Percentage,_and_Elo
+        """
+        return 1 / (1 + 10**(-centipawn/400))
 
     @staticmethod
     def choose_move(moves, epsilon):
@@ -70,11 +78,11 @@ class StockfishTrain:
 
         # Transform state value to be in the range [-1, 1]
         if sig:
-            state_value = 1 - 2 * util.sig(state_value, 1)
+            state_value = self.centipawn_to_winprob(state_value) * 2 - 1
 
         return state_value
 
-    def get_move_probs(self, board, epsilon=0.3):
+    def get_move_probs(self, board, epsilon=0.3, temperature=0.1):
         """Gets the move probabilities from a position using stockfish get_top_moves
         """
 
@@ -97,14 +105,20 @@ class StockfishTrain:
             # if x > 0 , that is a mate for white in x moves
             # if x < 0, that is a mate for black in x moves
             if move["Centipawn"] is None:
-                # large value * (1/move["mate"]) * player will arrange search probs
-                # based on best mate
-                search_probs.append(10000000 * (1 / move["Mate"]) * player)
+                # Probability of mating moves is set to 1, mating moves for the opponent is set to 0
+                # We would like to explore losing moves regardless, but epsilon-greedy resolves this
+                search_probs.append(np.sign(move["Mate"]) * player / 2 + 0.5)
             else:
-                # TODO: CHANGE 75 TO HYPERPARAMETER
-                search_probs.append(move["Centipawn"] * player / 75)
+                search_probs.append(self.centipawn_to_winprob(move["Centipawn"] * player))
 
-        search_probs = torch.nn.functional.softmax(torch.tensor(search_probs).float(), dim=0)
+        search_probs = torch.tensor(search_probs).float() ** (1/temperature)
+        total = torch.sum(search_probs)
+
+        # Avoid 0/0 error
+        if total.is_nonzero():
+            search_probs = search_probs / total
+        else:
+            search_probs = torch.full(search_probs.size(), 1 / search_probs.size(dim=0))
 
         # Will choose the move to make from the list of moves
         move = StockfishTrain.choose_move(moves, epsilon)

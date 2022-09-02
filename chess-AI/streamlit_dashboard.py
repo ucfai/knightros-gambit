@@ -55,18 +55,62 @@ class Dashboard:
     def load_files(self):
         """Create buttons to upload a dataset and a model through the dashboard.
         """
-        self.col1.title("Streamlit Training Dashboard")
+        self.col1.title("Knightr0's Gambit")
+        self.col2.title("Training Dashboard")
 
-        self.col1.title("Upload Dataset")
-        dataset = self.col1.file_uploader("Dataset")
+        self.col1.title("Get Dataset")
+        self.col2.title("Get Model")
 
-        self.col1.title("Upload Model")
-        model = self.col1.file_uploader("Model")
+        # get directory for model and dataset
+        data_dir = self.col1.text_input("Dataset Directory", "datasets/")
+        model_dir = self.col2.text_input("Model Directory", "models/")
 
-        dataset_path = dataset.name if dataset else None
-        model_path = model.name if model else None
+        # get the file names for each model / dataset
+        ds_file_name = self.col1.text_input("Dataset file name", "dataset-06-04-22:19.pt")
+        m_file_name = self.col2.text_input("Model file name", "model-06-04-22:19.pt")
 
-        return dataset_path, model_path
+        ds_load = self.col1.selectbox('Load Dataset', ('None', 'Locally', 'Figshare'))
+
+        m_load = self.col2.selectbox('Load Model', ('None', 'Locally', 'Figshare'))
+
+        self.col1.title("Save Dataset")
+        self.col2.title("Save Model")
+
+        # see if model should be saved to figshare
+        ds_save_figshare = self.col1.checkbox("Save dataset to Figshare")
+        m_save_figshare = self.col2.checkbox("Save model to Figshare")
+
+        # get MCTS save frequency
+        save_freq = self.col2.slider('MCTS Save freq', 1, 100)
+
+        # get figshare and local load flags
+        ds_figshare_load = (ds_load == 'Figshare')
+        ds_local_load = (ds_load == 'Local')
+        m_figshare_load = (m_load == 'Figshare')
+        m_local_load = (m_load == 'Local')
+
+        ds_saving = {
+            "data_dir": data_dir,
+            "file_name": ds_file_name,
+            "figshare_load": ds_figshare_load,
+            "local_load": ds_local_load,
+            "figshare_save": ds_save_figshare
+        }
+
+        m_saving = {
+            "model_dir": model_dir,
+            "file_name": m_file_name,
+            "figshare_load": m_figshare_load,
+            "local_load": m_local_load,
+            "figshare_save": m_save_figshare,
+            "mcts_check_freq": save_freq
+        }
+
+        self.col1.subheader('Params')
+        self.col1.code(ds_saving, language=None)
+        self.col1.code(m_saving, language=None)
+
+        return ds_saving, m_saving
 
     def stockfish_params(self):
         """Sets all the necessary parameters for stockfish.
@@ -97,17 +141,15 @@ class Dashboard:
         """Sets all the neural network hyperparameters.
         """
         self.col2.title("NNET Hyperparameters")
-        saved_models = self.col2.number_input("Number of Saved Models", value=0)
-        overwrite = self.col2.checkbox("Overwrite")
         learning_rate = self.col2.number_input("Learning Rate", value=0.01)
         momentum = self.col2.number_input("Momentum", value=0.01)
         weight_decay = self.col2.number_input("Weight Decay", value=0.01)
 
-        return saved_models, overwrite, learning_rate, momentum, weight_decay
+        return learning_rate, momentum, weight_decay
 
 
     def train_flags(self):
-        """ Gets the make dataset flag, stockfish train flag, and mcts train 
+        """ Gets the make dataset flag, stockfish train flag, and mcts train
         flag from the dashboard
         """
         self.col1.title("Training Flags")
@@ -116,3 +158,4 @@ class Dashboard:
         mcts_train_flag = self.col1.checkbox("MCTS Train", value=True)
 
         return make_dataset_flag, stockfish_train_flag, mcts_train_flag
+        
