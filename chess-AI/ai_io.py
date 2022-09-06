@@ -22,12 +22,13 @@ class DatasetSaving:
         local_load: flag for if dataset should be loaded from local directory
         figshare_save: flag for if dataset should be saved to figshare
     """
-    def __init__(self, data_dir, file_name, figshare_load, local_load, figshare_save):
+    def __init__(self, data_dir, file_name, figshare_load, local_load, figshare_save, cp_freq):
         self.data_dir = data_dir
         self.file_name = file_name
         self.figshare_load = figshare_load
         self.local_load = local_load
         self.figshare_save = figshare_save
+        self.cp_freq = cp_freq
 
 
 class ModelSaving:
@@ -102,7 +103,7 @@ def load_dataset(dataset_saving, show_dash):
     return torch.load(dataset_saving.data_dir + dataset_saving.file_name)
 
 
-def save_dataset(dataset, dataset_saving):
+def save_dataset(dataset, data_dir, figshare_save=False, cp=None):
     """Save a dataset to Figshare or Locally
 
     The save_dir refers to the directory where the file
@@ -111,11 +112,12 @@ def save_dataset(dataset, dataset_saving):
     """
     date_string = create_date_string()
     # get the full file path to save
-    full_path = dataset_saving.data_dir + "dataset-" +  date_string + ".pt"
+    name = date_string if cp is None else "{}-{}".format(date_string, cp)
+    full_path = data_dir + "dataset-" + name + ".pt"
     # save the dataset
     torch.save(dataset, full_path)
 
-    if dataset_saving.figshare_save:
+    if figshare_save:
         # Save dataset to figshare
         title = "dataset-" + date_string
         desc = "This description is a placeholder"

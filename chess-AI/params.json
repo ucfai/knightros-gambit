@@ -7,7 +7,8 @@
             "file_name": "dataset-06-04-22:19.pt",
             "figshare_load": false,
             "local_load": false,
-            "figshare_save":false
+            "figshare_save":false,
+            "cp_freq": 1000
         },
 
         "model_saving": {

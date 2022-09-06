@@ -94,7 +94,7 @@ def assign_rewards(board, length):
     return state_values
 
 
-def create_dataset(games, move_approximator, val_approximator=None, show_dash=False):
+def create_dataset(games, move_approximator, val_approximator=None, cp_freq=None, data_dir=None, show_dash=False):
     """Builds a dataset with the size of (games)
 
     Attributes:
@@ -103,25 +103,28 @@ def create_dataset(games, move_approximator, val_approximator=None, show_dash=Fa
         move_approximator: Supplies a policy distribution over legal moves and a move to take
     """
 
+    assert data_dir is None or (data_dir is not None and cp_freq is not None), "data_dir can only be specified if cp on"
     # Storing gradients for all forward passes in each training game is demanding. Instead,
     # ignore gradients for now and store only the gradients needed for a particular batch later on
+    game_data = []
     with torch.no_grad():
-        if show_dash:
-            # Print every 10th game for visualization purposes
-            game_data = [training_game(val_approximator, move_approximator,
-                                       game_num=i) for i in range(games)]
-        else:
-            game_data = [training_game(val_approximator, move_approximator) for _ in range(games)]
+        for i in range(games):
+            if show_dash:
+                game_data.append(training_game(val_approximator, move_approximator, game_num=i))
+            else:
+                game_data.append(training_game(val_approximator, move_approximator))
 
-    # Convert all the fen strings into tensors that are used in the dataset
-    input_state = torch.stack(
-        [get_cnn_input(chess.Board(state)) for game in game_data for state in game[0]])
-    state_values = torch.tensor([state_val for game in game_data for state_val in game[1]]).float()
-    move_probs = torch.tensor(
-        np.array([move_prob for game in game_data for move_prob in game[2]])).float()
+            if cp_freq is not None and i % cp_freq == 0 or i == games - 1:
+                # Convert all the fen strings into tensors that are used in the dataset
+                input_state = torch.stack(
+                    [get_cnn_input(chess.Board(state)) for game in game_data for state in game[0]])
+                state_values = torch.tensor([state_val for game in game_data for state_val in game[1]]).float()
+                move_probs = torch.tensor(
+                    np.array([move_prob for game in game_data for move_prob in game[2]])).float()
 
-    # Create iterable dataset from game data
-    dataset = TensorDataset(input_state, state_values, move_probs)
+                # Create iterable dataset from game data
+                dataset = TensorDataset(input_state, state_values, move_probs)
+                save_dataset(dataset, data_dir, cp=i)
 
     # Return the dataset to be used
     return dataset
@@ -217,7 +220,7 @@ def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=Fal
         save_model(nnet, options.model_saving, checkpointing=True, file_name=f"model_{iteration}")
 
 
-def create_stockfish_dataset(sf_opt, show_dash):
+def create_stockfish_dataset(sf_opt, dataset_saving, show_dash):
     """Create dataset of values/moves using stockfish
 
     Attributes:
@@ -231,7 +234,8 @@ def create_stockfish_dataset(sf_opt, show_dash):
     stocktrain_value_approximator = stockfish.get_value
     stocktrain_moves = lambda board: stockfish.get_move_probs(board, epsilon=0.3)
 
-    return create_dataset(sf_opt.games, stocktrain_moves, stocktrain_value_approximator, show_dash)
+    return create_dataset(sf_opt.games, stocktrain_moves,stocktrain_value_approximator, show_dash,
+                          cp_freq=dataset_saving.cp_freq, data_dir=dataset_saving.data_dir)
 
 
 def train_on_mcts(nnet, mcts_opt, show_dash=False):
@@ -273,7 +277,7 @@ def main():
                 print(msg)
             dataset = create_stockfish_dataset(stockfish_options, flags.show_dash)
             make_dir(dataset_saving.data_dir)
-            save_dataset(dataset, dataset_saving)
+            save_dataset(dataset, dataset_saving.data_dir, dataset_saving.figshare_save)
             msg = "Dataset Creation completed"
             if flags.show_dash:
                 Dashboard.info_message("success", msg)
