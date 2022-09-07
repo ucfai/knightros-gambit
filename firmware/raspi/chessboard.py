@@ -57,6 +57,7 @@ class Board(dict):
         else:
             self.move(p1, p2)
             self.complete_move(piece, dest, p2)
+            self.updateCastleStatus(p1)
 
     def move(self, p1, p2):
         """Moves a piece from p1 to p2
@@ -167,6 +168,28 @@ class Board(dict):
             self.halfmove_clock = int(pat[4])
             self.fullmove_number = int(pat[5])
 
+    def updateCastleStatus(self, p1):
+        if p1 == "A1":
+            pieces.leftWhiteMoved = True
+        elif p1 == "H1":
+            pieces.rightWhiteMoved = True
+        elif p1 == "A8":
+            pieces.leftBlackMoved = True
+        elif p1 == "H8":
+            pieces.rightBlackMoved = True
+        elif p1 == "E1":
+            pieces.whiteKingHome = False
+        elif p1 == "E8":
+            pieces.blackKingHome = False
+        
+        if pieces.whiteKingHome:
+            pieces.rightWhiteCheck = self.king_in_check("white") or self.is_in_check_after_move("E1", "F1")
+            pieces.leftWhiteCheck = self.king_in_check("white") or self.is_in_check_after_move("E1", "D1")
+        if pieces.blackKingHome:
+            pieces.rightBlackCheck = self.king_in_check("black") or self.is_in_check_after_move("E8", "F8")
+            pieces.leftBlackCheck = self.king_in_check("black") or self.is_in_check_after_move("E8", "D8")
+
+            
 class ChessError(Exception):
     pass
 

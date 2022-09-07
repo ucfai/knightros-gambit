@@ -2,7 +2,9 @@
 
 Based on https://github.com/saavedra29/chess_tk"""
 
+from shutil import which
 import sys
+from tracemalloc import start
 
 SHORT_NAME = {
     "R": "Rook",
@@ -12,6 +14,10 @@ SHORT_NAME = {
     "K": "King",
     "P": "Pawn"
 }
+
+leftBlackMoved, rightBlackMoved, leftWhiteMoved, rightWhiteMoved = False, False, False, False
+leftBlackCheck, rightBlackCheck, leftWhiteCheck, rightWhiteCheck = False, False, False, False
+whiteKingHome, blackKingHome = True, True
 
 def create_piece(piece, color="white"):
     """Takes a piece name or shortname and returns the corresponding piece
@@ -79,11 +85,62 @@ class King(Piece):
     """King chess piece.
     """
     shortname = "k"
+    canCastle = True
+
+    #def moves_available(self, pos):
+        #return super(King, self).moves_available(pos.upper(), True, True, 1)
 
     def moves_available(self, pos):
         """Returns moves available based on piece
         """
-        return super(King, self).moves_available(pos.upper(), True, True, 1)
+        board = self.board
+        _ = self
+        if self.color == "white":
+            startY, rooks, checks = 0, [leftWhiteMoved, rightWhiteMoved], [leftWhiteCheck, rightWhiteCheck]
+        else:
+            startY, rooks, checks = 7, [leftBlackMoved, rightBlackMoved], [leftBlackCheck, rightBlackCheck]
+        
+        startX = 4
+        possible_moves = ((1, 0), (-1, 0), (0, 1), (0, -1))
+        possible_castles = ((0, -2), (0, 2))
+        allowed_moves = []
+
+        # Moving
+        prohibited = board.occupied("white") + board.occupied("black")
+        beginningpos = board.num_notation(pos.upper())
+
+        # Removes castling privilege if king has moved
+        if self.canCastle and (beginningpos[0] != startY or beginningpos[1] != startX):
+            self.canCastle = False
+            if self.color == "white":
+                whiteKingHome = False
+            else:
+                blackKingHome = False
+
+        for x, y in possible_moves:
+            newLoc = beginningpos[0] + x, beginningpos[1] + y
+            if board.alpha_notation(newLoc) not in board.occupied(self.color):
+                allowed_moves.append(newLoc)
+
+        # Checks if each rook can castsle
+        if self.canCastle:
+            i = 0
+            for x, y in possible_castles:
+                if not (rooks[i] or checks[i]):
+                    newLoc = beginningpos[0], beginningpos[1] + y
+                    betweenLoc = beginningpos[0], beginningpos[1] + (y / 2)
+                    if i == 0:
+                        knightLoc = beginningpos[0], beginningpos[1] + y - 1
+                        if board.alpha_notation(knightLoc) not in prohibited:
+                            if board.alpha_notation(newLoc) not in prohibited and board.alpha_notation(betweenLoc) not in prohibited:
+                                allowed_moves.append(newLoc)
+                    elif board.alpha_notation(newLoc) not in prohibited and board.alpha_notation(betweenLoc) not in prohibited:
+                        allowed_moves.append(newLoc)
+                i += 1
+
+        allowed_moves = filter(board.is_on_board, allowed_moves)
+        return map(board.alpha_notation, allowed_moves)
+
 
 class Queen(Piece):
     """Queen chess piece.
