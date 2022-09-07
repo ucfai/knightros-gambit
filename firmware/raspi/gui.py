@@ -262,7 +262,7 @@ def assign_human_turn_at_start():
             title="Choose Piece Color",
             prompt="Choose piece color ([w]hite, [b]lack, or [r]andom): ").lower()
         if start == "r":
-             piece_color = "w" if random.randint(0, 1) else "b"
+             start = "w" if random.randint(0, 1) else "b"
         if start == "b":
              return False
         if start == "w":
