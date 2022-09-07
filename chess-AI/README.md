@@ -110,10 +110,10 @@ Example use:
 
 `currently_unused` : parameters that are currently not being used in training. 
 
-`move_epsilon`
+`move_epsilon` : N/A
 
-`probability_scalar` 
+`probability_scalar` : N/A
 
-`sigmoid_scalar`  
+`sigmoid_scalar`  : N/A
 
-`temperature` 
+`temperature` : N/A
