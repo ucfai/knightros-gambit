@@ -15,7 +15,7 @@
             "file_name": "model-06-04-22:32.pt",
             "figshare_load":false,
             "local_load": false,
-            "figshare_save":true,
+            "figshare_save":false,
             "mcts_check_freq": 10
         }
     },
@@ -27,20 +27,20 @@
     },
 
     "stockfish":{
-        "epochs": 10,
+        "epochs": 5,
         "batch_size": 8,
-        "games": 1,
-        "elo": 1000,
+        "games": 200,
+        "elo": 800,
         "depth": 5
     },
 
     "mcts":{
-        "epochs": 1,
+        "epochs": 5,
         "batch_size": 8,
-        "games": 10,
-        "exploration": 5,
+        "games": 200,
+        "exploration": 1,
         "training_episodes": 5,
-        "simulations": 2
+        "simulations": 25
     },
 
     "currently_unused": {

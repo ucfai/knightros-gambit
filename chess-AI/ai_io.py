@@ -5,6 +5,7 @@ import argparse
 from datetime import datetime
 import json
 import os
+import logging
 
 import torch
 
@@ -114,6 +115,7 @@ def save_dataset(dataset, dataset_saving):
     full_path = dataset_saving.data_dir + "dataset-" +  date_string + ".pt"
     # save the dataset
     torch.save(dataset, full_path)
+    logging.info("DATASET SAVED TO %s WITH A SIZE OF %s GB",full_path,os.path.getsize(full_path)/1e9)
 
     if dataset_saving.figshare_save:
         # Save dataset to figshare
