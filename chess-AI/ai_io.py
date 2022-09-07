@@ -126,6 +126,7 @@ def save_dataset(dataset, data_dir, figshare_save=False, cp=None):
         categories = [179]
         FigshareApi.upload(title, desc, keys, categories, full_path)
 
+    return full_path
 
 def save_model(nnet, model_saving, checkpointing, file_name=None):
     """Save a model to Figshare or Locally.

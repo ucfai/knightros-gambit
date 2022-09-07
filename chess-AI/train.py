@@ -1,5 +1,7 @@
 """Main training program.
 """
+import os
+
 import chess
 import numpy as np
 import torch
@@ -107,6 +109,8 @@ def create_dataset(games, move_approximator, val_approximator=None, cp_freq=None
     # Storing gradients for all forward passes in each training game is demanding. Instead,
     # ignore gradients for now and store only the gradients needed for a particular batch later on
     game_data = []
+    last_path = None
+
     with torch.no_grad():
         for i in range(games):
             if show_dash:
@@ -124,7 +128,11 @@ def create_dataset(games, move_approximator, val_approximator=None, cp_freq=None
 
                 # Create iterable dataset from game data
                 dataset = TensorDataset(input_state, state_values, move_probs)
-                save_dataset(dataset, data_dir, cp=i)
+
+                if last_path is not None:
+                    os.remove(last_path)
+
+                last_path = save_dataset(dataset, data_dir, cp=i)
 
     # Return the dataset to be used
     return dataset
