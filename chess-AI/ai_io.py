@@ -44,13 +44,14 @@ class ModelSaving:
         checkpoint_path: the path where models should be saved during checkpointing
     """
     def __init__(self, model_dir, file_name, figshare_load, local_load, figshare_save,
-        mcts_check_freq, checkpoint_path=None):
+        mcts_check_freq, stock_check_freq, checkpoint_path=None):
         self.model_dir = model_dir
         self.file_name = file_name
         self.figshare_load = figshare_load
         self.local_load = local_load
         self.figshare_save = figshare_save
         self.mcts_check_freq = mcts_check_freq
+        self.stock_check_freq = stock_check_freq
         self.checkpoint_path = checkpoint_path
 
 
@@ -112,7 +113,7 @@ def save_dataset(dataset, data_dir, figshare_save=False, cp=None):
     """
     date_string = create_date_string()
     # get the full file path to save
-    name = date_string if cp is None else "{}-{}".format(date_string, cp)
+    name = date_string if cp is None else "{}-game{}".format(date_string, cp)
     full_path = data_dir + "dataset-" + name + ".pt"
     # save the dataset
     torch.save(dataset, full_path)
@@ -127,6 +128,7 @@ def save_dataset(dataset, data_dir, figshare_save=False, cp=None):
         FigshareApi.upload(title, desc, keys, categories, full_path)
 
     return full_path
+
 
 def save_model(nnet, model_saving, checkpointing, file_name=None):
     """Save a model to Figshare or Locally.
@@ -154,6 +156,8 @@ def save_model(nnet, model_saving, checkpointing, file_name=None):
             # 179 is category, Artificial Intelligence and Image Processing
             categories = [179]
             FigshareApi.upload(title, desc, keys, categories, full_path)
+
+    return full_path
 
 
 def load_model(nnet, model_saving, show_dash):

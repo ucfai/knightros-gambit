@@ -96,7 +96,7 @@ def assign_rewards(board, length):
     return state_values
 
 
-def create_dataset(games, move_approximator, val_approximator=None, cp_freq=None, data_dir=None, show_dash=False):
+def create_dataset(games, move_approximator, val_approximator=None, show_dash=False, cp_freq=None, data_dir=None):
     """Builds a dataset with the size of (games)
 
     Attributes:
@@ -138,7 +138,7 @@ def create_dataset(games, move_approximator, val_approximator=None, cp_freq=None
     return dataset
 
 
-def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=False):
+def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=False, cp_freq=None):
     """Train with the specified dataset
 
     Attributes:
@@ -146,6 +146,8 @@ def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=Fal
         nnet: the neural network
         options: Instance of TrainOptions containing settings/hyperparameters for training
     """
+    last_path = None
+
     if show_dash:
         Dashboard.info_message("info", "Training on Dataset")
 
@@ -165,7 +167,6 @@ def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=Fal
 
     # Main training loop
     for epoch in range(options.epochs):
-
         # Variables used solely for monitoring training, not used for actually updating the model
         value_losses = []
         policy_losses = []
@@ -218,6 +219,11 @@ def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=Fal
         if show_dash:
             # Keep track of when each epoch is over
             Dashboard.info_message("success", "Epoch " + str(epoch) + " Finished")
+
+        if cp_freq is not None and epoch % cp_freq == 0:
+            if last_path is not None:
+                os.remove(last_path)
+            last_path = save_model(nnet, options.model_saving, checkpointing=True, file_name=f"model_epoch{epoch}")
 
     if show_dash:
         # Chart and show all the losses
@@ -283,7 +289,7 @@ def main():
                 Dashboard.info_message("success", msg)
             else:
                 print(msg)
-            dataset = create_stockfish_dataset(stockfish_options, flags.show_dash)
+            dataset = create_stockfish_dataset(stockfish_options, dataset_saving, flags.show_dash)
             make_dir(dataset_saving.data_dir)
             save_dataset(dataset, dataset_saving.data_dir, dataset_saving.figshare_save)
             msg = "Dataset Creation completed"
@@ -304,7 +310,7 @@ def main():
                 Dashboard.info_message("success", msg)
             else:
                 print(msg)
-            train_on_dataset(dataset, nnet, stockfish_options, iteration=0)
+            train_on_dataset(dataset, nnet, stockfish_options, iteration=0, cp_freq=stockfish_options.model_saving.stock_check_freq)
 
             msg = "Stockfish Training completed"
             if flags.show_dash:
@@ -329,6 +335,7 @@ def main():
 
         if mcts_options.model_saving.model_dir is not None:
             save_model(nnet, mcts_options.model_saving, checkpointing=False)
+
 
 if __name__ == "__main__":
     main()
