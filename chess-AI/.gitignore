@@ -5,9 +5,6 @@
 # Our first model!
 !model.pt
 
-# BayesianElo program used for computing elo of agents
-BayesianElo/
-
 test.pgn
 =======
 # ignore all saved datasets

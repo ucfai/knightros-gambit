@@ -62,7 +62,7 @@ class HardStockfishPlayer:
     """"AI" class that is a simple wrapper around the Stockfish engine.
     """
     
-    def __init__(self, elo_rating=1800):
+    def __init__(self, elo_rating=2000):
         self.stockfish = create_stockfish_wrapper()
         self.stockfish.set_elo_rating(elo_rating)
         self.stockfish.depth = 9
@@ -93,57 +93,58 @@ class RandomPlayer:
         
 
 def evaluate_two_players(player1, player2, num_games=20):
+
     white = False
     pointsP1 = 0
+    game_num = 0
     for _ in range(num_games):
+        game_num +=1
         white = not(white)
         board = chess.Board()
         if white:
             while True:
-                if isinstance(player1, Knightr0Player):
-                    policy,_ = player1.model(get_cnn_input(board))
-                    board.push_uci(policy_converter.find_best_legal_move(policy, board))
-                else:
-                    board.push(player1.select_move(board))
+                board = make_move(player1, board)
                 if board.is_game_over(claim_draw=True):
                     if board.is_checkmate():
                         pointsP1 += 0.5
                     pointsP1 += 0.5
                     break
                 
-                if isinstance(player2, Knightr0Player):
-                    policy,_ = player2.model(get_cnn_input(board))
-                    board.push_uci(policy_converter.find_best_legal_move(policy, board))
-                else:
-                    board.push(player2.select_move(board))
+                board = make_move(player2, board)
                 if board.is_game_over(claim_draw=True):
                     if not(board.is_checkmate()):
                         pointsP1 += 0.5
                     break        
         else:
             while True:
-                if isinstance(player2, Knightr0Player):
-                    policy,_ = player2.model(get_cnn_input(board))
-                    board.push_uci(policy_converter.find_best_legal_move(policy, board))
-                else:
-                    board.push(player2.select_move(board))
+                board = make_move(player2, board)
                 if board.is_game_over(claim_draw=True):
                     if not(board.is_checkmate()):
                         pointsP1 += 0.5
                     break
                     
-                if isinstance(player1, Knightr0Player):
-                    policy,_ = player1.model(get_cnn_input(board))
-                    board.push_uci(policy_converter.find_best_legal_move(policy, board))
-                else:
-                    board.push(player1.select_move(board))
+                board = make_move(player1, board)
                 if board.is_game_over(claim_draw=True):
                     if board.is_checkmate():
                         pointsP1 += 0.5
                     pointsP1 += 0.5
                     break
+        print("-------{} VS {}-------".format(player1,player2))
+        print("Game {}".format(game_num))
+        print("Player 1 Points {}".format(pointsP1))
+        print("Player 2 Points {}".format(game_num - pointsP1))
+        print("-----------------------------------------------------\n")
+
     pointsP2 = num_games - pointsP1
     return pointsP1, pointsP2
+
+def make_move(player, board):
+    if isinstance(player, Knightr0Player):
+        policy,_ = player.model(get_cnn_input(board))
+        board.push_uci(policy_converter.find_best_legal_move(policy, board))
+    else:
+        board.push(player.select_move(board))
+    return board
 
 def get_elo(points, num_games):
     expected = 0.5
