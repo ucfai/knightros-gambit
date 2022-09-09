@@ -37,7 +37,7 @@
     "mcts":{
         "epochs": 1,
         "batch_size": 8,
-        "games": 10,
+        "games": 1,
         "exploration": 5,
         "training_episodes": 5,
         "simulations": 2

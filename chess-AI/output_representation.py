@@ -199,7 +199,6 @@ class _PlayNetworkPolicyConverter:
         """
         max_val_move = None
         max_val = -float('inf')
-        print(list(board_t.legal_moves))
 
         for move in board_t.legal_moves:
             uci_move = move.uci()

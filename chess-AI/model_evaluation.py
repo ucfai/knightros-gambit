@@ -7,6 +7,7 @@ import torch
 import random
 import itertools
 import numpy as np
+import sys
 
 from mcts import Mcts
 from ai_io import init_params
@@ -20,10 +21,13 @@ class Knightr0Player:
     '''"AI" class that is a wrapper around our custom modification of AlphaZero.
     '''
     def __init__(self, path_to_model=None):
+        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
         if not(path_to_model == None):
-            self.model = torch.load(path_to_model)
+            self.model = PlayNetwork().to(device=device)
+            self.model.load_state_dict(torch.load(path_to_model))
         else:
-            self.model = PlayNetwork(testing=True).to('cpu')
+            self.model = PlayNetwork(testing=True).to(device=device)
         # TODO: Update exploration rate.
         self.mcts = Mcts(exploration=0.01, device=torch.device('cuda:0' if torch.cuda.is_available() else 'cpu'))
 
@@ -156,8 +160,14 @@ def get_elo(points, num_games):
     return elos
 
 def main():
+    # Allow for model path to be passed as a CLI argument
+    if len(sys.argv) <= 1:
+        model_path = None
+    else:
+        model_path = sys.argv[1]
+
     num_games = 30
-    players = [Knightr0Player(), RandomPlayer(), EasyStockfishPlayer(), HardStockfishPlayer()]
+    players = [Knightr0Player(model_path), RandomPlayer(), EasyStockfishPlayer(), HardStockfishPlayer()]
     tot_pts = np.zeros_like(players)
     matches = list(itertools.combinations(players, 2))
     pts = np.zeros_like(matches)
