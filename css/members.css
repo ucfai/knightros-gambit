@@ -108,9 +108,35 @@ body {
   color: rgb(245, 224, 179);
 }
 /* On smaller screens, where height is less than 450px, change the style of the sidebar (less padding and a smaller font size) */
-@media screen and (max-height: 450px) {
-  .sidebar {padding-top: 15px;}
+@media screen and (max-height: 640px) {
+  .sidebar {
+    padding-top: 15px;
+    width: 90px;
+  }
   .sidebar a {font-size: 18px;}
+  #site-header-name {
+    padding-left: 100px;
+    font-size: 25px; 
+  }
+  #site-header-subtitle{
+    font-size: 15px;
+    padding-left: 100px;
+  }
+  .grid-item-main {
+    font-size: 10px;
+    letter-spacing: 0.5px;
+  }
+  .grid-item {
+    font-size: 8px;
+  }
+  .grid-container {
+    margin-left: 90px;
+  }
+  #intro {
+    font-size: 20px;
+    letter-spacing: 2px;
+    margin-left: -80px;
+  }
 }
 /* UCF logo on sidebar */
 .sidebar img {

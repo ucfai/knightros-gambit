@@ -24,7 +24,8 @@ body {
   padding-top: 0px;
   padding-right: 30px;
   padding-bottom: 10px;
-  padding-left: 220px;}
+  padding-left: 220px;
+}
 /* page title */
 #intro {
   font-size: 36px;
@@ -33,8 +34,6 @@ body {
   color: rgb(238, 233, 224);
   margin-top: 50px;
   padding-top: 30pxpx;
-  padding-right: 30px;
-  padding-left: 220px; 
 }
 /* quote formatting */
 #quote {
@@ -44,8 +43,7 @@ body {
   color: rgb(182, 153, 97);
   margin-top: 70px;
   padding-top: 30xpx;
-  padding-right: 30px;
-  padding-left: 340px; 
+  padding-left: 100px;
 }
 /* body text format */
 #text {
@@ -53,9 +51,7 @@ body {
   font-family: 'Roboto';
   color: rgb(172, 172, 172);
   padding-top: 8px;
-  padding-right: 30px;
   padding-bottom: 1px;
-  padding-left: 220px; 
 }
 /* page subheading */
 #background {
@@ -65,16 +61,14 @@ body {
   color: rgb(238, 233, 224);
   margin-top: 20px;
   padding-top: 30px;
-  padding-right: 30px;
   padding-bottom: 10px;
-  padding-left: 220px; 
 }
 /* list format */
 ul.a {
   font-size: 15px;
   font-family: 'Roboto';
   color: rgb(172, 172, 172);
-  margin-left: 16%;
+  margin-left: 3%;
   line-height: 160%;
 }
 li::marker {
@@ -100,13 +94,13 @@ a:active {
 /* Container w/main body of text and images */
 .container {
   overflow-y: auto;
+  margin-left: 220px;
+  margin-right: 20px;
 }
 .container img {
   margin-top: 130px;
   opacity: 60%;
-  margin-left: 220px;
-  margin-right: auto;
-  width: 85%;
+  width: 100%;
 }
 /* The header line */
 .site-header hr{
@@ -144,15 +138,28 @@ a:active {
 .sidebar a:hover {
   color: rgb(245, 224, 179);
 }  
-/* Style page content */
-.main {
-  margin-left: 160px; /* Same as the width of the sidebar */
-  padding: 0px 10px;
-}
 /* On smaller screens, where height is less than 450px, change the style of the sidebar (less padding and a smaller font size) */
-@media screen and (max-height: 450px) {
-  .sidebar {padding-top: 15px;}
+@media screen and (max-height: 640px) {
+  .sidebar {
+    padding-top: 15px;
+    width: 90px;
+  }
   .sidebar a {font-size: 18px;}
+  #site-header-name {
+    padding-left: 100px;
+    font-size: 25px; 
+  }
+  #site-header-subtitle{
+    font-size: 15px;
+    padding-left: 100px;
+  }
+  .container {
+    margin-left: 100px;
+  }
+  #quote { 
+    font-size: 25px;
+    padding-left: 25px; 
+  }
 }
 /* UCF logo on sidebar */
 .sidebar img {

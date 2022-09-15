@@ -32,7 +32,6 @@ body {
   font-family: 'Exo';
   color: rgb(238, 233, 224);
   text-align: center;
-  padding-left: 200px;
 }
 /* page title */
 #background {
@@ -41,17 +40,13 @@ body {
   font-family: 'Exo';
   color: rgb(219, 206, 173);
   padding-top: -10px;
-  padding-right: 30px;
   padding-bottom: 10px;
-  padding-left: 220px;
 }
 /* grid containing text and images */
 .grid-container {
   display: inline-grid;
   grid-gap: 20px;
   padding: 10px;
-  margin-left: 230px;
-  margin-right: 20px;
   grid-template-columns: fit-content(50%) fit-content(50%);
 }
 .grid-item {
@@ -78,8 +73,6 @@ body {
   display: inline-grid;
   grid-gap: 20px;
   padding: 10px;
-  margin-left: 230px;
-  margin-right: 20px;
   grid-template-columns: fit-content(100%);
 }
 .grid {
@@ -109,14 +102,13 @@ body {
   display: inline-grid;
   grid-gap: 20px;
   padding: 10px;
-  margin-left: 230px;
-  margin-right: 20px;
   grid-template-columns: fit-content(33%) fit-content(33%) fit-content(33%);
 }
 /* Container w/main body of text and images */
 .container {
   overflow-y: scroll;
-  width: 100%;
+  margin-left: 220px;
+  margin-right: 20px;
 }
 /* The header line */
 .site-header hr {
@@ -172,9 +164,23 @@ a:active {
   color: rgb(245, 224, 179);
 }
 /* On smaller screens, where height is less than 450px, change the style of the sidebar (less padding and a smaller font size) */
-@media screen and (max-height: 450px) {
-  .sidebar {padding-top: 15px;}
+@media screen and (max-height: 640px) {
+  .sidebar {
+    padding-top: 15px;
+    width: 90px;
+  }
   .sidebar a {font-size: 18px;}
+  #site-header-name {
+    padding-left: 100px;
+    font-size: 25px; 
+  }
+  #site-header-subtitle{
+  font-size: 15px;
+  padding-left: 100px;
+  }
+.container {
+  margin-left: 100px;
+  }
 }
 /* UCF logo on sidebar */
 .sidebar img {
