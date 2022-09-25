@@ -23,12 +23,12 @@ class PlayNetwork(nn.Module):
     a value head of one scalar evaluation number.
     """
 
-    def __init__(self):
+    def __init__(self, testing=False):
         super(PlayNetwork, self).__init__()
-        self.num_res_blocks = 2
+        self.num_res_blocks = 20
         self.num_filters = 32
 
-        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device('cuda:0' if torch.cuda.is_available() and not(testing) else 'cpu')
 
         # Takes 19 channels of input comprised of current state's piece and repetition
         # planes

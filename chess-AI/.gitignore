@@ -5,6 +5,8 @@
 # Our first model!
 !model.pt
 
+test.pgn
+=======
 # ignore all saved datasets
 /datasets
 

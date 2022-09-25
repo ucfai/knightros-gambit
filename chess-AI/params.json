@@ -1,52 +1,52 @@
 {
-    "_comment": "PARAMS MUST BE ALPHABETIZED",
+  "_comment": "PARAMS MUST BE ALPHABETIZED",
 
-    "saving":{
-        "dataset_saving": {
-            "data_dir": "datasets/",
-            "file_name": "dataset-06-04-22:19.pt",
-            "figshare_load": false,
-            "local_load": false,
-            "figshare_save":false
-        },
-
-        "model_saving": {
-            "model_dir": "models/",
-            "file_name": "model-06-04-22:32.pt",
-            "figshare_load":false,
-            "local_load": false,
-            "figshare_save":false,
-            "mcts_check_freq": 10
-        }
+  "saving": {
+    "dataset_saving": {
+      "data_dir": "datasets/",
+      "file_name": "dataset-06-04-22:19.pt",
+      "figshare_load": false,
+      "local_load": false,
+      "figshare_save": false
     },
 
-    "misc_params": {
-        "lr": 0.1,
-        "momentum": 0.001,
-        "weight_decay": 0.9
-    },
-
-    "stockfish":{
-        "epochs": 5,
-        "batch_size": 8,
-        "games": 200,
-        "elo": 800,
-        "depth": 5
-    },
-
-    "mcts":{
-        "epochs": 5,
-        "batch_size": 8,
-        "games": 200,
-        "exploration": 1,
-        "training_episodes": 5,
-        "simulations": 25
-    },
-
-    "currently_unused": {
-        "move_epsilon": 0.5,
-        "probability_scalar": 0.5,
-        "sigmoid_scalar": 0.1,
-        "temperature": 0.5
+    "model_saving": {
+      "model_dir": "models/",
+      "file_name": "model-06-04-22:32.pt",
+      "figshare_load": false,
+      "local_load": false,
+      "figshare_save": false,
+      "mcts_check_freq": 10
     }
+  },
+
+  "misc_params": {
+    "lr": 0.1,
+    "momentum": 0.001,
+    "weight_decay": 0.9
+  },
+
+  "stockfish": {
+    "epochs": 5,
+    "batch_size": 8,
+    "games": 150,
+    "elo": 800,
+    "depth": 5
+  },
+
+  "mcts": {
+    "epochs": 5,
+    "batch_size": 8,
+    "games": 50,
+    "exploration": 5,
+    "training_episodes": 5,
+    "simulations": 20
+  },
+
+  "currently_unused": {
+    "move_epsilon": 0.5,
+    "probability_scalar": 0.5,
+    "sigmoid_scalar": 0.1,
+    "temperature": 0.5
+  }
 }
