@@ -64,7 +64,7 @@ def training_game(val_approximator, move_approximator, game_num=None):
         # See https://python-chess.readthedocs.io/en/latest/core.html#chess.Board.can_claim_draw
         if board.is_game_over() or board.can_claim_draw():
             if game_num is not None:
-                logging.info(board, end="\n\n")
+                logging.info("GAME OVER - ",{game_num + 1}," GAMES GENERATED")
                 Dashboard.info_message("success", f"{game_num + 1} Games Generated")
             break
 
@@ -138,7 +138,7 @@ def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=Fal
     if show_dash:
         Dashboard.info_message("info", "Training on Dataset")
     else:
-        logging.info("DATASET SIZE %s ", str(len(dataset)))
+        logging.info("TRAINING DATASET SIZE %s ", str(len(dataset)))
 
     # Stores the average losses which are used for graphing
     average_pol_loss = []
@@ -156,7 +156,6 @@ def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=Fal
 
     # Main training loop
     for epoch in range(options.epochs):
-
 
         # Variables used solely for monitoring training, not used for actually updating the model
         value_losses = []
@@ -211,7 +210,7 @@ def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=Fal
             # Keep track of when each epoch is over
             Dashboard.info_message("success", "Epoch " + str(epoch) + " Finished")
         else:
-            logging.info("EPOCH %s -- POLICY LOSS %0.3f -- VAL LOSS %0.3f",epoch, policy_loss, value_loss)    
+            logging.info("EPOCH %d -- AVG POLICY LOSS %0.5f -- AVG VAL LOSS %0.5f",epoch, policy_loss, value_loss)    
 
     if show_dash:
         # Chart and show all the losses
@@ -255,8 +254,14 @@ def train_on_mcts(nnet, mcts_opt, show_dash=False):
     for i in range(mcts_opt.training_episodes):
         mcts_moves = lambda board: mcts.get_tree_results(mcts_opt.simulations, nnet, board,
                                                          temperature=5)
+        logging.info("CREATING MCTS DATASET FOR TRAINING EPISODE %d" , i + 1)
 
+        start = time.time()                                                
         dataset = create_dataset(mcts_opt.games, mcts_moves)
+        end = time.time()                                                
+
+        logging.info("DATASET CREATED IN %0.3f SECONDS",end-start)
+
         train_on_dataset(dataset, nnet, mcts_opt, iteration=(i+1),
                          save=(i % mcts_opt.model_saving.mcts_check_freq == 0), show_dash=show_dash)
 
@@ -298,7 +303,7 @@ def main():
                 raise ValueError("If not making dataset either local load or figshare \
                 load must be specified")
         if flags.stockfish_train:
-            msg = "STARTING STOCKFISH TRAINING " + str(stockfish_options.epochs) + " EPOCHS"
+            msg = "STARTING STOCKFISH TRAINING WITH " + str(stockfish_options.epochs) + " EPOCHS"
             if flags.show_dash:
                 Dashboard.info_message("success", msg)
             else:
@@ -308,15 +313,15 @@ def main():
             train_on_dataset(dataset, nnet, stockfish_options, iteration=0)
             end = time.time()
 
-            msg = "STOCKFISH TRANING COMPLETE IN " + str(end-start) + " SECONDS"
+            msg = "STOCKFISH TRANING COMPLETE IN " + str(end-start) + " SECONDS \n"
             if flags.show_dash:
                 Dashboard.info_message("success", msg)
             else:
                 logging.info(msg)
-
+            
         if flags.mcts_train:
             # Train network using MCTS
-            msg = "STARTING MCTS TRAINING WITH " + str(mcts_options.epochs) + " EPOCHS AND " + str(mcts_options.training_episodes) + " EPISODES" 
+            msg = "STARTING MCTS TRAINING WITH " + str(mcts_options.epochs) + " EPOCHS AND " + str(mcts_options.training_episodes) + " TRAINING EPISODES" 
             if flags.show_dash:
                 Dashboard.info_message("success", msg)
             else:
