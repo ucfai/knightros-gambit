@@ -15,31 +15,30 @@ from util import parse_args
 class GUI:
     """GUI class that creates a visual interface of the board.
     """
-    pieces = {}
-    selected_piece = None
-    focused = None
-    turn = ""
-    move_first = ""
-    game = None
-    players = None
-    made_move = None
-    images = {}
-    color1 = "#949494"
-    color2 = "#f8f6f1"
-    highlightcolor = "#4f4f4f"
-    rows = 8
-    columns = 8
-    dim_square = 64
+    COLOR_GREY = "#949494"
+    COLOR_WHITE = "#f8f6f1"
+    HIGHLIGHT_COLOR = "#4f4f4f"
+    ROWS = 8
+    COLUMNS = 8
+    DIM_SQUARE = 64
 
     def __init__(self, parent, board):
+        self.pieces = {}
+        self.selected_piece = None
+        self.focused = None
+        self.turn = ""
+        self.human_plays_white_pieces = False
+        self.game = None
+        self.players = None
+        self.made_move = None
+        self.images = {}
         self.chessboard = board
         self.parent = parent
-        canvas_width = self.columns * self.dim_square
-        canvas_height = self.rows * self.dim_square
+        canvas_width = self.COLUMNS * self.DIM_SQUARE
+        canvas_height = self.ROWS * self.DIM_SQUARE
         self.canvas = tk.Canvas(parent, width=canvas_width,
                                height=canvas_height, bg="black")
         self.canvas.pack(padx=8, pady=8)
-        #Adding Frame
         self.btmfrm = tk.Frame(parent, height=64)
         self.btmfrm.pack(fill="x", side=tk.BOTTOM)
 
@@ -68,10 +67,10 @@ class GUI:
         self.players = params["players"]
         if params["human_plays_white_pieces"]:
             self.turn = 0
-            self.move_first = "gui"
+            self.human_plays_white_pieces = True
         else:
             self.turn = 1
-            self.move_first = "ai"
+            self.human_plays_white_pieces = False
           
         if not self.turn:
             print("Please make your move on the board.")
@@ -94,7 +93,8 @@ class GUI:
             self.selected_piece = None
             self.focused = None
             self.pieces = {}
-            if (self.turn and self.move_first == "gui") or (not self.turn and self.move_first == "ai"):
+            # Print arrows on turn of opposing player to the GUIHumanPlayer depending on the values of turn and human_plays_white_pieces being the same
+            if (self.turn and self.human_plays_white_pieces) or (not self.turn and not self.human_plays_white_pieces):
                 self.chessboard.show(self.game.current_fen())
                 self.show_move(self.game.last_made_move(), self.game.is_white_turn())
             self.draw_board()
@@ -105,8 +105,8 @@ class GUI:
     def square_clicked(self, event):
         """Waits for click on the board and depending on player's turn, executes the move
         """
-        if not self.turn or (self.turn and self.move_first == "ai"):
-            col_size = row_size = self.dim_square
+        if (not self.turn) or (not self.human_plays_white_pieces):
+            col_size = row_size = self.DIM_SQUARE
             selected_column = int(event.x / col_size)
             selected_row = 7 - int(event.y / row_size)
             pos = self.chessboard.alpha_notation((selected_row, selected_column))
@@ -118,7 +118,7 @@ class GUI:
                 self.made_move = self.shift(self.selected_piece[1], pos)
                 if self.made_move == None:
                     self.selected_piece = None
-                    self.focus(pos)
+                    self.focus(None)
                     self.draw_board()
                     print("Invalid Move! Choose a new piece.")
                     return
@@ -131,7 +131,7 @@ class GUI:
             # Need to empty move queue to play out final captures, etc (if any) before ending
             while self.game.board.msg_queue:
                 self.game.process(None)
-            #gui player can no longer make moves
+            # Gui player can no longer make moves
             self.canvas.unbind("<Button-1>")
             print("\nGAME OVER: ", end="")
             if self.game.winner() is None:
@@ -143,7 +143,7 @@ class GUI:
 
             if not player_wants_rematch():
                 print("Thanks for playing!")
-                #break  # Break out of main game loop
+                # Break out of main game loop
 
             # TODO: Implement rematch capability
             raise ValueError("Rematch not yet implemented")
@@ -174,6 +174,7 @@ class GUI:
             piece = self.chessboard[pos]
         except Exception as e:
             piece = None
+            self.focused = None
         if piece is not None and (piece.color == self.chessboard.player_turn):
             self.selected_piece = (self.chessboard[pos], pos)
             self.focused = list(map(self.chessboard.num_notation,
@@ -187,28 +188,28 @@ class GUI:
             "            e            f            g           h  ")
         self.canvas.create_text(505, 265, fill="#363333",font=("Times", 19,),
             text="\n".join("8  7  6  5  4  3  2  1  "))
-        color = self.color2
-        for row in range(self.rows):
-            color = self.color1 if color == self.color2 else self.color2
-            for col in range(self.columns):
-                x_1 = (col * self.dim_square)
-                y_1 = ((7 - row) * self.dim_square)
-                x_2 = x_1 + self.dim_square
-                y_2 = y_1 + self.dim_square
+        color = self.COLOR_WHITE
+        for row in range(self.ROWS):
+            color = self.COLOR_GREY if color == self.COLOR_WHITE else self.COLOR_WHITE
+            for col in range(self.COLUMNS):
+                x_1 = (col * self.DIM_SQUARE)
+                y_1 = ((7 - row) * self.DIM_SQUARE)
+                x_2 = x_1 + self.DIM_SQUARE
+                y_2 = y_1 + self.DIM_SQUARE
                 if (self.focused is not None and (row, col) in self.focused):
                     self.canvas.create_rectangle(x_1, y_1, x_2, y_2,
-                                                 fill=self.highlightcolor,
+                                                 fill=self.HIGHLIGHT_COLOR,
                                                  tags="area")
                 else:
                     self.canvas.create_rectangle(x_1, y_1, x_2, y_2, fill=color,
                                                  tags="area")
-                color = self.color1 if color == self.color2 else self.color2
+                color = self.COLOR_GREY if color == self.COLOR_WHITE else self.COLOR_WHITE
         for name in self.pieces:
             self.pieces[name] = (self.pieces[name][0], self.pieces[name][1])
-            x_0 = (self.pieces[name][1] * self.dim_square) + int(
-                self.dim_square / 2)
-            y_0 = ((7 - self.pieces[name][0]) * self.dim_square) + int(
-                self.dim_square / 2)
+            x_0 = (self.pieces[name][1] * self.DIM_SQUARE) + int(
+                self.DIM_SQUARE / 2)
+            y_0 = ((7 - self.pieces[name][0]) * self.DIM_SQUARE) + int(
+                self.DIM_SQUARE / 2)
             self.canvas.coords(name, x_0, y_0)
         self.canvas.tag_raise("occupied")
         self.canvas.tag_lower("area")
@@ -220,13 +221,13 @@ class GUI:
         arr = list(move)
         corr_x, corr_y = self.chessboard.num_notation(arr[0].upper() + arr[1])
         corr_x1, corr_y1 = self.chessboard.num_notation(arr[2].upper() + arr[3])
-        x_1 = (corr_y * self.dim_square) + int(self.dim_square / 2)
-        y_1 = ((7 - corr_x) * self.dim_square) + int(self.dim_square / 2)
-        x_2 = (corr_y1 * self.dim_square) + int(self.dim_square / 2)
+        x_1 = (corr_y * self.DIM_SQUARE) + int(self.DIM_SQUARE / 2)
+        y_1 = ((7 - corr_x) * self.DIM_SQUARE) + int(self.DIM_SQUARE / 2)
+        x_2 = (corr_y1 * self.DIM_SQUARE) + int(self.DIM_SQUARE / 2)
         if not color:
-            y_2 = ((7 - corr_x1) * self.dim_square) + int(self.dim_square / 2) + 25
+            y_2 = ((7 - corr_x1) * self.DIM_SQUARE) + int(self.DIM_SQUARE / 2) + 25
         else:
-            y_2 = ((7 - corr_x1) * self.dim_square) + int(self.dim_square / 2) - 25
+            y_2 = ((7 - corr_x1) * self.DIM_SQUARE) + int(self.DIM_SQUARE / 2) - 25
 
         self.canvas.create_line(x_1, y_1, x_2, y_2, arrow=tk.LAST, fill="#000000", tags="arrow")
 
@@ -244,8 +245,8 @@ class GUI:
                 self.canvas.create_image(0, 0, image=self.images[filename],
                                          tags=(piecename, "occupied"),
                                          anchor="c")
-                x_0 = (corr_y * self.dim_square) + int(self.dim_square / 2)
-                y_0 = ((7 - corr_x) * self.dim_square) + int(self.dim_square / 2)
+                x_0 = (corr_y * self.DIM_SQUARE) + int(self.DIM_SQUARE / 2)
+                y_0 = ((7 - corr_x) * self.DIM_SQUARE) + int(self.DIM_SQUARE / 2)
                 self.canvas.coords(piecename, x_0, y_0)
 
     def gui_loop(self):
@@ -258,7 +259,7 @@ def assign_human_turn_at_start():
      """Assigns piece color for human and returns boolean accordingly.
      """
      while True:
-        start = tk.simpledialog.askstring(
+        start = simpledialog.askstring(
             title="Choose Piece Color",
             prompt="Choose piece color ([w]hite, [b]lack, or [r]andom): ").lower()
         if start == "r":
@@ -268,6 +269,7 @@ def assign_human_turn_at_start():
         if start == "w":
              return True
         print("Please choose one of [w], [b], or [r].")
+
 
 def init_parameters():
     """Initialize parameters needed to create Game object.
@@ -323,7 +325,7 @@ def player_wants_rematch():
     # TODO: implement
     return False
 
-def main(): #took out chessboard
+def main():
     """Main driver loop for running Knightro's Gambit.
     """
     # Set random seed for program
@@ -331,13 +333,13 @@ def main(): #took out chessboard
     root=tk.Tk()
     root.title("Knightr0\'s Gambit")
 
-    # initialize gui
+    # Initialize gui
     color = None
     gui = GUI(root, chessboard.Board(color))
     textbox=tk.Text(root)
     textbox.pack()
 
-    # redirects print statements to gui
+    # Redirects print statements to gui
     def redirector(input_str):
         textbox.insert(tk.INSERT, input_str)
 

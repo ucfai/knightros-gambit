@@ -85,10 +85,7 @@ class King(Piece):
     """King chess piece.
     """
     shortname = "k"
-    canCastle = True
-
-    #def moves_available(self, pos):
-        #return super(King, self).moves_available(pos.upper(), True, True, 1)
+    can_castle = True
 
     def moves_available(self, pos):
         """Returns moves available based on piece
@@ -110,8 +107,8 @@ class King(Piece):
         beginningpos = board.num_notation(pos.upper())
 
         # Removes castling privilege if king has moved
-        if self.canCastle and (beginningpos[0] != startY or beginningpos[1] != startX):
-            self.canCastle = False
+        if self.can_castle and (beginningpos[0] != startY or beginningpos[1] != startX):
+            self.can_castle = False
             if self.color == "white":
                 whiteKingHome = False
             else:
@@ -122,8 +119,8 @@ class King(Piece):
             if board.alpha_notation(newLoc) not in board.occupied(self.color):
                 allowed_moves.append(newLoc)
 
-        # Checks if each rook can castsle
-        if self.canCastle:
+        # Checks if each rook can castle
+        if self.can_castle:
             i = 0
             for x, y in possible_castles:
                 if not (rooks[i] or checks[i]):
