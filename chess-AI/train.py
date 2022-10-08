@@ -1,8 +1,10 @@
 """Main training program.
 """
 import chess
+import logging
 import numpy as np
 import torch
+import time
 from torch.utils.data import DataLoader, TensorDataset
 
 from ai_io import init_params, save_model, save_dataset, load_dataset, make_dir
@@ -61,10 +63,8 @@ def training_game(val_approximator, move_approximator, game_num=None):
         # TODO: Consider removing `board.can_claim_draw()` as it may be slow to check.
         # See https://python-chess.readthedocs.io/en/latest/core.html#chess.Board.can_claim_draw
         if board.is_game_over() or board.can_claim_draw():
-            if game_num is not None and game_num % 10 == 0:  # Print every 10th game
-                # Print board and display message on streamlit dashboard
-                print(board, end="\n\n")
-
+            if game_num is not None:
+                logging.info("GAME OVER - ",{game_num + 1}," GAMES GENERATED")
                 Dashboard.info_message("success", f"{game_num + 1} Games Generated")
             break
 
@@ -137,6 +137,8 @@ def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=Fal
     """
     if show_dash:
         Dashboard.info_message("info", "Training on Dataset")
+    else:
+        logging.info("TRAINING DATASET SIZE %s ", str(len(dataset)))
 
     # Stores the average losses which are used for graphing
     average_pol_loss = []
@@ -207,10 +209,13 @@ def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=Fal
         if show_dash:
             # Keep track of when each epoch is over
             Dashboard.info_message("success", "Epoch " + str(epoch) + " Finished")
+        else:
+            logging.info("EPOCH %d -- AVG POLICY LOSS %0.5f -- AVG VAL LOSS %0.5f",epoch, policy_loss, value_loss)    
 
     if show_dash:
         # Chart and show all the losses
         Dashboard.visualize_losses(average_pol_loss, average_val_loss)
+    
 
     # Saves model to specified file, or a new file if not specified.
     if save:
@@ -249,8 +254,14 @@ def train_on_mcts(nnet, mcts_opt, show_dash=False):
     for i in range(mcts_opt.training_episodes):
         mcts_moves = lambda board: mcts.get_tree_results(mcts_opt.simulations, nnet, board,
                                                          temperature=5)
+        logging.info("CREATING MCTS DATASET FOR TRAINING EPISODE %d" , i + 1)
 
+        start = time.time()                                                
         dataset = create_dataset(mcts_opt.games, mcts_moves)
+        end = time.time()                                                
+
+        logging.info("DATASET CREATED IN %0.3f SECONDS",end-start)
+
         train_on_dataset(dataset, nnet, mcts_opt, iteration=(i+1),
                          save=(i % mcts_opt.model_saving.mcts_check_freq == 0), show_dash=show_dash)
 
@@ -266,19 +277,24 @@ def main():
 
     if flags.start_train:
         if flags.make_dataset:
-            msg = "Dataset Creation Has Begun"
+            msg = "CREATING STOCKFISH DATASET WITH " + str(stockfish_options.games) + " GAMES"
             if flags.show_dash:
                 Dashboard.info_message("success", msg)
             else:
-                print(msg)
+                logging.info(msg)
+            
+            start = time.time()
             dataset = create_stockfish_dataset(stockfish_options, flags.show_dash)
             make_dir(dataset_saving.data_dir)
-            save_dataset(dataset, dataset_saving)
-            msg = "Dataset Creation completed"
+            end = time.time()
+
+            msg = "STOCKFISH DATASET CREATED IN " + str(end - start) + " SECONDS"
             if flags.show_dash:
                 Dashboard.info_message("success", msg)
             else:
-                print(msg)
+                logging.info(msg)
+            save_dataset(dataset, dataset_saving)
+       
         else:
             if dataset_saving.local_load or dataset_saving.figshare_load:
                 dataset = load_dataset(dataset_saving, flags.show_dash)
@@ -287,33 +303,39 @@ def main():
                 raise ValueError("If not making dataset either local load or figshare \
                 load must be specified")
         if flags.stockfish_train:
-            msg = "Stockfish Training Has Begun"
+            msg = "STARTING STOCKFISH TRAINING WITH " + str(stockfish_options.epochs) + " EPOCHS"
             if flags.show_dash:
                 Dashboard.info_message("success", msg)
             else:
-                print(msg)
+                logging.info(msg)
+            
+            start = time.time()    
             train_on_dataset(dataset, nnet, stockfish_options, iteration=0)
+            end = time.time()
 
-            msg = "Stockfish Training completed"
+            msg = "STOCKFISH TRANING COMPLETE IN " + str(end-start) + " SECONDS \n"
             if flags.show_dash:
                 Dashboard.info_message("success", msg)
             else:
-                print(msg)
-
+                logging.info(msg)
+            
         if flags.mcts_train:
             # Train network using MCTS
-            msg = "MCTS Training has begun"
+            msg = "STARTING MCTS TRAINING WITH " + str(mcts_options.epochs) + " EPOCHS AND " + str(mcts_options.training_episodes) + " TRAINING EPISODES" 
             if flags.show_dash:
                 Dashboard.info_message("success", msg)
             else:
-                print(msg)
-            train_on_mcts(nnet, mcts_options, flags.show_dash)
+                logging.info(msg)
 
-            msg = "MCTS Training completed"
+            start = time.time()    
+            train_on_mcts(nnet, mcts_options, flags.show_dash)
+            end = time.time()
+
+            msg = "MCTS TRAINING COMPLETE IN " + str(end-start) + " SECONDS"
             if flags.show_dash:
                 Dashboard.info_message("success", msg)
             else:
-                print(msg)
+                logging.info(msg)
 
         if mcts_options.model_saving.model_dir is not None:
             save_model(nnet, mcts_options.model_saving, checkpointing=False)
