@@ -25,10 +25,10 @@ class PlayNetwork(nn.Module):
 
     def __init__(self):
         super(PlayNetwork, self).__init__()
-        self.num_res_blocks = 2
+        self.num_res_blocks = 20
         self.num_filters = 32
 
-        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        # self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
         # Takes 19 channels of input comprised of current state's piece and repetition
         # planes
@@ -38,7 +38,7 @@ class PlayNetwork(nn.Module):
                                                   padding=1,
                                                   bias=False),
                                         nn.BatchNorm2d(self.num_filters),
-                                        nn.ReLU()).to(device=self.device)
+                                        nn.ReLU())
 
         # Each conv layer in a residual block uses 256 3x3 filters, padding used
         # to keep the channel dimensions constant.
@@ -55,7 +55,7 @@ class PlayNetwork(nn.Module):
                                     kernel_size=3,
                                     padding=1,
                                     bias=False),
-                          nn.BatchNorm2d(self.num_filters)).to(device=self.device)
+                          nn.BatchNorm2d(self.num_filters))
             for _ in range(self.num_res_blocks)]
 
         # Use 2 1x1 filters to convolve input channels to 2 output channels, one
@@ -70,7 +70,7 @@ class PlayNetwork(nn.Module):
                                          nn.ReLU(),
                                          nn.Flatten(),
                                          nn.Linear(in_features=2 * 8 * 8,
-                                                   out_features=8 * 8 * 73)).to(device=self.device)
+                                                   out_features=8 * 8 * 73))
 
         # Convolve 256 8x8 channels into 8x8 channel, then use fully connected layer to
         # take 64 input features from 8x8 channel and transform to 256 output features,
@@ -87,10 +87,9 @@ class PlayNetwork(nn.Module):
                                         nn.ReLU(),
                                         nn.Linear(in_features=self.num_filters,
                                                   out_features=1),
-                                        nn.Tanh()).to(device=self.device)
+                                        nn.Tanh())
 
     def forward(self, x):
-        x = x.to(device=self.device)
         x = self.conv_layer(x)
 
         # Go through all the residual blocks and add the
@@ -98,13 +97,12 @@ class PlayNetwork(nn.Module):
         for res_block in self.res_blocks:
             shortcut = x
             x = res_block(x)
-            x = nn.functional.relu_(x + shortcut)
+            x = nn.functional.relu(x + shortcut)
 
         value_out = self.value_head(x)
-        policy_out = self.policy_head(x)
+        policy_out = self.policy_head(x).view(-1, 8, 8, 73)
 
-        policy = policy_out.reshape(8, 8, 73)
-        return policy, value_out
+        return policy_out, value_out
 
 
 def main():
