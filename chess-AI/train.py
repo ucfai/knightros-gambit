@@ -1,9 +1,11 @@
 """Main training program.
 """
+import os
 import chess
 import numpy as np
 import torch
-from torch.utils.data import DataLoader, TensorDataset
+import torch.distributed
+from torch.utils.data import DataLoader, TensorDataset, distributed
 
 from ai_io import init_params, save_model, save_dataset, load_dataset, make_dir
 from mcts import Mcts
@@ -127,7 +129,7 @@ def create_dataset(games, move_approximator, val_approximator=None, show_dash=Fa
     return dataset
 
 
-def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=False):
+def train_on_dataset(rank, world_size, dataset, nnet, options, iteration, save=True, show_dash=False):
     """Train with the specified dataset
 
     Attributes:
@@ -137,6 +139,13 @@ def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=Fal
     """
     if show_dash:
         Dashboard.info_message("info", "Training on Dataset")
+
+    # Specify that there are other gpus to consider when computing and specify to
+    # PyTorch to use them for distributed data parallel processing
+    # backend should be 'nccl', device_ids should be [rank], and output_device should be rank when using gpus
+    torch.distributed.init_process_group(world_size=world_size, rank=rank, backend='gloo', init_method='tcp://127.0.0.1:23456')
+    nnet = torch.nn.parallel.DistributedDataParallel(nnet, device_ids=None, output_device=None, broadcast_buffers=False)
+    sampler = distributed.DistributedSampler(dataset, num_replicas=world_size, rank=rank) if torch.is_distributed else None
 
     # Stores the average losses which are used for graphing
     average_pol_loss = []
@@ -150,7 +159,7 @@ def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=Fal
     # TODO: Consider using other optimizers, such as Adam
     opt = torch.optim.SGD(nnet.parameters(), lr=options.learning_rate,
                           weight_decay=options.weight_decay, momentum=options.momentum)
-    train_dl = DataLoader(dataset=dataset, batch_size=options.batch_size, shuffle=False)
+    train_dl = DataLoader(dataset=dataset, batch_size=options.batch_size, shuffle=False, sampler=sampler)
 
     # Main training loop
     for epoch in range(options.epochs):
@@ -166,26 +175,18 @@ def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=Fal
         for (input_states, state_values, move_probs) in train_dl:
             num_moves += 1
 
-            policy_batch = []
-            value_batch = []
+            input_states = input_states.squeeze()
+            state_values = state_values.view(-1, 1)
 
             # Store policies and values for entire batch
-            # TODO: Can maybe replace loop with 1 nnet call on inputs, then zip to separate lists
-            for state in input_states:
-                policy, value = nnet(state.to(device=options.device))
-                policy_batch.append(policy)
-                value_batch.append(value)
+            policy, value = nnet(input_states)
 
-            # Convert the list of tensors to a single tensor for policy and value.
-            policy_batch = torch.stack(policy_batch).float().to(options.device)
-            value_batch = torch.stack(value_batch).flatten().float().to(options.device)
-
-            move_probs = move_probs.to(device=options.device)
-            state_values = state_values.to(device=options.device)
+            # move_probs = move_probs.to(device=options.device)
+            # state_values = state_values.to(device=options.device)
 
             # Compute policy loss and value loss using loss functions
-            pol_loss = ce_loss_fn(policy_batch, move_probs)
-            val_loss = mse_loss_fn(value_batch, state_values)
+            pol_loss = ce_loss_fn(policy, move_probs)
+            val_loss = mse_loss_fn(value, state_values)
             loss = pol_loss + val_loss
 
             # Add to list for graphing purposes
@@ -234,7 +235,7 @@ def create_stockfish_dataset(sf_opt, show_dash):
     return create_dataset(sf_opt.games, stocktrain_moves, stocktrain_value_approximator, show_dash)
 
 
-def train_on_mcts(nnet, mcts_opt, show_dash=False):
+def train_on_mcts(rank, world_size, nnet, mcts_opt, show_dash=False):
     """Use MCTS to improve value and move output of network
 
     Attributes:
@@ -251,7 +252,8 @@ def train_on_mcts(nnet, mcts_opt, show_dash=False):
                                                          temperature=5)
 
         dataset = create_dataset(mcts_opt.games, mcts_moves)
-        train_on_dataset(dataset, nnet, mcts_opt, iteration=(i+1),
+        # torch.multiprocessing.spawn(train_on_dataset, nprocs=world_size, args=(world_size, dataset, nnet, mcts_opt, (i+1), (i % mcts_opt.model_saving.mcts_check_freq == 0), show_dash))
+        train_on_dataset(rank, world_size, dataset, nnet, mcts_opt, iteration=(i+1),
                          save=(i % mcts_opt.model_saving.mcts_check_freq == 0), show_dash=show_dash)
 
 
@@ -259,6 +261,8 @@ def main():
     """Main function that will be run when starting training.
     """
     # Detect device to train on
+    world_size = os.cpu_count()
+    iteration = 0
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     nnet = PlayNetwork().to(device=device)
 
@@ -292,7 +296,8 @@ def main():
                 Dashboard.info_message("success", msg)
             else:
                 print(msg)
-            train_on_dataset(dataset, nnet, stockfish_options, iteration=0)
+            # train_on_dataset(dataset, nnet, stockfish_options, iteration)
+            torch.multiprocessing.spawn(train_on_dataset, nproc=world_size, args=(world_size, dataset, nnet, stockfish_options, iteration))
 
             msg = "Stockfish Training completed"
             if flags.show_dash:
@@ -307,7 +312,8 @@ def main():
                 Dashboard.info_message("success", msg)
             else:
                 print(msg)
-            train_on_mcts(nnet, mcts_options, flags.show_dash)
+            # train_on_mcts(world_size, nnet, mcts_options, flags.show_dash)
+            torch.multiprocessing.spawn(train_on_mcts, nprocs=world_size, args=(world_size, nnet, mcts_options, flags.show_dash))
 
             msg = "MCTS Training completed"
             if flags.show_dash:
