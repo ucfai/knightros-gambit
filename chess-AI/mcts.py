@@ -41,8 +41,9 @@ class Mcts:
         """Get best possible move after running given number of simulations"""
         fen_string = board.fen()
 
-        for _ in range(mcts_simulations):
-            self.search(board, nnet)
+        with torch.no_grad():
+            for _ in range(mcts_simulations):
+                self.search(board, nnet)
 
         values = self.state_values[fen_string].values()
         moves = list(self.state_values[fen_string].keys())
@@ -55,10 +56,11 @@ class Mcts:
 
     def get_tree_results(self, mcts_simulations, nnet, board, temperature):
         """Runs MCTS searches on the board and returns the final policy and move to take"""
-        for _ in range(mcts_simulations):
-            self.search(board, nnet)
+        with torch.no_grad():
+            for _ in range(mcts_simulations):
+                self.search(board, nnet)
 
-        return self.find_search_probs(board.fen(), temperature)
+            return self.find_search_probs(board.fen(), temperature)
 
     def set_current_qn_value(self, fen_string, uci_move):
         """Returns q and n values if they exist, otherwise initializes them"""
@@ -128,28 +130,29 @@ class Mcts:
             return 1 if board.outcome().winner else 0
 
         # Checks to see if the node has been visited (expansion)
-        if fen_string not in self.states_visited:
-            self.states_visited.append(fen_string)
+        with torch.no_grad():
+            if fen_string not in self.states_visited:
+                self.states_visited.append(fen_string)
 
-            # Get predictions and value from the nnet at the current state
-            policy, value = nnet(get_cnn_input(board).to(device=self.device))
-            policy_legal = policy_converter.find_value_of_all_legal_moves(policy, board)
+                # Get predictions and value from the nnet at the current state
+                policy, value = nnet(get_cnn_input(board).to(device=self.device))
+                policy_legal = policy_converter.find_value_of_all_legal_moves(policy, board)
 
-            # Update P with network's policy output
-            self.p_values.update({fen_string: policy_legal})
-            return -value
+                # Update P with network's policy output
+                self.p_values.update({fen_string: policy_legal})
+                return -value
 
-        # Select move to descend with
-        move = self.find_tree_move(board.legal_moves, fen_string)
+            # Select move to descend with
+            move = self.find_tree_move(board.legal_moves, fen_string)
 
-        # Obtain backed up leaf node evaluation
-        board.push(move)
-        value = self.search(board, nnet)
-        board.pop()
+            # Obtain backed up leaf node evaluation
+            board.push(move)
+            value = self.search(board, nnet)
+            board.pop()
 
-        # Update the Q and N values with the new evaluation
-        fen_string = board.fen()
-        self.update_qn(fen_string, move.uci(), value)
+            # Update the Q and N values with the new evaluation
+            fen_string = board.fen()
+            self.update_qn(fen_string, move.uci(), value)
 
         # Back up value to previous nodes
         return -value
