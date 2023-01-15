@@ -79,7 +79,7 @@ bool moveDirect(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t endR
   // Enable electromagnet
   if (enableMagnet)
   {
-    ledcWrite(EM_PWM_CHANNEL, PWM_HALF);
+    ledcWrite(EM_PWM_CHANNEL, PWM_FULL);
     digitalWrite(INDICATOR_LED, HIGH);
   }
 
@@ -353,7 +353,7 @@ bool moveAlongEdges(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t 
   
 
   // Enable electromagnet
-  ledcWrite(EM_PWM_CHANNEL, PWM_HALF);
+  ledcWrite(EM_PWM_CHANNEL, PWM_FULL);
   digitalWrite(INDICATOR_LED, HIGH);
   
   // Loop through each of the calculated points and call the according movement function
@@ -423,7 +423,7 @@ void centerPiece()
   moveToFirstCircle();
 
   // Enable electromagnet
-  ledcWrite(EM_PWM_CHANNEL, PWM_HALF);
+  ledcWrite(EM_PWM_CHANNEL, PWM_FULL);
   digitalWrite(INDICATOR_LED, HIGH);
 
   for (i = 0; i < NUM_CIRCLES; i++)
