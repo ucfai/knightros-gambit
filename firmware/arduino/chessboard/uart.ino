@@ -234,12 +234,12 @@ bool makeMove(volatile char * message)
     {
       if (message[EXTRA_IDX] == '0')
       {
-        digitalWrite(ELECTROMAGNET, LOW);
+        ledcWrite(ELECTROMAGNET, 0);
         digitalWrite(INDICATOR_LED, LOW);
       }
       else if (message[EXTRA_IDX] == '1')
       {
-        ledcWrite(EM_PWM_CHANNEL, PWM_HALF);
+        ledcWrite(EM_PWM_CHANNEL, PWM_FULL);
         digitalWrite(INDICATOR_LED, HIGH);
       }
     }
