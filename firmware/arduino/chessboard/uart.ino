@@ -216,7 +216,7 @@ bool makeMove(volatile char * message)
   else if (message[OPCODE_IDX] == INSTRUCTION)
   {
     // Align Axis
-    if (message[ITYPE_IDX] == ALIGN)
+    if (message[ITYPE_IDX] == ALIGN_AXIS)
     {
       if (message[EXTRA_IDX] == '0')
         alignAxis(xMotor, ZERO_POSITION);
