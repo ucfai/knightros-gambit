@@ -4,10 +4,11 @@
     "saving":{
         "dataset_saving": {
             "data_dir": "datasets/",
-            "file_name": "dataset-06-04-22:19.pt",
+            "file_name": "dataset-09-08-22_01-41-15.pt",
             "figshare_load": false,
-            "local_load": false,
-            "figshare_save":false
+            "local_load": true,
+            "figshare_save": false,
+            "cp_freq": 10
         },
 
         "model_saving": {
@@ -16,7 +17,8 @@
             "figshare_load":false,
             "local_load": false,
             "figshare_save":false,
-            "mcts_check_freq": 10
+            "mcts_check_freq": 10,
+            "stock_check_freq": 2
         }
     },
 
@@ -29,8 +31,8 @@
     "stockfish":{
         "epochs": 5,
         "batch_size": 8,
-        "games": 150,
-        "elo": 800,
+        "games": 100,
+        "elo": 1000,
         "depth": 5
     },
 

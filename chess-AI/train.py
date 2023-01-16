@@ -1,5 +1,7 @@
 """Main training program.
 """
+import os
+
 import chess
 import numpy as np
 import torch
@@ -94,7 +96,7 @@ def assign_rewards(board, length):
     return state_values
 
 
-def create_dataset(games, move_approximator, val_approximator=None, show_dash=False):
+def create_dataset(games, move_approximator, val_approximator=None, show_dash=False, cp_freq=None, data_dir=None):
     """Builds a dataset with the size of (games)
 
     Attributes:
@@ -103,31 +105,40 @@ def create_dataset(games, move_approximator, val_approximator=None, show_dash=Fa
         move_approximator: Supplies a policy distribution over legal moves and a move to take
     """
 
+    assert data_dir is None or (data_dir is not None and cp_freq is not None), "data_dir can only be specified if cp on"
     # Storing gradients for all forward passes in each training game is demanding. Instead,
     # ignore gradients for now and store only the gradients needed for a particular batch later on
+    game_data = []
+    last_path = None
+
     with torch.no_grad():
-        if show_dash:
-            # Print every 10th game for visualization purposes
-            game_data = [training_game(val_approximator, move_approximator,
-                                       game_num=i) for i in range(games)]
-        else:
-            game_data = [training_game(val_approximator, move_approximator) for _ in range(games)]
+        for i in range(games):
+            if show_dash:
+                game_data.append(training_game(val_approximator, move_approximator, game_num=i))
+            else:
+                game_data.append(training_game(val_approximator, move_approximator))
 
-    # Convert all the fen strings into tensors that are used in the dataset
-    input_state = torch.stack(
-        [get_cnn_input(chess.Board(state)) for game in game_data for state in game[0]])
-    state_values = torch.tensor([state_val for game in game_data for state_val in game[1]]).float()
-    move_probs = torch.tensor(
-        np.array([move_prob for game in game_data for move_prob in game[2]])).float()
+            if cp_freq is not None and i % cp_freq == 0 or i == games - 1:
+                # Convert all the fen strings into tensors that are used in the dataset
+                input_state = torch.stack(
+                    [get_cnn_input(chess.Board(state)) for game in game_data for state in game[0]])
+                state_values = torch.tensor([state_val for game in game_data for state_val in game[1]]).float()
+                move_probs = torch.tensor(
+                    np.array([move_prob for game in game_data for move_prob in game[2]])).float()
 
-    # Create iterable dataset from game data
-    dataset = TensorDataset(input_state, state_values, move_probs)
+                # Create iterable dataset from game data
+                dataset = TensorDataset(input_state, state_values, move_probs)
+
+                if last_path is not None:
+                    os.remove(last_path)
+
+                last_path = save_dataset(dataset, data_dir, cp=i)
 
     # Return the dataset to be used
     return dataset
 
 
-def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=False):
+def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=False, cp_freq=None):
     """Train with the specified dataset
 
     Attributes:
@@ -135,6 +146,8 @@ def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=Fal
         nnet: the neural network
         options: Instance of TrainOptions containing settings/hyperparameters for training
     """
+    last_path = None
+
     if show_dash:
         Dashboard.info_message("info", "Training on Dataset")
 
@@ -154,7 +167,6 @@ def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=Fal
 
     # Main training loop
     for epoch in range(options.epochs):
-
         # Variables used solely for monitoring training, not used for actually updating the model
         value_losses = []
         policy_losses = []
@@ -208,6 +220,11 @@ def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=Fal
             # Keep track of when each epoch is over
             Dashboard.info_message("success", "Epoch " + str(epoch) + " Finished")
 
+        if cp_freq is not None and epoch % cp_freq == 0:
+            if last_path is not None:
+                os.remove(last_path)
+            last_path = save_model(nnet, options.model_saving, checkpointing=True, file_name=f"model_epoch{epoch}")
+
     if show_dash:
         # Chart and show all the losses
         Dashboard.visualize_losses(average_pol_loss, average_val_loss)
@@ -217,7 +234,7 @@ def train_on_dataset(dataset, nnet, options, iteration, save=True, show_dash=Fal
         save_model(nnet, options.model_saving, checkpointing=True, file_name=f"model_{iteration}")
 
 
-def create_stockfish_dataset(sf_opt, show_dash):
+def create_stockfish_dataset(sf_opt, dataset_saving, show_dash):
     """Create dataset of values/moves using stockfish
 
     Attributes:
@@ -231,7 +248,8 @@ def create_stockfish_dataset(sf_opt, show_dash):
     stocktrain_value_approximator = stockfish.get_value
     stocktrain_moves = lambda board: stockfish.get_move_probs(board, epsilon=0.3)
 
-    return create_dataset(sf_opt.games, stocktrain_moves, stocktrain_value_approximator, show_dash)
+    return create_dataset(sf_opt.games, stocktrain_moves,stocktrain_value_approximator, show_dash,
+                          cp_freq=dataset_saving.cp_freq, data_dir=dataset_saving.data_dir)
 
 
 def train_on_mcts(nnet, mcts_opt, show_dash=False):
@@ -271,9 +289,9 @@ def main():
                 Dashboard.info_message("success", msg)
             else:
                 print(msg)
-            dataset = create_stockfish_dataset(stockfish_options, flags.show_dash)
+            dataset = create_stockfish_dataset(stockfish_options, dataset_saving, flags.show_dash)
             make_dir(dataset_saving.data_dir)
-            save_dataset(dataset, dataset_saving)
+            save_dataset(dataset, dataset_saving.data_dir, dataset_saving.figshare_save)
             msg = "Dataset Creation completed"
             if flags.show_dash:
                 Dashboard.info_message("success", msg)
@@ -292,7 +310,7 @@ def main():
                 Dashboard.info_message("success", msg)
             else:
                 print(msg)
-            train_on_dataset(dataset, nnet, stockfish_options, iteration=0)
+            train_on_dataset(dataset, nnet, stockfish_options, iteration=0, cp_freq=stockfish_options.model_saving.stock_check_freq)
 
             msg = "Stockfish Training completed"
             if flags.show_dash:
@@ -317,6 +335,7 @@ def main():
 
         if mcts_options.model_saving.model_dir is not None:
             save_model(nnet, mcts_options.model_saving, checkpointing=False)
+
 
 if __name__ == "__main__":
     main()
