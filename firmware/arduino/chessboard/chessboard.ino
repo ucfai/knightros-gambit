@@ -33,7 +33,7 @@ enum UARTMisc
 // 127 is for 50% duty cycle, 255 is for 100% duty cycle
 enum ElectromagnetMisc
 {
-  ELECTROMAGNET = 23,
+  ELECTROMAGNET = 100,
   PWM_FULL = 255,
   PWM_HALF = 127,
   EM_PWM_CHANNEL = 0,
