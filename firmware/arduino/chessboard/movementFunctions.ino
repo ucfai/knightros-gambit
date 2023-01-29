@@ -109,7 +109,7 @@ bool moveDirect(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t endR
     {
       // All moveDirect calls that move pieces have valid slopes, so we can only encounter this
       // if we are moving to the start point, which does not move pieces
-      digitalWrite(ELECTROMAGNET, LOW);
+      ledcWrite(EM_PWM_CHANNEL, 0);
       digitalWrite(INDICATOR_LED, LOW);
   
       // We need to find the smaller distance for the diagonal movement using the absolute value, 
@@ -139,7 +139,7 @@ bool moveDirect(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t endR
   }
 
   // Turn electromagnet off
-  digitalWrite(ELECTROMAGNET, LOW);
+  ledcWrite(EM_PWM_CHANNEL, 0);
   digitalWrite(INDICATOR_LED, LOW);
 
   // Print debug info about moveDirect main movement
@@ -386,7 +386,7 @@ bool moveAlongEdges(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t 
   }
 
   // Turn electromagnet off
-  digitalWrite(ELECTROMAGNET, LOW);
+  ledcWrite(EM_PWM_CHANNEL, 0);
   digitalWrite(INDICATOR_LED, LOW);
  
   // Print debug info about moveAlongEdges main movement
@@ -398,6 +398,11 @@ bool moveAlongEdges(uint8_t startCol, uint8_t startRow, uint8_t endCol, uint8_t 
 
 bool alignPiece(uint8_t col, uint8_t row)
 {
+  uint8_t currCol = currPositionX / (stepsPerUnitSpace * 8);
+  uint8_t currRow = currPositionY / (stepsPerUnitSpace * 8);
+  
+  moveDirect(currCol, currRow, col, row, false);
+  centerPiece();
   return true;
 }
 
@@ -437,7 +442,7 @@ void centerPiece()
   }
 
   // Turn electromagnet off
-  digitalWrite(ELECTROMAGNET, LOW);
+  ledcWrite(EM_PWM_CHANNEL, 0);
   digitalWrite(INDICATOR_LED, LOW);
 }
 
