@@ -234,7 +234,7 @@ bool makeMove(volatile char * message)
     {
       if (message[EXTRA_IDX] == '0')
       {
-        ledcWrite(ELECTROMAGNET, 0);
+        ledcWrite(EM_PWM_CHANNEL, 0);
         digitalWrite(INDICATOR_LED, LOW);
       }
       else if (message[EXTRA_IDX] == '1')
