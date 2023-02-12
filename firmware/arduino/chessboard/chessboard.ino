@@ -226,6 +226,8 @@ void setup()
 
     Serial.println("Starting Program...\n");
   }
+  
+  enableMotors();
 }
 
 void loop()
