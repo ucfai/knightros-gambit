@@ -207,10 +207,11 @@ def main():
     Creates a directory for each move in the game and produces labeled cells for each move to be
     to develop piece color classifier and piece type classifier.
     '''
-    image_path = "computer-vision/data/misc/board2.png"
+
+    # cwd = os.getcwd()
+    image_path = "..\misc\\board2.png"
     test_img = cv.imread(image_path)
     get_board_corners(test_img)
-    return
 
     # Prompt user for game name until they provide a dir name that already exists.
     game_name = None
