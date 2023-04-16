@@ -24,12 +24,79 @@ the board in the image.
 from pathlib import Path
 import os
 import subprocess
-
 import cv2 as cv
+import numpy as np
+import matplotlib.pyplot as plt
 
 def get_board_corners(calibration_img):
     # TODO: Update this to actually return corners
-    return [0, 0, 0, 0]
+  
+    # resize image
+    dim = (480, 480)
+    calibration_img = cv.resize(calibration_img, dim, interpolation = cv.INTER_AREA)
+
+    # convert img to grayscale
+    gray = cv.cvtColor(calibration_img, cv.COLOR_BGR2GRAY)
+
+    # blur image
+    blur = cv.GaussianBlur(gray, (3,3), 0)
+    
+    # do otsu threshold on gray image
+    thresh = cv.adaptiveThreshold(blur, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 151, 2)
+    # thresh = cv.threshold(blur, 0, 255, cv.THRESH_BINARY+cv.THRESH_OTSU)[1]
+
+    cv.imshow('Thresh', thresh)
+    
+    # apply morphology
+    kernel = np.ones((2,2), np.uint8)
+    morph = cv.morphologyEx(thresh, cv.MORPH_CLOSE, kernel)
+    morph = cv.morphologyEx(morph, cv.MORPH_OPEN, kernel)
+
+    cv.imshow('Morph', morph)
+
+    # get largest contour
+    contours = cv.findContours(morph, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+
+    contours = contours[0] if len(contours) == 2 else contours[1]
+
+    for i in range(len(contours)):
+        cv.drawContours(calibration_img, contours, i, (0,0,255), 2)
+
+    area_thresh = 0
+    for c in contours:
+        area = cv.contourArea(c)
+        if area > area_thresh:
+            area_thresh = area
+            max_cnt = cv.approxPolyDP(c, 0.01*cv.arcLength(c, True), True)
+    if max_cnt is None:
+        raise ValueError("No rectangle detected in image.")
+
+    print(max_cnt)
+
+    # Draw all max contour points
+    for i in range(len(max_cnt)):
+        cv.drawContours(calibration_img, max_cnt, i, (255,0,0), 6)
+
+    cv.imshow('max_cnt points', calibration_img)
+
+    # If max_rect has more than four points, extract a rectangle from it.
+    if max_cnt.shape[0] > 4:
+        max_cnt = extract_rect_from_contour(max_cnt)
+
+    for i in range(len(max_cnt)):
+        cv.drawContours(calibration_img, max_cnt, i, (0,255,0), 3)
+
+    cv.imshow('board corners', calibration_img)
+    cv.waitKey()
+
+    return max_cnt
+
+def extract_rect_from_contour(contour):
+    '''Helper function to extract a rectangle from a contour.'''
+    rect = cv.minAreaRect(contour)
+    box = cv.boxPoints(rect)
+    box = np.int0(box)
+    return box.reshape(4, 1, 2)
 
 def compute_img_trans_matrix(calibration_img):
     return None, None, None
@@ -127,7 +194,7 @@ def save_img_and_labels(move_path, row, col, sq_img, color_label, type_label):
     square = chr(col + ord('a')) + chr(row + ord('1'))
     cv.imwrite(f"{move_path}/square.png", sq_img)
     with open(f"{move_path}/labels.csv", "a") as file:
-        file.write(f"{square}, {color_label}, {type_label}")
+        file.write(f"{square}, {color_label}, {type_label}") 
 
 def get_fens(game_path):
     result = subprocess.run(['pgn-extract', "--quiet", "-Wepd", game_path],
@@ -140,6 +207,11 @@ def main():
     Creates a directory for each move in the game and produces labeled cells for each move to be
     to develop piece color classifier and piece type classifier.
     '''
+    image_path = "computer-vision/data/misc/board2.png"
+    test_img = cv.imread(image_path)
+    get_board_corners(test_img)
+    return
+
     # Prompt user for game name until they provide a dir name that already exists.
     game_name = None
     while not game_name:
@@ -150,6 +222,7 @@ def main():
             game_name = None
 
     # Build list of fens using pgn-extract
+    print(f"{path.__str__()}/{game_name}.pgn")
     fens =  get_fens(game_path=f"{path.__str__()}/{game_name}.pgn")
 
     image_paths = list(path.glob("*.png"))
