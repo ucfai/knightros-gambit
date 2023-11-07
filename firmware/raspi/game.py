@@ -15,6 +15,8 @@ class Game:
     The main program logic is in the `process` function. `process` should be called in a loop in
     the frontend code.
     """
+    SLEEP_TIME = 0.01
+
     def __init__(self, mode_of_interaction, interact_w_arduino, human_plays_white_pieces=None):
         self.mode_of_interaction = mode_of_interaction
         # TODO: Set up board with either white or black on human side.
@@ -45,7 +47,7 @@ class Game:
     def last_made_move(self):
         """Returns the last made move, if applicable. If no moves have been made, returns None.
         """
-        if self.board.engine.chess_board.move_stack:
+        if not self.board.engine.chess_board.move_stack:
             return None
         return self.board.engine.chess_board.peek().uci()
 
@@ -74,7 +76,7 @@ class Game:
                                       "Should we loop until move is valid? What if "
                                       "the board is messed up? Need to revisit.")
 
-    def process(self, player):
+    def process(self, player, verbose=False):
         """One iteration of main game loop.
 
         Note: expects caller to check game.is_game_over before calling.
@@ -85,11 +87,12 @@ class Game:
             made_move: boolean that is True if turn changes, otherwise False.
         """
         arduino_status = self.board.get_status_from_arduino()
-        print(f"\nBoard Status: {arduino_status}")
+        if verbose:
+            print(f"\nBoard Status: {arduino_status}")
 
         if arduino_status.status == status.ArduinoStatus.EXECUTING_MOVE:
             # Wait for move in progress to finish executing
-            time.sleep(1) # reduce the amount of polling while waiting for move to finish
+            time.sleep(self.SLEEP_TIME) # reduce the amount of polling while waiting for move to finish
 
             if self.board.ser is None:
                 # Allows testing other game loop functionality with simulated connection to Arduino
@@ -105,7 +108,7 @@ class Game:
 
         if arduino_status.status == status.ArduinoStatus.IDLE:
             # Don't spam new Arduino messages too frequently if waiting for Arduino status to update
-            time.sleep(1)
+            time.sleep(self.SLEEP_TIME)
 
             if self.board.msg_queue:
                 # We have a separate move counter for moves and instructions; to resolve conflicts

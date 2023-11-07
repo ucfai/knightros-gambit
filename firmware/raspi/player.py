@@ -69,6 +69,29 @@ class CLHumanPlayer:
     def __str__(self):
         return "CLHumanPlayer"
 
+class GUIHumanPlayer:
+    """Human class that allows playing with the chessboard through the gui.
+    """
+    def __init__(self):
+        self.next_move = None
+
+    def select_move(self, board):
+        """Returns None until a new move is selected on the GUI
+        (which can only be done if it's the GUI player's turn)
+        """
+        # Note next move can be None
+        prev_move = self.next_move
+        self.next_move = None
+        return prev_move
+
+    def set_move(self, next_move):
+        """Sets the next_move to move made by the player on the GUI
+        """
+        self.next_move = next_move
+
+    def __str__(self):
+        return "GUIPlayer"
+
 # class PhysicalHumanPlayer:
 #     def __init__(self):
 #         pass
